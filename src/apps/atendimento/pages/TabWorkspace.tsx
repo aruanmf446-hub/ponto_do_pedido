@@ -6,6 +6,7 @@ import { formatTime, minutesSince } from '@/core/dates';
 import { formatCents, parseCents, splitEvenly } from '@/core/money';
 import { ApprovalDialog } from '@/core/ui/ApprovalDialog';
 import { Dialog } from '@/core/ui/Dialog';
+import { Icon } from '@/core/ui/Icon';
 import { usePermission, useTenant } from '@/core/ui/TenantProvider';
 import { newIdempotencyKey, useAction } from '@/core/ui/useAction';
 import {
@@ -44,6 +45,7 @@ export function TabWorkspace({
   categories,
   products,
   freeTables,
+  openTabs = [],
 }: {
   tab: TabDetail;
   tableLabel: string | null;
@@ -53,6 +55,7 @@ export function TabWorkspace({
   categories: { id: string; name: string }[];
   products: MenuProduct[];
   freeTables: { id: string; label: string }[];
+  openTabs?: { id: string; number: number; label: string; total_cents: number; opened_at: string }[];
 }) {
   const { tenantId, base, model, timezone } = useTenant();
   const canOrder = usePermission('atendimento.pedido.registrar') === 'direct';
@@ -102,7 +105,7 @@ export function TabWorkspace({
     <header className="at-tabhead">
       <div>
         <Link href={`${base}/atendimento`} className="at-back">
-          ← Mesas
+          <Icon name="armchair" size={14} /> Voltar às mesas
         </Link>
         <h1>
           {title} <span className="at-tabnum">Comanda #{tab.number}</span>
@@ -362,6 +365,21 @@ export function TabWorkspace({
           </>
         ) : model === 'm3' ? (
           <>
+            <nav className="at-ws-list" aria-label="Comandas em atendimento">
+              <p className="at-ws-list-title">Comandas em atendimento</p>
+              <ul>
+                {openTabs.map((t) => (
+                  <li key={t.id}>
+                    <Link href={`${base}/atendimento/comanda/${t.id}`} aria-current={t.id === tab.id ? 'page' : undefined}>
+                      <span>
+                        <strong>#{t.number}</strong> {t.label}
+                      </span>
+                      <span>{formatCents(t.total_cents)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
             <div className="at-ws-main">
               {ordersPanel}
               {draftPanel}

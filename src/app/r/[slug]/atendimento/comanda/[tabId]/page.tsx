@@ -25,6 +25,13 @@ export default async function TabRoute({ params }: { params: Promise<{ slug: str
       categories={menu.categories}
       products={menu.products}
       freeTables={floor.tables.filter((t) => !occupied.has(t.id)).map((t) => ({ id: t.id, label: t.label }))}
+      openTabs={floor.tabs.map((t) => ({
+        id: t.id,
+        number: t.number,
+        label: t.table_id ? `Mesa ${floor.tables.find((x) => x.id === t.table_id)?.label ?? ''}` : (t.customer_name ?? 'Balcão'),
+        total_cents: t.total_cents,
+        opened_at: t.opened_at,
+      }))}
     />
   );
 }

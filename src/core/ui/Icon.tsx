@@ -3,6 +3,12 @@
 import {
   Activity,
   AlertTriangle,
+  Beef,
+  Croissant,
+  Fish,
+  Pizza,
+  Popcorn,
+  Wine,
   Armchair,
   ArrowLeftRight,
   ArrowRight,
@@ -77,6 +83,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react';
+import { foodKind, type FoodKind } from '@/core/ui/FoodArt';
 
 const ICONS = {
   activity: Activity,
@@ -153,9 +160,36 @@ const ICONS = {
   menu: UtensilsCrossed,
   wallet: Wallet,
   zap: Zap,
+  beef: Beef,
+  croissant: Croissant,
+  fish: Fish,
+  pizza: Pizza,
+  popcorn: Popcorn,
+  wine: Wine,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
+
+const KIND_ICON: Record<FoodKind, IconName> = {
+  prato: 'utensils',
+  lanche: 'sandwich',
+  bebida: 'drink',
+  cafe: 'coffee',
+  sobremesa: 'dessert',
+  salada: 'salad',
+  massa: 'soup',
+  sopa: 'soup',
+  japonesa: 'fish',
+  petisco: 'popcorn',
+  pizza: 'pizza',
+  carne: 'beef',
+  acai: 'dessert',
+};
+
+/** Ícone sugerido para uma categoria ou produto (pelo nome). */
+export function foodIcon(...texts: (string | null | undefined)[]): IconName {
+  return KIND_ICON[foodKind(...texts)];
+}
 
 export function Icon({ name, size = 18, className, strokeWidth = 2 }: { name: IconName; size?: number; className?: string; strokeWidth?: number }) {
   const Component = ICONS[name];
