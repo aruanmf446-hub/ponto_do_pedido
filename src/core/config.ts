@@ -4,6 +4,8 @@
 export const config = {
   rootDomain: process.env.NEXT_PUBLIC_PDP_ROOT_DOMAIN ?? 'pontodopedido.com',
   pathTenants: process.env.NEXT_PUBLIC_PDP_PATH_TENANTS === '1',
+  /** Modelo do site institucional (m1..m4); PDP_SITE_TEMPLATE. */
+  siteTemplate: process.env.NEXT_PUBLIC_PDP_SITE_TEMPLATE ?? 'm1',
   app: {
     url: process.env.NEXT_PUBLIC_PDP_APP_SUPABASE_URL ?? '',
     publishableKey: process.env.NEXT_PUBLIC_PDP_APP_SUPABASE_PUBLISHABLE_KEY ?? '',

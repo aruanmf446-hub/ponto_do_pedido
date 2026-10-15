@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Landing } from '@/apps/plataforma/Landing';
+import { isVisualModel } from '@/core/apps';
 import { fetchPlans } from '@/core/billing';
+import { config } from '@/core/config';
 
 export const metadata: Metadata = {
   title: { absolute: 'Ponto do Pedido — gestão para restaurantes' },
@@ -14,7 +16,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ modelo?: string }> }) {
+  const { modelo } = await searchParams;
+  // Prévia de outro modelo por ?modelo=mN; o modelo publicado vem de PDP_SITE_TEMPLATE.
+  const template = isVisualModel(modelo) ? modelo : isVisualModel(config.siteTemplate) ? config.siteTemplate : 'm1';
   const plans = await fetchPlans();
-  return <Landing plans={plans} />;
+  return <Landing plans={plans} template={template} />;
 }

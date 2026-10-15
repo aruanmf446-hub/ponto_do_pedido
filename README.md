@@ -43,13 +43,15 @@ Itens que dependem do titular (não podem ser feitos pelo código):
 - [ ] **Publicação na Cloudflare** — no GitHub (Settings → Secrets and variables → Actions):
   - segredos `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`;
   - variáveis públicas `PDP_APP_SUPABASE_URL`, `PDP_APP_SUPABASE_PUBLISHABLE_KEY`,
-    `PDP_BILLING_SUPABASE_URL`, `PDP_BILLING_SUPABASE_PUBLISHABLE_KEY` (e opcional `PDP_ROOT_DOMAIN`).
+    `PDP_BILLING_SUPABASE_URL`, `PDP_BILLING_SUPABASE_PUBLISHABLE_KEY` (e opcionais `PDP_ROOT_DOMAIN`
+    e `PDP_SITE_TEMPLATE` — modelo do site institucional, `m1` a `m4`; veja as prévias em `/modelos`).
   - Na Cloudflare, a zona `pontodopedido.com` precisa de um registro DNS curinga `*.pontodopedido.com`
     (com proxy ativo), além do domínio raiz.
 - [ ] **Auth do Supabase** (projeto pontodopedido) — configurar a Site URL (`https://pontodopedido.com`)
   e as Redirect URLs (`https://pontodopedido.com/**`, `https://*.pontodopedido.com/**`) e decidir a
   política de confirmação de e-mail (e SMTP próprio, se for exigir confirmação).
-- [ ] **Banco pontodopedido** — concluir as migrations remotas (ver [estado remoto](docs/supabase-remoto.md)).
+- [ ] **Banco pontodopedido** — concluir as migrations remotas (ver [estado remoto](docs/supabase-remoto.md)),
+  incluindo `20261015154053_public_templates` (modelos do Cardápio e do Delivery).
 - [ ] **Comercial** — os preços aparecem como "Valor sob consulta" e não há provedor de pagamento
   configurado (nenhuma cobrança real é feita) até a decisão do titular.
 

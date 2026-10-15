@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { DEVELOPER } from '@/core/config';
 import { SchemeToggle } from '@/core/ui/SchemeToggle';
-import { display, text } from '@/apps/plataforma/fonts';
+import { display, editorial, sora, text } from '@/apps/plataforma/fonts';
 import '@/apps/plataforma/plataforma.css';
 
 export function PlatformMark() {
@@ -17,7 +17,7 @@ export function PlatformMark() {
 /** Estrutura do site institucional e do portal (claro/escuro). */
 export function PlatformChrome({ children, signedIn, portal }: { children: ReactNode; signedIn: boolean; portal?: boolean }) {
   return (
-    <div className={`pl ${display.variable} ${text.variable}`}>
+    <div className={`pl ${display.variable} ${text.variable} ${editorial.variable} ${sora.variable}`}>
       <a className="pl-skip" href="#conteudo">
         Ir para o conteúdo
       </a>
