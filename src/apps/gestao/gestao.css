@@ -446,9 +446,14 @@
 }
 .gs-donut {
   display: grid;
-  grid-template-columns: 150px 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  justify-items: center;
   gap: 18px;
   align-items: center;
+  min-width: 0;
+}
+.gs-donut > :last-child {
+  justify-self: stretch;
 }
 .gs-donut-chart {
   position: relative;

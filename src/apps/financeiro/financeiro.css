@@ -896,8 +896,13 @@
   background: color-mix(in srgb, var(--tone) 12%, transparent);
 }
 .fn-stat-value {
-  font-size: clamp(1.05rem, 12cqi, 1.4rem);
+  font-size: clamp(0.95rem, 11cqi, 1.4rem);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fn-stat {
+  min-width: 0;
 }
 .fn-stat-hint {
   font-size: 0.75rem;

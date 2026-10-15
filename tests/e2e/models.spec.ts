@@ -7,7 +7,7 @@ test('troca de modelo do Estoque persiste após recarregar', async ({ page }) =>
   const root = page.locator('.es');
   const before = await root.getAttribute('data-model');
   const target = before === 'm3' ? 'm2' : 'm3';
-  await page.getByRole('button', { name: 'Aparência' }).click();
+  await page.locator('.pdp-model-trigger').click();
   await page.locator(`[data-model-option="${target}"]`).click();
   await expect(root).toHaveAttribute('data-model', target);
   await page.reload();
@@ -21,11 +21,11 @@ test('cada modelo muda a estrutura, não só a cor', async ({ page }) => {
   await login(page, 'adm');
   const seen = new Set<string>();
   for (const model of ['m1', 'm2', 'm3', 'm4']) {
-    await page.getByRole('button', { name: 'Aparência' }).click();
+    await page.locator('.pdp-model-trigger').click();
     await page.locator(`[data-model-option="${model}"]`).click();
     await expect(page.locator('.fn')).toHaveAttribute('data-model', model);
     const shape = await page.evaluate(() =>
-      ['.fn-side', '.fn-bar', '.fn-tabs', '.fn-rail'].map((s) => (document.querySelector(s) ? 1 : 0)).join(''),
+      ['.fn-side', '.fn-bar', '.fn-chart', '.fn-week', '.fn-folders', '.fn-counters'].map((s) => (document.querySelector(s) ? 1 : 0)).join(''),
     );
     seen.add(shape);
   }
