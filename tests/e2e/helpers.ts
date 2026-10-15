@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
-export const SLUG = process.env.PDP_E2E_SLUG ?? 'famiglia';
+export const SLUG = process.env.PDP_E2E_SLUG ?? 'aurora';
 export const PASSWORD = 'Senha12345!';
 export const T = `/r/${SLUG}`;
 export const user = (who: string) => `${who}+${SLUG}@teste.local`;

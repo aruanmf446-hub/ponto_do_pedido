@@ -105,18 +105,101 @@ button:disabled {
 .pdp-approval-summary dd {
   margin: 0;
 }
-.pdp-model-list {
+/* Galeria de modelos (estrutura; cores vêm de cada aplicativo) */
+.pdp-model-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  max-width: 280px;
+}
+.pdp-model-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pdp-model-dialog {
+  max-width: min(880px, calc(100vw - 24px));
+}
+.pdp-model-hint {
+  margin: 0 0 12px;
+  opacity: 0.75;
+}
+.pdp-gallery {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+}
+.pdp-gallery-card {
+  width: 100%;
+  height: 100%;
   display: grid;
   gap: 8px;
-}
-.pdp-model-option {
-  width: 100%;
+  align-content: start;
   text-align: left;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1.5px solid color-mix(in srgb, currentColor 16%, transparent);
+  background: color-mix(in srgb, currentColor 3%, transparent);
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.pdp-gallery-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 12%);
+}
+.pdp-gallery-card[aria-pressed='true'] {
+  border-color: var(--pdp-accent, currentColor);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pdp-accent, currentColor) 35%, transparent);
+}
+.pdp-gallery-preview {
+  position: relative;
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 6%), 0 4px 12px rgb(0 0 0 / 8%);
+}
+.pdp-model-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+}
+.pdp-gallery-active {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.pdp-gallery-text {
   display: grid;
   gap: 2px;
+  padding: 0 4px 4px;
+}
+.pdp-gallery-index {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.pdp-gallery-desc {
+  font-size: 0.82rem;
+  opacity: 0.7;
+  line-height: 1.35;
+}
+.pdp-food-art {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .pdp-scheme {
   display: flex;
@@ -180,6 +263,34 @@ button:disabled {
   content: '▾';
   font-size: 0.75em;
   opacity: 0.7;
+}
+.pdp-avatar {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+.pdp-switcher-who {
+  display: grid;
+  line-height: 1.15;
+  min-width: 0;
+  text-align: left;
+}
+.pdp-switcher-name,
+.pdp-switcher-role {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdp-switcher-role {
+  font-size: 0.72rem;
+  opacity: 0.65;
+  font-weight: 400;
 }
 .pdp-switcher-menu {
   position: absolute;

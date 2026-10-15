@@ -777,20 +777,6 @@
 .fn .pdp-msg--error {
   color: var(--fn-danger);
 }
-.fn .pdp-model-option {
-  padding: 12px 14px;
-  border: 1px solid var(--fn-line);
-  border-radius: var(--fn-radius);
-  background: var(--fn-surface-2);
-}
-.fn .pdp-model-option[aria-pressed='true'] {
-  border-color: var(--fn-accent);
-  box-shadow: 0 0 0 1px var(--fn-accent);
-}
-.fn .pdp-model-option span {
-  color: var(--fn-muted);
-  font-size: 0.85rem;
-}
 
 /* ---------------- m1 · Escritório por Documentos ---------------- */
 .fn[data-model='m1'] .fn-side {

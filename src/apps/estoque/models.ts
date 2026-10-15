@@ -1,10 +1,30 @@
 import type { ModelOption } from '@/core/ui/ModelPicker';
 
 export const ESTOQUE_MODELS: ModelOption[] = [
-  { id: 'm1', name: 'Controle Industrial', description: 'Painel de chão de fábrica: saldos com medidores, sinais de alerta e grafite com amarelo.' },
-  { id: 'm2', name: 'Lotes e Validade', description: 'Tudo organizado pelo vencimento: faixas de risco e lotes em fita colorida.' },
-  { id: 'm3', name: 'Conferência', description: 'Prancheta de inventário: listas de checagem, contagens grandes e foco na divergência.' },
-  { id: 'm4', name: 'Solicitações e Movimentos', description: 'Fluxo de pedidos dos setores e linha do tempo das movimentações.' },
+  {
+    id: 'm1',
+    name: 'Controle de Estoque Industrial',
+    description: 'Indicadores com ícones e tabela de materiais com nível, mínimo e situação.',
+    thumb: { bg: '#f3f5f4', surface: '#ffffff', ink: '#17201c', accent: '#2f7d5b', nav: 'side', body: 'table' },
+  },
+  {
+    id: 'm2',
+    name: 'Lotes e Validade',
+    description: 'Tudo pelo vencimento: filtros laterais, faixas de risco e lotes por data.',
+    thumb: { bg: '#fbfaf7', surface: '#ffffff', ink: '#262219', accent: '#d9480f', nav: 'top', body: 'table' },
+  },
+  {
+    id: 'm3',
+    name: 'Conferência e Inventário',
+    description: 'Tema escuro de prancheta, etapas da contagem e foco nas divergências.',
+    thumb: { bg: '#12171a', surface: '#1b2226', ink: '#e4ecef', accent: '#3fb68b', nav: 'sideDark', body: 'list', top: '#0d1113' },
+  },
+  {
+    id: 'm4',
+    name: 'Solicitações e Movimentações',
+    description: 'Pedidos dos setores, situação de cada um e linha do tempo do estoque.',
+    thumb: { bg: '#f1f5fb', surface: '#ffffff', ink: '#182233', accent: '#2563eb', nav: 'top', body: 'feed' },
+  },
 ];
 
 export const ESTOQUE_NAV = [

@@ -237,3 +237,53 @@ export async function pendingApprovalsCount(tenantId: string): Promise<number> {
   const items = await rpcRead<{ can_decide: boolean }[]>('approvals_list', { p_tenant: tenantId, p_module: null, p_only_actionable: true });
   return items.length;
 }
+
+export type DashboardExtras = {
+  team: { total: number; byRole: { name: string; count: number }[] };
+  activity: { id: number; at: string; actor: string; action: string; module: string | null }[];
+  approvals: { id: string; summary: string; requested_at: string; requester: string; amount_cents: number | null }[];
+};
+
+/** Dados complementares do painel: equipe por função, atividade recente e aprovações. */
+export async function loadDashboardExtras(tenantId: string): Promise<DashboardExtras> {
+  const supabase = await createServerSupabase();
+  const [members, roles, memberRoles, audit, approvals] = await Promise.all([
+    supabase.from('memberships').select('id, user_id, display_name, is_owner').eq('tenant_id', tenantId).eq('status', 'active'),
+    supabase.from('roles').select('id, name').eq('tenant_id', tenantId),
+    supabase.from('membership_roles').select('membership_id, role_id').eq('tenant_id', tenantId),
+    supabase.from('audit_log').select('id, at, actor_user_id, action, module').eq('tenant_id', tenantId).order('at', { ascending: false }).limit(7),
+    supabase.from('approval_requests').select('id, summary, requested_at, requested_by, amount_cents').eq('tenant_id', tenantId).eq('status', 'pending').order('requested_at', { ascending: false }).limit(5),
+  ]);
+  const people = members.data ?? [];
+  const names = new Map(people.map((m) => [m.user_id as string, m.display_name as string]));
+  const roleName = new Map((roles.data ?? []).map((r) => [r.id as string, r.name as string]));
+  const counts = new Map<string, number>();
+  const withRole = new Set<string>();
+  for (const mr of memberRoles.data ?? []) {
+    const name = roleName.get(mr.role_id as string);
+    if (!name) continue;
+    withRole.add(mr.membership_id as string);
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  const owners = people.filter((m) => m.is_owner).length;
+  if (owners) counts.set('Titular', owners);
+  const unassigned = people.filter((m) => !m.is_owner && !withRole.has(m.id as string)).length;
+  if (unassigned) counts.set('Sem função', unassigned);
+  return {
+    team: { total: people.length, byRole: [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count) },
+    activity: (audit.data ?? []).map((a) => ({
+      id: a.id as number,
+      at: a.at as string,
+      action: a.action as string,
+      module: a.module as string | null,
+      actor: a.actor_user_id ? (names.get(a.actor_user_id as string) ?? 'Usuário') : 'Cliente / sistema',
+    })),
+    approvals: (approvals.data ?? []).map((a) => ({
+      id: a.id as string,
+      summary: a.summary as string,
+      requested_at: a.requested_at as string,
+      amount_cents: (a.amount_cents as number | null) ?? null,
+      requester: names.get(a.requested_by as string) ?? 'Colaborador',
+    })),
+  };
+}

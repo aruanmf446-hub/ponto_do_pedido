@@ -11,7 +11,7 @@ const BILLING = process.env.SEED_BILLING_URL ?? 'http://127.0.0.1:55321';
 const KEY = process.env.SEED_KEY ?? 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const e2e = process.argv.includes('--e2e');
-const slug = args[0] ?? `famiglia${Date.now().toString(36).slice(-5)}`;
+const slug = args[0] ?? `aurora${Date.now().toString(36).slice(-5)}`;
 const password = 'Senha12345!';
 const ownerEmail = `dono+${slug}@teste.local`;
 
@@ -27,14 +27,14 @@ async function call(url, token, body) {
 }
 
 const supabase = createClient(APP, KEY, { auth: { persistSession: false } });
-const { data: signUp, error } = await supabase.auth.signUp({ email: ownerEmail, password, options: { data: { full_name: 'Marco Rossi' } } });
+const { data: signUp, error } = await supabase.auth.signUp({ email: ownerEmail, password, options: { data: { full_name: 'Helena Prado' } } });
 if (error) throw error;
 const token = signUp.session.access_token;
 
 await call(`${BILLING}/functions/v1/billing`, token, {
   action: 'subscribe',
   plan_code: 'diamond',
-  restaurant_name: 'Famiglia da Pizza',
+  restaurant_name: 'Bistrô Aurora',
   restaurant_slug: slug,
   accept_terms: true,
   idempotency_key: slug,
@@ -50,24 +50,38 @@ async function rpc(fn, args) {
 }
 
 const salao = await rpc('sector_save', { p_tenant: tenant, p_id: null, p_name: 'Salão Principal', p_kind: 'salao', p_active: true, p_position: 0 });
-await rpc('sector_save', { p_tenant: tenant, p_id: null, p_name: 'Varanda', p_kind: 'salao', p_active: true, p_position: 1 });
-for (let i = 1; i <= 8; i += 1) {
-  await rpc('table_save', { p_tenant: tenant, p_id: null, p_label: String(i).padStart(2, '0'), p_sector: salao, p_seats: 4, p_active: true, p_position: i });
+const varanda = await rpc('sector_save', { p_tenant: tenant, p_id: null, p_name: 'Varanda', p_kind: 'salao', p_active: true, p_position: 1 });
+for (let i = 1; i <= 12; i += 1) {
+  await rpc('table_save', {
+    p_tenant: tenant, p_id: null, p_label: String(i).padStart(2, '0'), p_sector: i <= 8 ? salao : varanda,
+    p_seats: i % 3 === 0 ? 6 : i % 2 === 0 ? 2 : 4, p_active: true, p_position: i,
+  });
 }
 const cats = {};
-for (const [i, name] of ['Pizzas', 'Entradas', 'Massas', 'Bebidas', 'Sobremesas'].entries()) {
+const categoryNames = ['Pratos principais', 'Lanches', 'Saladas', 'Massas', 'Porções', 'Bebidas', 'Cafés', 'Sobremesas'];
+for (const [i, name] of categoryNames.entries()) {
   cats[name] = await rpc('category_save', { p_tenant: tenant, p_id: null, p_name: name, p_description: '', p_position: i, p_active: true });
 }
 const products = [
-  ['Pizzas', 'Margherita', 'Molho de tomate, mussarela e manjericão', 4990],
-  ['Pizzas', 'Calabresa', 'Calabresa fatiada, cebola e azeitonas', 4790],
-  ['Pizzas', 'Portuguesa', 'Presunto, ovos, cebola e ervilha', 5290],
-  ['Pizzas', 'Quatro Queijos', 'Mussarela, provolone, parmesão e gorgonzola', 5590],
-  ['Entradas', 'Bruschetta', 'Pão italiano, tomate e manjericão', 2490],
-  ['Massas', 'Spaghetti ao Sugo', 'Molho de tomate artesanal', 3890],
-  ['Bebidas', 'Refrigerante Lata', '350 ml', 700],
-  ['Bebidas', 'Suco Natural', 'Laranja ou limão', 1100],
-  ['Sobremesas', 'Tiramisù', 'Receita da casa', 2200],
+  ['Pratos principais', 'Filé grelhado', 'Filé ao ponto, arroz de ervas e legumes salteados', 6890],
+  ['Pratos principais', 'Frango à parmegiana', 'Empanado, molho de tomate e queijo gratinado', 4790],
+  ['Pratos principais', 'Salmão com risoto', 'Salmão grelhado e risoto de limão-siciliano', 7490],
+  ['Pratos principais', 'Prato executivo do dia', 'Arroz, feijão, proteína do dia e salada', 3290],
+  ['Lanches', 'Burger da casa', 'Pão brioche, blend 180 g, queijo e cebola caramelizada', 3890],
+  ['Lanches', 'Sanduíche natural', 'Pão integral, frango, cenoura e requeijão', 2290],
+  ['Saladas', 'Salada Caesar', 'Alface romana, frango, croutons e parmesão', 3190],
+  ['Saladas', 'Bowl vegano', 'Grão-de-bico, quinoa, legumes assados e tahine', 3490],
+  ['Massas', 'Espaguete ao sugo', 'Molho de tomate artesanal e manjericão', 3890],
+  ['Massas', 'Lasanha à bolonhesa', 'Massa fresca, ragu e bechamel', 4290],
+  ['Porções', 'Batata frita rústica', 'Com alecrim e maionese da casa', 2490],
+  ['Porções', 'Pizza margherita individual', 'Tomate, mussarela e manjericão', 3990],
+  ['Bebidas', 'Suco natural', 'Laranja, limão ou abacaxi com hortelã', 1190],
+  ['Bebidas', 'Refrigerante lata', '350 ml', 700],
+  ['Bebidas', 'Água com gás', '500 ml', 600],
+  ['Cafés', 'Cappuccino', 'Espresso, leite vaporizado e canela', 1290],
+  ['Cafés', 'Espresso', 'Grãos especiais torrados na casa', 790],
+  ['Sobremesas', 'Torta de limão', 'Base crocante e merengue maçaricado', 1890],
+  ['Sobremesas', 'Brownie com sorvete', 'Chocolate meio amargo e creme', 2290],
 ];
 for (const [i, [cat, name, description, price]] of products.entries()) {
   await rpc('product_save', {
@@ -79,7 +93,7 @@ for (const [i, [kind, name]] of [['dinheiro', 'Dinheiro'], ['pix', 'Pix'], ['cre
   await rpc('payment_method_save', { p_tenant: tenant, p_id: null, p_kind: kind, p_name: name, p_active: true, p_channels: null, p_position: i });
 }
 await rpc('delivery_zone_save', { p_tenant: tenant, p_id: null, p_name: 'Centro', p_neighborhoods: ['Centro'], p_fee_cents: 800, p_min_order_cents: 3000, p_eta_minutes: 45, p_active: true });
-await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { delivery_enabled: true, local_order_mode: 'ambos', local_order_confirmation: 'atendente', service_fee_percent: 10, kitchen_stages: ['Montagem', 'Forno', 'Finalização'] } });
+await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { delivery_enabled: true, local_order_mode: 'ambos', local_order_confirmation: 'atendente', service_fee_percent: 10, kitchen_stages: ['Preparo', 'Montagem', 'Finalização'] } });
 
 // Estoque e suprimentos de demonstração
 const deposito = await rpc('stock_location_save', { p_tenant: tenant, p_id: null, p_name: 'Depósito seco', p_kind: 'deposito', p_parent: null, p_active: true });

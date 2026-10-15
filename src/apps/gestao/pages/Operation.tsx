@@ -187,7 +187,7 @@ export function OperationPage({
             </label>
             <label className="gs-field">
               Etapas de preparo
-              <input name="stages" defaultValue={stages.join(', ')} placeholder="Montagem, Forno, Finalização" />
+              <input name="stages" defaultValue={stages.join(', ')} placeholder="Preparo, Montagem, Finalização" />
               <small>Separe por vírgulas. Usadas pela tela de estações da Cozinha.</small>
             </label>
             <button type="submit" className="gs-btn gs-btn--primary" disabled={action.pending}>

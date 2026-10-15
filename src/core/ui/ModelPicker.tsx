@@ -1,12 +1,14 @@
 'use client';
 
+import { LayoutTemplate } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { saveUiPreference } from '@/core/actions';
 import type { ColorScheme, InternalApp, VisualModel } from '@/core/apps';
 import { Dialog } from '@/core/ui/Dialog';
+import { TemplateGallery, type TemplateOption } from '@/core/ui/TemplateGallery';
 
-export type ModelOption = { id: VisualModel; name: string; description: string };
+export type ModelOption = TemplateOption;
 
 /**
  * Escolha do modelo visual do aplicativo (salvo por usuário, restaurante e
@@ -18,7 +20,6 @@ export function ModelPicker({
   current,
   scheme,
   options,
-  label = 'Aparência',
 }: {
   tenantId: string;
   app: InternalApp;
@@ -31,6 +32,8 @@ export function ModelPicker({
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const index = Math.max(0, options.findIndex((o) => o.id === current));
+  const active = options[index];
 
   const save = (model: VisualModel, nextScheme: ColorScheme) =>
     start(async () => {
@@ -44,28 +47,18 @@ export function ModelPicker({
 
   return (
     <>
-      <button type="button" className="pdp-model-trigger" onClick={() => setOpen(true)} aria-haspopup="dialog">
-        {label}
+      <button type="button" className="pdp-model-trigger" onClick={() => setOpen(true)} aria-haspopup="dialog" title="Trocar o modelo visual">
+        <LayoutTemplate size={16} aria-hidden="true" />
+        <span className="pdp-model-trigger-label">
+          Modelo {index + 1}/{options.length}
+          {active ? <span className="pdp-model-trigger-name"> · {active.name}</span> : null}
+        </span>
       </button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="Modelo visual" className="pdp-model-dialog">
-        <p className="pdp-model-hint">A escolha vale só para você, neste restaurante e neste aplicativo.</p>
-        <ul className="pdp-model-list" role="list">
-          {options.map((option) => (
-            <li key={option.id}>
-              <button
-                type="button"
-                className="pdp-model-option"
-                data-model-option={option.id}
-                aria-pressed={option.id === current}
-                disabled={pending}
-                onClick={() => save(option.id, scheme)}
-              >
-                <strong>{option.name}</strong>
-                <span>{option.description}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+      <Dialog open={open} onClose={() => setOpen(false)} title="Escolha o modelo deste aplicativo" className="pdp-model-dialog">
+        <p className="pdp-model-hint">
+          {options.length} modelos com organização e visual próprios. A escolha vale só para você, neste restaurante e neste aplicativo.
+        </p>
+        <TemplateGallery options={options} current={current} disabled={pending} onSelect={(id) => save(id, scheme)} />
         <fieldset className="pdp-scheme">
           <legend>Tema</legend>
           {(['system', 'light', 'dark'] as const).map((value) => (

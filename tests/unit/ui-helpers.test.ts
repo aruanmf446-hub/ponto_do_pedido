@@ -24,3 +24,17 @@ describe('auxiliares de validade e status', () => {
     expect(statusTone('open')).toBe('warn');
   });
 });
+
+describe('ilustração por tipo de produto', async () => {
+  const { foodKind } = await import('@/core/ui/FoodArt');
+  it('reconhece tipos comuns sem confundir palavras parecidas', () => {
+    expect(foodKind('Lasanha à bolonhesa')).toBe('massa');
+    expect(foodKind('Bolo de cenoura')).toBe('sobremesa');
+    expect(foodKind('Cappuccino')).toBe('cafe');
+    expect(foodKind('Suco natural')).toBe('bebida');
+    expect(foodKind('Burger da casa')).toBe('lanche');
+    expect(foodKind('Hot roll')).toBe('japonesa');
+    expect(foodKind('Prato do dia')).toBe('prato');
+    expect(foodKind('Qualquer coisa', 'Bebidas')).toBe('bebida');
+  });
+});

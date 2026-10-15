@@ -1,5 +1,6 @@
 import { APP_LABELS, APP_PATHS, type InternalApp } from '@/core/apps';
 import { signOut } from '@/core/actions';
+import { initials } from '@/core/storage';
 
 /**
  * Acesso às demais áreas autorizadas do usuário (sem tela de seleção após o
@@ -10,6 +11,7 @@ export function AppSwitcher({
   apps,
   current,
   userName,
+  role,
   extras = [],
   className,
 }: {
@@ -17,6 +19,7 @@ export function AppSwitcher({
   apps: InternalApp[];
   current: InternalApp;
   userName: string;
+  role?: string | null;
   extras?: { href: string; label: string }[];
   className?: string;
 }) {
@@ -24,7 +27,13 @@ export function AppSwitcher({
   return (
     <details className={['pdp-switcher', className].filter(Boolean).join(' ')}>
       <summary className="pdp-switcher-user" title={userName}>
-        {userName}
+        <span className="pdp-avatar" aria-hidden="true">
+          {initials(userName)}
+        </span>
+        <span className="pdp-switcher-who">
+          <span className="pdp-switcher-name">{userName}</span>
+          {role ? <span className="pdp-switcher-role">{role}</span> : null}
+        </span>
       </summary>
       <div className="pdp-switcher-menu">
         {others.length + extras.length > 0 ? (

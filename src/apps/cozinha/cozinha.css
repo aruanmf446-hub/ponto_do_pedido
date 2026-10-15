@@ -410,15 +410,6 @@
   background: var(--kz-accent);
   color: #fff;
 }
-.kz .pdp-model-option {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid var(--kz-line);
-  background: var(--kz-surface-2);
-}
-.kz .pdp-model-option[aria-pressed='true'] {
-  border-color: var(--kz-accent);
-}
 
 /* ---------- M2 · Fila de Produção (ticket rail) ---------- */
 .kz[data-model='m2'] {

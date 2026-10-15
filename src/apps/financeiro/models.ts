@@ -1,10 +1,30 @@
 import type { ModelOption } from '@/core/ui/ModelPicker';
 
 export const FINANCEIRO_MODELS: ModelOption[] = [
-  { id: 'm1', name: 'Escritório por Documentos', description: 'Pastas por área, papel claro e tipografia editorial; tudo parte do documento.' },
-  { id: 'm2', name: 'Console de Aprovações', description: 'Fila de decisões em primeiro plano, tema escuro e alto contraste.' },
-  { id: 'm3', name: 'Livro-Razão', description: 'Tabelas densas com pautas, números alinhados e totais em destaque.' },
-  { id: 'm4', name: 'Agenda Financeira', description: 'Vencimentos em linha do tempo, cartões arredondados e navegação por ícones.' },
+  {
+    id: 'm1',
+    name: 'Painel Financeiro Executivo',
+    description: 'Saldo, a pagar e a receber em destaque, gráfico do período e pendências.',
+    thumb: { bg: '#f5f3ee', surface: '#ffffff', ink: '#1f1c17', accent: '#8a5a2b', nav: 'sideDark', body: 'cards', top: '#2b241c' },
+  },
+  {
+    id: 'm2',
+    name: 'Agenda Financeira',
+    description: 'Vencimentos em linha do tempo, cartões arredondados e navegação por ícones.',
+    thumb: { bg: '#f3f1fb', surface: '#ffffff', ink: '#241f3a', accent: '#6d4ce0', nav: 'rail', body: 'list', top: '#241f3a' },
+  },
+  {
+    id: 'm3',
+    name: 'Escritório Contábil por Documentos',
+    description: 'Cada lançamento parte do documento: pastas, notas, contratos e comprovantes.',
+    thumb: { bg: '#f4f6f4', surface: '#ffffff', ink: '#14281c', accent: '#1d6b40', nav: 'side', body: 'table' },
+  },
+  {
+    id: 'm4',
+    name: 'Console de Aprovações e Pagamentos',
+    description: 'Fila de decisões com ações rápidas de aprovar, recusar e pagar.',
+    thumb: { bg: '#f2f5f8', surface: '#ffffff', ink: '#0e1116', accent: '#0f8a5f', nav: 'side', body: 'list' },
+  },
 ];
 
 export const FINANCEIRO_NAV = [

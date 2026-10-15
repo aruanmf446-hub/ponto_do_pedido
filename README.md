@@ -21,9 +21,9 @@ Cloudflare (Workers via OpenNext).
 ```bash
 npm ci
 node scripts/local-supabase.mjs start      # Supabase locais: pontodopedido (5432x) e assinaturas (5532x)
-node scripts/seed-local.mjs famiglia --e2e # restaurante de demonstração (senha Senha12345!)
+node scripts/seed-local.mjs aurora --e2e # restaurante de demonstração (senha Senha12345!)
 cp .env.example .env.local                 # preencha com os valores locais exibidos pelo script
-npm run dev                                # http://localhost:3000/r/famiglia (PDP_PATH_TENANTS=1)
+npm run dev                                # http://localhost:3000/r/aurora (PDP_PATH_TENANTS=1)
 ```
 
 ## Qualidade

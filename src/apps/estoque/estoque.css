@@ -783,20 +783,6 @@
 .es .pdp-msg--error {
   color: var(--es-danger);
 }
-.es .pdp-model-option {
-  padding: 12px 14px;
-  border: 1px solid var(--es-line);
-  border-radius: 8px;
-  background: var(--es-surface-2);
-}
-.es .pdp-model-option[aria-pressed='true'] {
-  border-color: var(--es-accent);
-  box-shadow: 0 0 0 1px var(--es-accent);
-}
-.es .pdp-model-option span {
-  color: var(--es-muted);
-  font-size: 0.85rem;
-}
 
 /* ---------------- m1 · Controle Industrial ---------------- */
 .es[data-model='m1'] {

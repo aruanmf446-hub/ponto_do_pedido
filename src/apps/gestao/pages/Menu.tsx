@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { formatCents, parseCents } from '@/core/money';
 import { browserSupabase } from '@/core/supabase/browser';
-import { mediaUrl } from '@/core/storage';
+import { ProductImage } from '@/core/ui/ProductImage';
 import { ApprovalDialog } from '@/core/ui/ApprovalDialog';
 import { Dialog } from '@/core/ui/Dialog';
 import { useTenant } from '@/core/ui/TenantProvider';
@@ -61,7 +61,9 @@ export function MenuPage({ categories, products, sectors }: { categories: Catego
       <div className="gs-grid">
         {shown.map((p) => (
           <article key={p.id} className="gs-card gs-product">
-            {p.image_path ? <img className="gs-thumb" src={mediaUrl(p.image_path) ?? ''} alt="" /> : <span className="gs-thumb" aria-hidden="true" />}
+            <span className="gs-thumb">
+              <ProductImage name={p.name} path={p.image_path} category={categories.find((c) => c.id === p.category_id)?.name} />
+            </span>
             <div>
               <h2 className="gs-h2">{p.name}</h2>
               <p className="gs-meta" style={{ margin: '2px 0' }}>
@@ -156,7 +158,9 @@ function ProductEditor({
         }}
       >
         <div className="gs-row">
-          {image ? <img className="gs-thumb" src={mediaUrl(image) ?? ''} alt="Foto do produto" /> : <span className="gs-thumb" aria-hidden="true" />}
+          <span className="gs-thumb">
+            <ProductImage name={product?.name || 'Produto'} path={image} />
+          </span>
           <label className="gs-btn gs-btn--small">
             {uploading ? 'Enviando…' : image ? 'Trocar foto' : 'Enviar foto'}
             <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && void upload(e.target.files[0])} />

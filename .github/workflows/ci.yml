@@ -55,7 +55,7 @@ jobs:
       - name: Testes de banco
         run: npm run test:db
       - name: Restaurante de demonstração
-        run: node scripts/seed-local.mjs famiglia --e2e
+        run: node scripts/seed-local.mjs aurora --e2e
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - name: E2E

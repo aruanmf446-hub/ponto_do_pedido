@@ -693,15 +693,6 @@
   border-radius: 10px;
   padding: 8px;
 }
-.at .pdp-model-option {
-  padding: 12px;
-  border: 1px solid var(--at-line);
-  border-radius: 12px;
-  background: var(--at-surface-2);
-}
-.at .pdp-model-option[aria-pressed='true'] {
-  border-color: var(--at-accent);
-}
 
 /* ---------- M1 · Menu Online ---------- */
 .at[data-model='m1'] .at-ws-grid {
