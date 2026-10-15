@@ -224,110 +224,100 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
     );
   }
 
-  // ---------- m1 · Padrão: produto em movimento, texto de resultado ----------
+  // ---------- m1 · Padrão: comandas de uma sexta à noite ----------
   return (
     <div className="pl-landing" data-template="m1">
       <section className="pl-section pl-m1-hero" aria-labelledby="hero-title">
         <div className="pl-m1-hero-copy">
-          <span className="pl-m1-pill">Operação do restaurante em tempo real</span>
-          <h1 id="hero-title">O pedido sai da mesa. A conta fecha sem erro.</h1>
-          <p>
-            Garçom, cozinha e caixa trabalham no mesmo pedido. Você acompanha o salão inteiro do celular, sem voltar ao balcão.
-          </p>
+          <h1 id="hero-title">Sexta, 20h. Salão cheio. Nenhum pedido perdido.</h1>
+          <p>Cada comanda segue da mesa para a cozinha e volta como conta fechada. Você acompanha tudo do celular.</p>
           <Cta />
         </div>
-        <div className="pl-m1-mock" aria-hidden="true">
-          <div className="pl-m1-ticket">
+        <div className="pl-m1-sheets" aria-hidden="true">
+          <div className="pl-m1-sheet pl-m1-sheet--caixa">
+            <h3>Via do caixa</h3>
+            <p>Total da mesa 12</p>
+            <p>Dividir em 2</p>
+          </div>
+          <div className="pl-m1-sheet pl-m1-sheet--cozinha">
+            <h3>Via da cozinha</h3>
+            <ul>
+              <li>1× Risoto de cogumelos</li>
+              <li>2× Caipirinha</li>
+            </ul>
+          </div>
+          <div className="pl-m1-sheet pl-m1-sheet--mesa">
             <header>
               <strong>Mesa 12</strong>
-              <span>2 pessoas · 19:42</span>
+              <time>19:42</time>
             </header>
             <ul>
               <li>
-                <span>1× Risoto de cogumelos</span>
-                <b className="pl-m1-s-ok">Na cozinha</b>
+                1× Risoto de cogumelos <b>Na cozinha</b>
               </li>
               <li>
-                <span>2× Caipirinha</span>
-                <b className="pl-m1-s-done">Servido</b>
+                2× Caipirinha <b>Servido</b>
               </li>
               <li>
-                <span>1× Sobremesa do dia</span>
-                <b className="pl-m1-s-wait">Aguardando</b>
+                1× Sobremesa do dia <b>Aguardando</b>
               </li>
             </ul>
-          </div>
-          <div className="pl-m1-board">
-            <div>
-              <h4>Novo</h4>
-              <i>Mesa 7</i>
-              <i>Mesa 3</i>
-            </div>
-            <div>
-              <h4>Preparo</h4>
-              <i>Mesa 12</i>
-            </div>
-            <div>
-              <h4>Pronto</h4>
-              <i>Mesa 9</i>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="pl-section pl-m1-bento" aria-labelledby="bento-title">
-        <span className="pl-m1-label">O que muda no seu turno</span>
-        <h2 id="bento-title">Menos ida e volta. Menos pergunta na cozinha.</h2>
-        <div className="pl-m1-grid">
-          <article className="pl-m1-card pl-m1-card--wide">
-            <span>Garçom</span>
-            <h3>O pedido já está rodando quando você sai da mesa.</h3>
-            <p>A cozinha recebe no mesmo instante. Você sabe quando cada prato sai, sem olhar para o balcão.</p>
-          </article>
-          <article className="pl-m1-card">
-            <span>Cozinha</span>
-            <h3>Fila na ordem certa.</h3>
-            <p>Cada pedido aparece uma vez, na sequência que a casa definiu.</p>
-          </article>
-          <article className="pl-m1-card">
-            <span>Caixa</span>
-            <h3>Conta fechada num toque.</h3>
-            <p>Divisão e troco calculados. O fechamento do turno sai pronto.</p>
-          </article>
-          <article className="pl-m1-card pl-m1-card--wide">
-            <span>Dono</span>
-            <h3>O dia aparece enquanto acontece.</h3>
-            <p>Vendas, estoque baixo e pedidos esperando sua decisão, tudo na tela de hoje.</p>
-          </article>
-        </div>
+      <section className="pl-section pl-m1-night" aria-labelledby="night-title">
+        <h2 id="night-title">A noite, do ponto de vista da casa.</h2>
+        <ol className="pl-m1-rows">
+          <li>
+            <time>19:42</time>
+            <p>O garçom anota na mesa. A cozinha recebe no mesmo instante.</p>
+          </li>
+          <li>
+            <time>20:05</time>
+            <p>O prato sai. O garçom já sabe, sem perguntar no balcão.</p>
+          </li>
+          <li>
+            <time>21:30</time>
+            <p>A conta sai na mesa, com a divisão feita.</p>
+          </li>
+          <li>
+            <time>22:10</time>
+            <p>Você fecha o dia e vê o que vendeu, o que acabou e o que espera a sua decisão.</p>
+          </li>
+        </ol>
       </section>
 
       <section className="pl-section pl-m1-trust" aria-labelledby="trust-title">
         <div className="pl-m1-dark">
-          <h2 id="trust-title">Quem faz, pode. Quem não pode, pede aprovação.</h2>
+          <h2 id="trust-title">Quem não pode decidir, pede. Quem pode, decide.</h2>
           <p>
-            Cada função enxerga só o que precisa. Desconto acima do limite e cancelamento depois do preparo chegam a quem decide.
-            Nada some sem registro.
+            Cada função vê só o que usa. Pedidos de exceção, como desconto acima do limite ou cancelamento depois do preparo,
+            param em quem pode liberar. Tudo fica registrado.
           </p>
         </div>
       </section>
 
       <section className="pl-section pl-m1-guest" aria-labelledby="guest-title">
-        <span className="pl-m1-label">Para quem come</span>
-        <h2 id="guest-title">O cardápio é da sua casa. O cliente pede sozinho.</h2>
-        <p>
-          QR na mesa ou link do delivery, com as suas fotos e a sua identidade. Sua equipe para de repetir o cardápio em voz alta.
-        </p>
+        <h2 id="guest-title">O cliente lê o cardápio no celular, com a cara da sua casa.</h2>
+        <p>QR na mesa ou link no delivery. Suas fotos, seus preços, sua ordem.</p>
       </section>
 
       {plansSection}
 
       <section className="pl-section pl-m1-final" aria-labelledby="final-title">
-        <h2 id="final-title">Abra a próxima sexta com tudo no lugar.</h2>
+        <h2 id="final-title">Próxima sexta, mesma hora.</h2>
         <Cta />
-        <p className="pl-m1-modules">
-          Gestão · Atendimento · Cozinha · Caixa · Cardápio Digital · Delivery · Financeiro · Estoque
-        </p>
+        <ul className="pl-m1-modules" aria-label="Módulos incluídos">
+          <li>Gestão</li>
+          <li>Atendimento</li>
+          <li>Cozinha</li>
+          <li>Caixa</li>
+          <li>Cardápio Digital</li>
+          <li>Delivery</li>
+          <li>Financeiro</li>
+          <li>Estoque</li>
+        </ul>
       </section>
     </div>
   );
