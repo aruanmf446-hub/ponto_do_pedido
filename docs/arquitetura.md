@@ -3,7 +3,7 @@
 ## Visão geral
 
 ```
-Navegador ──► Cloudflare Worker (Next.js 16 via OpenNext)
+Navegador ──► Vercel (Next.js 16, produção a partir da branch main)
                  │  src/proxy.ts: hostname → restaurante, renova sessão
                  │  Server Components / Server Actions (somente chave publicável + sessão do usuário)
                  ▼

@@ -1,7 +1,7 @@
 # Ponto do Pedido — regras permanentes para agentes
 
 SaaS de gestão para restaurantes: **um projeto Next.js (App Router)** com
-aplicativos independentes, dois projetos Supabase e deploy na Cloudflare.
+aplicativos independentes, dois projetos Supabase e deploy na Vercel (produção).
 Leia também `AGENTS.md` (regras do Next.js 16 instaladas pelo framework).
 
 ## Fontes da verdade

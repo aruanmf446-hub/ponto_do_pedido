@@ -2,7 +2,7 @@
 
 SaaS de gestão para restaurantes, com aplicativos independentes em um único projeto
 Next.js 16 (App Router, TypeScript estrito), dois projetos Supabase e deploy na
-Cloudflare (Workers via OpenNext).
+Vercel (produção a partir da branch `main`).
 
 | Área | Rota | Para quem |
 | --- | --- | --- |
@@ -33,22 +33,18 @@ npm run lint && npm run typecheck   # ESLint (fronteiras entre apps) e TypeScrip
 npm test                            # unitários (Vitest)
 npm run test:db                     # RLS, permissões, fluxos e concorrência no Postgres local
 npm run test:e2e                    # Playwright contra o app em execução
-npm run cf:build                    # build do Worker Cloudflare
 ```
 
 ## Pendências para publicar
 
 Itens que dependem do titular (não podem ser feitos pelo código):
 
-- [ ] **Publicação na Cloudflare** — no GitHub (Settings → Secrets and variables → Actions):
-  - segredos `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`. O token precisa de
-    `Account → Workers Scripts → Edit` e `Account → Account Settings → Read`, limitado à conta.
-    O job `deploy` roda `npm run cf:preflight` antes do build e falha com a causa se o token estiver errado;
-  - variáveis públicas `PDP_APP_SUPABASE_URL`, `PDP_APP_SUPABASE_PUBLISHABLE_KEY`,
-    `PDP_BILLING_SUPABASE_URL`, `PDP_BILLING_SUPABASE_PUBLISHABLE_KEY` (e opcionais `PDP_ROOT_DOMAIN`
-    e `PDP_SITE_TEMPLATE` — modelo do site institucional, `m1` a `m4`; veja as prévias em `/modelos`).
-  - Na Cloudflare, a zona `pontodopedido.com` precisa de um registro DNS curinga `*.pontodopedido.com`
-    (com proxy ativo), além do domínio raiz.
+- [ ] **Publicação na Vercel** — no projeto `ponto_do_pedido` (Settings → Environment Variables),
+  variáveis públicas `NEXT_PUBLIC_*` com URL e chave publicável de cada Supabase (app e assinaturas),
+  e `NEXT_PUBLIC_PDP_ROOT_DOMAIN` / `NEXT_PUBLIC_PDP_SITE_TEMPLATE` se forem usadas. Nunca colocar
+  `service_role` ou chave secreta na Vercel como variável pública.
+- [ ] **Domínio** — `pontodopedido.com` e o curinga `*.pontodopedido.com` apontados para a Vercel,
+  para os subdomínios dos restaurantes funcionarem.
 - [ ] **Auth do Supabase** (projeto pontodopedido) — configurar a Site URL (`https://pontodopedido.com`)
   e as Redirect URLs (`https://pontodopedido.com/**`, `https://*.pontodopedido.com/**`) e decidir a
   política de confirmação de e-mail (e SMTP próprio, se for exigir confirmação).
@@ -63,6 +59,6 @@ Itens que dependem do titular (não podem ser feitos pelo código):
 - [Supabase: projetos, tabelas, RLS e funções](docs/supabase.md) · [estado remoto](docs/supabase-remoto.md)
 - [Autenticação, permissões e aprovações](docs/permissoes.md)
 - [Modelos visuais](docs/modelos-visuais.md)
-- [Deploy na Cloudflare](docs/deploy.md)
+- [Deploy na Vercel](docs/deploy.md)
 - Aplicativos: [docs/apps](docs/apps)
 - Regras permanentes para agentes: [CLAUDE.md](CLAUDE.md)

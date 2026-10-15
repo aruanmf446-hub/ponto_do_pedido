@@ -36,8 +36,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - name: Build do Worker Cloudflare (inclui next build)
-        run: npm run cf:build
+      - name: Build de produção (next build)
+        run: npm run build
 
   database-e2e:
     name: Banco (RLS, permissões, fluxos) e E2E
