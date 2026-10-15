@@ -586,3 +586,55 @@ describe('delivery', () => {
     );
   });
 });
+
+describe('atendimento encaminha a conta ao caixa', () => {
+  it('garçom sem permissão de receber encaminha a comanda; só o caixa recebe', async () => {
+    const owner = await createUser('Titular Encaminhamento');
+    const { tenantId: tenant } = await createTenant(owner);
+    const s = await seedOperation(tenant, owner);
+    const garcom = await addMember(tenant, owner, 'Garçom Encaminha', ['Atendente'], 'atendimento');
+    const operador = await addMember(tenant, owner, 'Operador Encaminha', ['Caixa'], 'caixa');
+    await q(as(operador), 'select public.cash_session_open($1, 10000, $2)', [tenant, key()]);
+
+    const tab = await val<{ id: string; forwarded_to_cashier_at: string | null }>(
+      as(garcom),
+      'select public.tab_open($1, $2, null, 2::smallint, $3)',
+      [tenant, s.table2, key()],
+    );
+    await q(as(garcom), 'select public.order_create($1, $2, $3, null, $4)', [
+      tenant,
+      tab.id,
+      JSON.stringify([{ product_id: s.pizza, quantity: 1 }]),
+      key(),
+    ]);
+
+    // Garçom pede a conta encaminhando ao caixa
+    const requested = await val<{ forwarded_to_cashier_at: string | null }>(
+      as(garcom),
+      'select public.tab_request_bill($1, $2, true)',
+      [tenant, tab.id],
+    );
+    expect(requested.forwarded_to_cashier_at).not.toBeNull();
+
+    // Garçom não recebe: a cobrança é do caixa
+    expect(
+      await errorCode(() =>
+        q(as(garcom), `select public.payment_register($1, $2, $3, 1000, null, null, 'atendimento', $4)`, [
+          tenant,
+          tab.id,
+          s.pix,
+          key(),
+        ]),
+      ),
+    ).toBe('FORBIDDEN');
+
+    // Caixa recebe o saldo e a comanda é quitada
+    await q(as(operador), `select public.payment_register($1, $2, $3, 4990, null, null, 'caixa', $4)`, [tenant, tab.id, s.pix, key()]);
+    const paid = await val<{ status: string; paid_cents: number; total_cents: number }>(
+      service,
+      'select status, paid_cents, total_cents from public.tabs where id = $1',
+      [tab.id],
+    );
+    expect(paid.paid_cents).toBe(paid.total_cents);
+  });
+});
