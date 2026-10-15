@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon, type IconName } from '@/core/ui/Icon';
 
 export function PageHead({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
@@ -26,11 +27,17 @@ export function Panel({ title, children, actions, className }: { title?: string;
   );
 }
 
-export function Stat({ label, value, tone }: { label: string; value: ReactNode; tone?: 'ok' | 'warn' | 'danger' }) {
+export function Stat({ label, value, tone, icon, hint }: { label: string; value: ReactNode; tone?: 'ok' | 'warn' | 'danger'; icon?: IconName; hint?: string }) {
   return (
     <div className="fn-stat" data-tone={tone}>
+      {icon ? (
+        <span className="fn-stat-icon">
+          <Icon name={icon} size={20} />
+        </span>
+      ) : null}
       <span className="fn-stat-label">{label}</span>
       <span className="fn-stat-value">{value}</span>
+      {hint ? <span className="fn-stat-hint">{hint}</span> : null}
     </div>
   );
 }
