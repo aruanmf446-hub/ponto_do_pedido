@@ -2,13 +2,16 @@
 // Cria um restaurante de demonstração nos Supabase LOCAIS seguindo o fluxo real:
 // cadastro do titular → contratação (assinaturas) → sincronização da licença →
 // cadastros via RPC → equipe via Edge Function `team`.
-// Uso: node scripts/seed-local.mjs [slug]
+// Uso: node scripts/seed-local.mjs [slug] [--e2e]
+// --e2e: dispensa a troca de senha do primeiro acesso (apenas no banco LOCAL de testes).
 import { createClient } from '@supabase/supabase-js';
 
 const APP = process.env.SEED_APP_URL ?? 'http://127.0.0.1:54321';
 const BILLING = process.env.SEED_BILLING_URL ?? 'http://127.0.0.1:55321';
 const KEY = process.env.SEED_KEY ?? 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
-const slug = process.argv[2] ?? `famiglia${Date.now().toString(36).slice(-5)}`;
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const e2e = process.argv.includes('--e2e');
+const slug = args[0] ?? `famiglia${Date.now().toString(36).slice(-5)}`;
 const password = 'Senha12345!';
 const ownerEmail = `dono+${slug}@teste.local`;
 
@@ -114,5 +117,12 @@ for (const [key, name, app, roleNames] of staff) {
     role_ids: roleNames.map(roleId), temporary_password: password,
   });
   accounts[key] = email;
+}
+if (e2e) {
+  const { default: pg } = await import('pg');
+  const db = new pg.Client({ connectionString: process.env.SEED_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' });
+  await db.connect();
+  await db.query('update public.memberships set must_change_password = false where tenant_id = $1', [tenant]);
+  await db.end();
 }
 console.log(JSON.stringify({ slug, tenant, password, accounts }, null, 2));

@@ -130,7 +130,8 @@ begin
         'caixa.acessar', 'caixa.abrir', 'caixa.receber', 'caixa.suprimento', 'caixa.fechar',
         'caixa.historico.visualizar']),
       ('Cozinha', 'Produção de pedidos.', array[
-        'cozinha.acessar', 'cozinha.preparo.executar', 'cozinha.item.indisponivel', 'cozinha.entrega.confirmar']),
+        'cozinha.acessar', 'cozinha.preparo.executar', 'cozinha.item.indisponivel', 'cozinha.entrega.confirmar',
+        'estoque.solicitacao.criar']),
       ('Administrativo', 'Compras, contas e documentos.', array[
         'financeiro.acessar', 'financeiro.compras.solicitar', 'financeiro.compras.cotar', 'financeiro.compras.comprar',
         'financeiro.fornecedores.gerir', 'financeiro.recebimento.conferir', 'financeiro.pagar.gerir',
