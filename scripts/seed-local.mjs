@@ -78,6 +78,24 @@ for (const [i, [kind, name]] of [['dinheiro', 'Dinheiro'], ['pix', 'Pix'], ['cre
 await rpc('delivery_zone_save', { p_tenant: tenant, p_id: null, p_name: 'Centro', p_neighborhoods: ['Centro'], p_fee_cents: 800, p_min_order_cents: 3000, p_eta_minutes: 45, p_active: true });
 await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { delivery_enabled: true, local_order_mode: 'ambos', local_order_confirmation: 'atendente', service_fee_percent: 10, kitchen_stages: ['Montagem', 'Forno', 'Finalização'] } });
 
+// Estoque e suprimentos de demonstração
+const deposito = await rpc('stock_location_save', { p_tenant: tenant, p_id: null, p_name: 'Depósito seco', p_kind: 'deposito', p_parent: null, p_active: true });
+const camara = await rpc('stock_location_save', { p_tenant: tenant, p_id: null, p_name: 'Câmara fria', p_kind: 'camara_fria', p_parent: null, p_active: true });
+const day = (n) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+const materiais = [
+  ['Farinha de trigo 00', 'Secos', 'kg', 20, 25, false, deposito, 40, null, 590],
+  ['Muçarela', 'Laticínios', 'kg', 8, 10, true, camara, 6, day(5), 3890],
+  ['Tomate pelado', 'Secos', 'kg', 10, 12, false, deposito, 18, day(120), 1250],
+  ['Manjericão', 'Hortifruti', 'un', 10, 20, true, camara, 12, day(-1), 300],
+  ['Azeite extravirgem', 'Secos', 'l', 4, 6, false, deposito, 9, day(300), 4200],
+];
+for (const [name, category, unit, min, reorder, perishable, location, qty, expires, cost] of materiais) {
+  const id = await rpc('material_save', { p_tenant: tenant, p_id: null, p_name: name, p_category: category, p_unit: unit, p_sku: null, p_min_qty: min, p_reorder_qty: reorder, p_perishable: perishable, p_active: true });
+  await rpc('stock_entry', { p_tenant: tenant, p_material: id, p_location: location, p_qty: qty, p_lot_code: `L${String(qty).padStart(3, '0')}`, p_expires_on: expires, p_unit_cost_cents: cost, p_reason: 'Saldo inicial', p_idempotency_key: `seed-${name}` });
+}
+await rpc('supplier_save', { p_tenant: tenant, p_id: null, p_name: 'Laticínios Serra Azul', p_document: null, p_contact_name: 'Carla', p_phone: null, p_email: null, p_notes: null, p_active: true });
+await rpc('supplier_save', { p_tenant: tenant, p_id: null, p_name: 'Empório Atacadista', p_document: null, p_contact_name: null, p_phone: null, p_email: null, p_notes: null, p_active: true });
+
 const { data: roles } = await supabase.from('roles').select('id, name').eq('tenant_id', tenant);
 const roleId = (n) => roles.find((r) => r.name === n).id;
 const staff = [

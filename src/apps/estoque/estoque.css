@@ -814,6 +814,12 @@
   --es-danger: #ff5a4f;
   --es-radius: 2px;
 }
+/* Cabeçalho sempre escuro (sinalização), em qualquer esquema de cor */
+.es[data-model='m1'] .es-head,
+.es[data-model='m1'] .es-navbar {
+  color: #eceff1;
+  --es-line: #444c54;
+}
 .es[data-model='m1'] .es-head {
   background: #1a1d20;
   border-bottom: 4px solid transparent;
@@ -833,6 +839,7 @@
 }
 .es[data-model='m1'] .es-nav a[aria-current='page'] {
   background: var(--es-surface);
+  color: var(--es-ink);
 }
 .es[data-model='m1'] .es-h1 {
   text-transform: uppercase;
