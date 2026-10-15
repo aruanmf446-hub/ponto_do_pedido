@@ -506,6 +506,24 @@ describe('cardápio local por QR Code', () => {
   });
 });
 
+describe('modelos públicos e configurações por área', () => {
+  it('o restaurante escolhe os modelos do Cardápio e do Delivery; áreas não se misturam', async () => {
+    const owner = await createUser('Titular Modelos');
+    const { tenantId: tenant, slug } = await createTenant(owner);
+    expect(await val(anon, 'select public.public_templates($1)', [slug])).toEqual({ cardapio: 'm1', delivery: 'm1' });
+    await q(as(owner), `select public.tenant_update_settings($1, '{"cardapio_template":"m3"}')`, [tenant]);
+    await q(as(owner), `select public.tenant_update_settings($1, '{"delivery_template":"m2"}')`, [tenant]);
+    expect(await val(anon, 'select public.public_templates($1)', [slug])).toEqual({ cardapio: 'm3', delivery: 'm2' });
+    expect(await errorCode(() => q(as(owner), `select public.tenant_update_settings($1, '{"cardapio_template":"m9"}')`, [tenant]))).toBe('INVALID');
+    expect(
+      await errorCode(() => q(as(owner), `select public.tenant_update_settings($1, '{"cardapio_template":"m2","delivery_enabled":true}')`, [tenant])),
+    ).toBe('INVALID');
+    expect(await errorCode(() => q(as(owner), `select public.tenant_update_settings($1, '{"service_fee_percent":10,"local_order_mode":"ambos"}')`, [tenant]))).toBe(
+      'INVALID',
+    );
+  });
+});
+
 describe('delivery', () => {
   it('pedido público → aceitação → produção → entrega → pagamento → encerramento', async () => {
     const owner = await createUser('Titular Delivery');
