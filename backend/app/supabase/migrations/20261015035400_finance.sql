@@ -303,11 +303,22 @@ create or replace function public.document_save(
 ) returns uuid language plpgsql security definer set search_path = '' as $$
 declare v_id uuid;
 begin
-  -- Comprovantes podem ser anexados por quem paga contas; demais documentos pelo Administrativo
+  -- Documentos em geral: Administrativo (processo interno). Comprovantes também
+  -- podem ser anexados por quem registra contas ou solicita reembolso.
   if private.evaluate_permission((select auth.uid()), p_tenant, 'financeiro.documentos.gerir') = 'direct' then
     perform private.authorize(p_tenant, 'financeiro.documentos.gerir');
+    if p_kind <> 'comprovante' then
+      perform private.require_internal(p_tenant, 'documentos', 'A gestão de documentos');
+    end if;
   else
-    perform private.authorize(p_tenant, 'financeiro.pagar.gerir');
+    if p_kind <> 'comprovante' then
+      perform private.fail('FORBIDDEN', 'Você pode anexar apenas comprovantes.');
+    end if;
+    if private.evaluate_permission((select auth.uid()), p_tenant, 'financeiro.pagar.gerir') = 'direct' then
+      perform private.authorize(p_tenant, 'financeiro.pagar.gerir');
+    else
+      perform private.authorize(p_tenant, 'financeiro.reembolsos.solicitar');
+    end if;
   end if;
   if p_storage_path is not null and split_part(p_storage_path, '/', 1) <> p_tenant::text then
     perform private.fail('INVALID', 'Arquivo inválido para este estabelecimento.');
