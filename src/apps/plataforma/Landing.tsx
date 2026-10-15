@@ -8,7 +8,16 @@ import { FLOW, MODULES, PRINCIPLES } from '@/apps/plataforma/content';
 import { MODULE_ICON, SHOWCASE } from '@/apps/plataforma/siteTemplates';
 
 /** Pratos de cozinhas diferentes: a plataforma serve a qualquer tipo de restaurante. */
-const DISHES = ['Prato executivo', 'Hambúrguer artesanal', 'Sushi variado', 'Salada da estação', 'Massa fresca', 'Café especial', 'Açaí na tigela', 'Sobremesa da casa'];
+const DISHES = [
+  'Prato executivo',
+  'Hambúrguer artesanal',
+  'Sushi variado',
+  'Salada da estação',
+  'Massa fresca',
+  'Café especial',
+  'Açaí na tigela',
+  'Sobremesa da casa',
+];
 
 function Cta() {
   return (
@@ -86,7 +95,10 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           <div className="pl-hero-copy">
             <p className="pl-eyebrow">Plataforma para restaurantes</p>
             <h1 id="hero-title">Um aplicativo para cada área. Uma operação só.</h1>
-            <p>Salão, cozinha, caixa, delivery, financeiro e estoque conectados em tempo real — cada equipe na sua tela, com a sua cara.</p>
+            <p>
+              Salão, cozinha, caixa, delivery, financeiro e estoque conectados em tempo real — cada equipe na sua tela, com a sua
+              cara.
+            </p>
             <Cta />
           </div>
           <div className="pl-showcase" aria-hidden="true">
@@ -125,7 +137,10 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           <h1 id="hero-title">
             Do salão à cozinha, <em>cada área no seu ritmo.</em>
           </h1>
-          <p>Bistrôs, hamburguerias, japoneses, cafés, cantinas e casas de açaí usam os mesmos produtos, mesas e preços em aplicativos feitos para cada função.</p>
+          <p>
+            Bistrôs, hamburguerias, japoneses, cafés, cantinas e casas de açaí usam os mesmos produtos, mesas e preços em
+            aplicativos feitos para cada função.
+          </p>
           <Cta />
         </section>
         <div className="pl-plates" aria-hidden="true">
@@ -142,7 +157,9 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
             <h2 id="apps-title" className="pl-h2">
               Oito aplicativos. Uma só casa.
             </h2>
-            <p className="pl-lead">Cada aplicativo tem navegação, tipografia e quatro modelos visuais próprios — escolhidos por quem usa.</p>
+            <p className="pl-lead">
+              Cada aplicativo tem navegação, tipografia e quatro modelos visuais próprios — escolhidos por quem usa.
+            </p>
           </div>
           <Modules numbered />
         </section>
@@ -172,7 +189,12 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
             <p className="pl-eyebrow">Ponto do Pedido</p>
             <h1 id="hero-title">Organize o restaurante inteiro em uma semana.</h1>
             <ul className="pl-checks">
-              {['Pedidos do salão direto para a cozinha', 'Caixa com conferência e fechamento', 'Cardápio por QR Code e delivery próprio', 'Permissões, aprovações e histórico completos'].map((t) => (
+              {[
+                'Pedidos do salão direto para a cozinha',
+                'Caixa com conferência e fechamento',
+                'Cardápio por QR Code e delivery próprio',
+                'Permissões, aprovações e histórico completos',
+              ].map((t) => (
                 <li key={t}>
                   <Icon name="check" size={18} /> {t}
                 </li>
@@ -206,14 +228,17 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
   return (
     <div className="pl-landing" data-template="m1">
       <section className="pl-section pl-hero" aria-labelledby="hero-title">
-        <p className="pl-eyebrow">Plataforma para restaurantes</p>
-        <h1 id="hero-title">Cada área do restaurante no seu próprio aplicativo.</h1>
-        <p>
-          Atendimento, Cozinha, Caixa, Cardápio Digital, Delivery, Financeiro e Estoque trabalham juntos, com as mesmas mesas, produtos e preços — e cada
-          pessoa entra direto na sua área.
-        </p>
-        <Cta />
+        <div className="pl-hero-copy">
+          <p className="pl-eyebrow">Plataforma para restaurantes</p>
+          <h1 id="hero-title">Cada área do restaurante no seu próprio aplicativo.</h1>
+          <p>
+            Atendimento, Cozinha, Caixa, Cardápio Digital, Delivery, Financeiro e Estoque trabalham juntos, com as mesmas mesas,
+            produtos e preços — e cada pessoa entra direto na sua área.
+          </p>
+          <Cta />
+        </div>
         <div className="pl-hero-board" aria-hidden="true">
+          <span className="pl-hero-live">Pedido ao vivo · Mesa 12</span>
           <span>
             <strong>
               <Icon name="service" size={16} /> Atendimento
@@ -287,8 +312,8 @@ export function PlanCards({ plans }: { plans: Plan[] }) {
         ))}
       </div>
       <p className="pl-note">
-        Valores e condições comerciais são definidos pela equipe comercial do Ponto do Pedido. Nenhuma cobrança é realizada automaticamente nesta plataforma
-        enquanto o meio de pagamento não estiver configurado.
+        Valores e condições comerciais são definidos pela equipe comercial do Ponto do Pedido. Nenhuma cobrança é realizada
+        automaticamente nesta plataforma enquanto o meio de pagamento não estiver configurado.
       </p>
     </>
   );
