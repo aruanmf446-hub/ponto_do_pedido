@@ -1,13 +1,10 @@
 name: Deploy Cloudflare
 
-# Publica o Worker (OpenNext) após o CI verde na main. Só executa quando os
-# segredos da Cloudflare e as variáveis públicas do Supabase estão configurados
-# no repositório; caso contrário, registra o motivo e encerra sem publicar.
+# Publica o Worker (OpenNext) somente por disparo manual (Actions → Deploy
+# Cloudflare → Run workflow), para não gastar minutos a cada push. Só executa
+# quando os segredos da Cloudflare e as variáveis públicas do Supabase estão
+# configurados; caso contrário, registra o motivo e encerra sem publicar.
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -19,7 +16,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -51,7 +47,7 @@ jobs:
       - if: steps.cfg.outputs.ready == 'true'
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
       - if: steps.cfg.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
