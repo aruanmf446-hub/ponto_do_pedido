@@ -13,13 +13,14 @@
   },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "ponto-do-pedido" }],
   "observability": { "enabled": true },
-  // Domínio principal e subdomínios dos restaurantes. Exigem a zona
-  // pontodopedido.com na mesma conta Cloudflare e um registro DNS curinga
-  // (*.pontodopedido.com) com proxy ativo. Só entram em vigor no deploy.
-  "routes": [
-    { "pattern": "pontodopedido.com/*", "zone_name": "pontodopedido.com" },
-    { "pattern": "*.pontodopedido.com/*", "zone_name": "pontodopedido.com" }
-  ],
+  "workers_dev": true,
+  // Rotas do domínio próprio (pontodopedido.com e *.pontodopedido.com) estão
+  // suspensas até a zona estar ativa na conta Cloudflare; sem elas o deploy
+  // publica em *.workers.dev. Para reativar, adicione de volta:
+  // "routes": [
+  //   { "pattern": "pontodopedido.com/*", "zone_name": "pontodopedido.com" },
+  //   { "pattern": "*.pontodopedido.com/*", "zone_name": "pontodopedido.com" }
+  // ],
   // Valores públicos (URL e chave publicável). Segredos nunca vão aqui.
   "vars": {
     "PDP_ROOT_DOMAIN": "pontodopedido.com",
