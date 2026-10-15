@@ -8,6 +8,10 @@ import { accessibleApps, can, hasModule, loadContext, tenantBase } from '@/core/
 
 export const dynamic = 'force-dynamic';
 
+function hoursAgo(hours: number): string {
+  return new Date(Date.now() - hours * 3600_000).toISOString();
+}
+
 export default async function DeliveryCentralRoute({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const base = await tenantBase();
@@ -19,7 +23,7 @@ export default async function DeliveryCentralRoute({ params }: { params: Promise
   if (!can(ctx, 'delivery.pedido.aceitar') && !can(ctx, 'delivery.pedido.despachar')) redirect(`${base}/acesso?motivo=sem-permissao`);
 
   const supabase = await createServerSupabase();
-  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const since = hoursAgo(24);
   const [{ data: orders }, { data: methods }] = await Promise.all([
     supabase
       .from('delivery_orders')

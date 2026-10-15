@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { InternalApp } from '@/core/apps';
 import type { UiPreference } from '@/core/prefs';
-import type { TenantContext } from '@/core/tenant/context';
+import { extraAreas, type TenantContext } from '@/core/tenant/context';
 import { AppSwitcher } from '@/core/ui/AppSwitcher';
 import { PlatformFooter, TenantMark } from '@/core/ui/Brand';
 import { ModelPicker } from '@/core/ui/ModelPicker';
@@ -52,7 +52,7 @@ export function CozinhaShell({
           <span className="kz-date">{clock}</span>
           <div className="kz-tools">
             <ModelPicker tenantId={ctx.tenant.id} app="cozinha" current={model} scheme={pref.scheme} options={COZINHA_MODELS} label="Aparência" />
-            <AppSwitcher base={base} apps={apps} current="cozinha" userName={ctx.membership.display_name} className="kz-switcher" />
+            <AppSwitcher base={base} apps={apps} current="cozinha" userName={ctx.membership.display_name} extras={extraAreas(ctx)} className="kz-switcher" />
           </div>
         </header>
         <main className="kz-main">{children}</main>

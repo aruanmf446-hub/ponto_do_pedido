@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { formatTime } from '@/core/dates';
 import { formatCents, parseCents, splitEvenly } from '@/core/money';
@@ -60,6 +61,7 @@ export function ChargeScreen({
   const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
   const [reason, setReason] = useState('');
   const [discount, setDiscountValue] = useState('');
+  const router = useRouter();
 
   const isCash = methods.find((m) => m.id === method)?.kind === 'dinheiro';
   const amountCents = parseCents(amount) ?? 0;
@@ -102,7 +104,7 @@ export function ChargeScreen({
         e.preventDefault();
         submit();
       } else if (e.key === 'Escape' && !document.querySelector('dialog[open]')) {
-        window.location.href = `${base}/caixa`;
+        router.push(`${base}/caixa`);
       }
     };
     window.addEventListener('keydown', onKey);

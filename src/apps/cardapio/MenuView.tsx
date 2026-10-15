@@ -37,6 +37,7 @@ function useGuestKey(qr: string | null) {
     } catch {
       value = randomKey();
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a chave do dispositivo só existe após a hidratação
     setKey(value);
   }, [qr]);
   return key;

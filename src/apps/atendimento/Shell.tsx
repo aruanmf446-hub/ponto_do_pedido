@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { InternalApp } from '@/core/apps';
 import type { UiPreference } from '@/core/prefs';
-import type { TenantContext } from '@/core/tenant/context';
+import { extraAreas, type TenantContext } from '@/core/tenant/context';
 import { AppSwitcher } from '@/core/ui/AppSwitcher';
 import { PlatformFooter, TenantMark } from '@/core/ui/Brand';
 import { ModelPicker } from '@/core/ui/ModelPicker';
@@ -53,7 +53,7 @@ export function AtendimentoShell({
           {model === 'm2' || model === 'm4' ? null : nav}
           <div className="at-tools">
             <ModelPicker tenantId={ctx.tenant.id} app="atendimento" current={model} scheme={pref.scheme} options={ATENDIMENTO_MODELS} label="Aparência" />
-            <AppSwitcher base={base} apps={apps} current="atendimento" userName={ctx.membership.display_name} className="at-switcher" />
+            <AppSwitcher base={base} apps={apps} current="atendimento" userName={ctx.membership.display_name} extras={extraAreas(ctx)} className="at-switcher" />
           </div>
         </header>
         <div className="at-frame">

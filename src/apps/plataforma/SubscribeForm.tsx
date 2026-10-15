@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useActionState, useEffect, useMemo, useState } from 'react';
-import type { Plan } from '@/core/billing';
+import type { Plan } from '@/core/plans';
 import { checkSlug, subscribe } from '@/apps/plataforma/actions';
 
 function toSlug(name: string): string {

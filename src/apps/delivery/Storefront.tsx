@@ -39,6 +39,7 @@ export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryM
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('pdp-delivery-contact') ?? 'null');
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- dados locais só existem após a hidratação
       if (saved?.whatsapp) setContact(saved);
     } catch {}
   }, []);

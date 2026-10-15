@@ -10,12 +10,14 @@ export function AppSwitcher({
   apps,
   current,
   userName,
+  extras = [],
   className,
 }: {
   base: string;
   apps: InternalApp[];
   current: InternalApp;
   userName: string;
+  extras?: { href: string; label: string }[];
   className?: string;
 }) {
   const others = apps.filter((app) => app !== current);
@@ -25,11 +27,16 @@ export function AppSwitcher({
         {userName}
       </summary>
       <div className="pdp-switcher-menu">
-        {others.length > 0 ? (
+        {others.length + extras.length > 0 ? (
           <nav aria-label="Outras áreas autorizadas" className="pdp-switcher-apps">
             {others.map((app) => (
               <a key={app} href={`${base}${APP_PATHS[app]}`}>
                 {APP_LABELS[app]}
+              </a>
+            ))}
+            {extras.map((area) => (
+              <a key={area.href} href={`${base}${area.href}`}>
+                {area.label}
               </a>
             ))}
           </nav>

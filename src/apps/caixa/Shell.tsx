@@ -3,7 +3,7 @@ import type { InternalApp } from '@/core/apps';
 import { formatDateTime } from '@/core/dates';
 import { formatCents } from '@/core/money';
 import type { UiPreference } from '@/core/prefs';
-import type { TenantContext } from '@/core/tenant/context';
+import { extraAreas, type TenantContext } from '@/core/tenant/context';
 import { AppSwitcher } from '@/core/ui/AppSwitcher';
 import { PlatformFooter, TenantMark } from '@/core/ui/Brand';
 import { ModelPicker } from '@/core/ui/ModelPicker';
@@ -34,7 +34,7 @@ export function CaixaShell({
   const tools = (
     <div className="cx-tools">
       <ModelPicker tenantId={ctx.tenant.id} app="caixa" current={model} scheme={pref.scheme} options={CAIXA_MODELS} label="Aparência" />
-      <AppSwitcher base={base} apps={apps} current="caixa" userName={ctx.membership.display_name} className="cx-switcher" />
+      <AppSwitcher base={base} apps={apps} current="caixa" userName={ctx.membership.display_name} extras={extraAreas(ctx)} className="cx-switcher" />
     </div>
   );
   const status = (

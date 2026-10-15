@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { InternalApp } from '@/core/apps';
 import type { UiPreference } from '@/core/prefs';
-import type { TenantContext } from '@/core/tenant/context';
+import { extraAreas, type TenantContext } from '@/core/tenant/context';
 import { AppSwitcher } from '@/core/ui/AppSwitcher';
 import { PlatformFooter, TenantMark } from '@/core/ui/Brand';
 import { ModelPicker } from '@/core/ui/ModelPicker';
@@ -36,7 +36,7 @@ export function GestaoShell({
   const picker = (
     <ModelPicker tenantId={ctx.tenant.id} app="gestao" current={model} scheme={pref.scheme} options={GESTAO_MODELS} label="Aparência" />
   );
-  const switcher = <AppSwitcher base={base} apps={apps} current="gestao" userName={ctx.membership.display_name} className="gs-switcher" />;
+  const switcher = <AppSwitcher base={base} apps={apps} current="gestao" userName={ctx.membership.display_name} extras={extraAreas(ctx)} className="gs-switcher" />;
   const footer = <PlatformFooter appName="Gestão" className="gs-footer" />;
   const nav = <GestaoNav items={items} base={base} grouped={model === 'm3' || model === 'm1'} pendingApprovals={pendingApprovals} />;
 

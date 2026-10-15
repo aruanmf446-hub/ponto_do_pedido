@@ -118,6 +118,15 @@ export async function requireApp(slug: string, app: InternalApp, nextPath?: stri
   return ctx;
 }
 
+/** Áreas autorizadas fora dos aplicativos internos (ex.: Central de Delivery). */
+export function extraAreas(ctx: TenantContext): { href: string; label: string }[] {
+  const areas: { href: string; label: string }[] = [];
+  if (hasModule(ctx, 'delivery') && (can(ctx, 'delivery.pedido.aceitar') || can(ctx, 'delivery.pedido.despachar'))) {
+    areas.push({ href: '/delivery/central', label: 'Central de Delivery' });
+  }
+  return areas;
+}
+
 export async function requireTenantSlug(): Promise<string> {
   const slug = (await headers()).get('x-pdp-tenant');
   if (!slug) notFound();

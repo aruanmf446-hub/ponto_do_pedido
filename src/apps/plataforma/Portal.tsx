@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { APP_LABELS, type AppModule } from '@/core/apps';
-import type { Plan, Subscription } from '@/core/billing';
-import { planPriceLabel } from '@/core/billing';
+import type { Plan, Subscription } from '@/core/plans';
+import { planPriceLabel } from '@/core/plans';
 import { formatDate } from '@/core/dates';
 import { formatCents } from '@/core/money';
 import { Dialog } from '@/core/ui/Dialog';

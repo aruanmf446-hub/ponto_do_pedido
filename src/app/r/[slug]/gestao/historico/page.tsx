@@ -15,7 +15,7 @@ export default async function HistoryRoute({
   const ctx = await requireApp(slug, 'gestao');
   if (!can(ctx, 'gestao.historico.visualizar')) return <Forbidden />;
   const page = Math.max(0, Number(sp.pagina ?? 0) || 0);
-  const module = sp.modulo ?? null;
-  const { rows, total } = await loadHistory(ctx.tenant.id, module, page);
-  return <HistoryPage rows={rows} total={total} page={page} module={module} base={await tenantBase()} timezone={ctx.tenant.timezone} />;
+  const moduleFilter = sp.modulo ?? null;
+  const { rows, total } = await loadHistory(ctx.tenant.id, moduleFilter, page);
+  return <HistoryPage rows={rows} total={total} page={page} module={moduleFilter} base={await tenantBase()} timezone={ctx.tenant.timezone} />;
 }

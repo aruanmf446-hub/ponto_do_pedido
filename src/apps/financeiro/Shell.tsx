@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { InternalApp } from '@/core/apps';
 import type { UiPreference } from '@/core/prefs';
-import type { TenantContext } from '@/core/tenant/context';
+import { extraAreas, type TenantContext } from '@/core/tenant/context';
 import { AppSwitcher } from '@/core/ui/AppSwitcher';
 import { PlatformFooter, TenantMark } from '@/core/ui/Brand';
 import { ModelPicker } from '@/core/ui/ModelPicker';
@@ -40,7 +40,7 @@ export function FinanceiroShell({
   const tools = (
     <div className="fn-tools">
       <ModelPicker tenantId={ctx.tenant.id} app="financeiro" current={model} scheme={pref.scheme} options={FINANCEIRO_MODELS} label="Aparência" />
-      <AppSwitcher base={base} apps={apps} current="financeiro" userName={ctx.membership.display_name} className="fn-switcher" />
+      <AppSwitcher base={base} apps={apps} current="financeiro" userName={ctx.membership.display_name} extras={extraAreas(ctx)} className="fn-switcher" />
     </div>
   );
   const nav = <FinanceiroNav base={base} model={model} visible={visible} badges={badges} />;

@@ -25,7 +25,9 @@ export function LiveRefresh({
   const router = useRouter();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handler = useRef(onEvent);
-  handler.current = onEvent;
+  useEffect(() => {
+    handler.current = onEvent;
+  });
   const key = tables.join(',');
 
   useEffect(() => {
