@@ -6,6 +6,7 @@ import type { UiPreference } from '@/core/prefs';
 import { extraAreas, type TenantContext } from '@/core/tenant/context';
 import { AppSwitcher } from '@/core/ui/AppSwitcher';
 import { PlatformFooter, TenantMark } from '@/core/ui/Brand';
+import { Icon } from '@/core/ui/Icon';
 import { ModelPicker } from '@/core/ui/ModelPicker';
 import { TenantProvider } from '@/core/ui/TenantProvider';
 import { caixaFonts } from '@/apps/caixa/fonts';
@@ -33,12 +34,21 @@ export function CaixaShell({
   const brand = <TenantMark name={ctx.tenant.name} logoPath={ctx.tenant.logo_path} className="cx-brand" />;
   const tools = (
     <div className="cx-tools">
-      <ModelPicker tenantId={ctx.tenant.id} app="caixa" current={model} scheme={pref.scheme} options={CAIXA_MODELS} label="Aparência" />
-      <AppSwitcher base={base} apps={apps} current="caixa" userName={ctx.membership.display_name} extras={extraAreas(ctx)} className="cx-switcher" />
+      <ModelPicker tenantId={ctx.tenant.id} app="caixa" current={model} scheme={pref.scheme} options={CAIXA_MODELS} />
+      <AppSwitcher
+        base={base}
+        apps={apps}
+        current="caixa"
+        userName={ctx.membership.display_name}
+        role={ctx.membership.is_owner ? 'Titular' : ctx.membership.job_title}
+        extras={extraAreas(ctx)}
+        className="cx-switcher"
+      />
     </div>
   );
   const status = (
     <span className="cx-session" data-open={!!session}>
+      <Icon name={session ? 'check' : 'lock'} size={14} />
       {session ? `Caixa aberto · ${formatDateTime(session.opened_at, ctx.tenant.timezone)} · fundo ${formatCents(session.opening_cents)}` : 'Caixa fechado'}
     </span>
   );

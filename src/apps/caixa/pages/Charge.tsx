@@ -7,9 +7,12 @@ import { formatTime } from '@/core/dates';
 import { formatCents, parseCents, splitEvenly } from '@/core/money';
 import { ApprovalDialog } from '@/core/ui/ApprovalDialog';
 import { Dialog } from '@/core/ui/Dialog';
+import { FoodArt } from '@/core/ui/FoodArt';
+import { Icon } from '@/core/ui/Icon';
 import { usePermission, useTenant } from '@/core/ui/TenantProvider';
 import { newIdempotencyKey, useAction } from '@/core/ui/useAction';
 import { charge, refund, setDiscount } from '@/apps/caixa/actions';
+import { METHOD_ICON } from '@/apps/caixa/pages/Home';
 import type { Payment } from '@/apps/caixa/queries';
 
 type Tab = {
@@ -130,8 +133,13 @@ export function ChargeScreen({
       <ul className="cx-items">
         {items.map((i, idx) => (
           <li key={idx}>
-            <span>
-              {i.quantity}× {i.name}
+            <span className="cx-item">
+              <span className="cx-thumb">
+                <FoodArt name={i.name} label="" />
+              </span>
+              <span>
+                {i.quantity}× {i.name}
+              </span>
             </span>
             <span>{formatCents(i.quantity * i.unit_price_cents)}</span>
           </li>
@@ -206,8 +214,8 @@ export function ChargeScreen({
     <div className="cx-methods" role="radiogroup" aria-label="Forma de pagamento">
       {methods.map((m, i) => (
         <button key={m.id} type="button" role="radio" aria-checked={method === m.id} className="cx-method" data-kind={m.kind} onClick={() => setMethod(m.id)}>
-          {model === 'm2' ? <kbd>{i + 1}</kbd> : null}
-          {m.name}
+          {model === 'm2' ? <kbd>{i + 1}</kbd> : <Icon name={METHOD_ICON[m.kind] ?? 'wallet'} size={model === 'm3' ? 24 : 18} />}
+          <span>{m.name}</span>
         </button>
       ))}
     </div>
@@ -232,6 +240,17 @@ export function ChargeScreen({
           <input className="cx-input cx-input--big" inputMode="decimal" value={tendered} onFocus={() => setField('tendered')} onChange={(e) => setTendered(e.target.value)} />
           <span className="cx-change">Troco: {formatCents(change)}</span>
         </label>
+      ) : null}
+      {isCash ? (
+        <div className="cx-quick" aria-label="Valor entregue rápido">
+          {[...new Set([amountCents, Math.ceil(amountCents / 1000) * 1000, Math.ceil(amountCents / 5000) * 5000, Math.ceil(amountCents / 10000) * 10000])]
+            .filter((v) => v > 0)
+            .map((v) => (
+              <button key={v} type="button" className="cx-chip" onClick={() => setTendered((v / 100).toFixed(2).replace('.', ','))}>
+                {v === amountCents ? 'Valor exato' : formatCents(v)}
+              </button>
+            ))}
+        </div>
       ) : null}
     </div>
   );
@@ -291,6 +310,11 @@ export function ChargeScreen({
     <div className="cx-balance" id="saldo">
       <span>Saldo a receber</span>
       <strong>{formatCents(balance)}</strong>
+      {tab.paid_cents > 0 ? (
+        <small>
+          de {formatCents(tab.total_cents)} · pago {formatCents(tab.paid_cents)}
+        </small>
+      ) : null}
     </div>
   );
 
@@ -371,28 +395,34 @@ export function ChargeScreen({
   } else {
     body = (
       <div className="cx-charge cx-charge--minimal">
-        {balanceBlock}
-        {methodButtons}
-        {amountInputs}
-        {split}
-        {confirm}
-        {feedback}
-        <details className="cx-details">
-          <summary>Detalhes da comanda</summary>
+        <div className="cx-card cx-pay">
+          {balanceBlock}
+          {methodButtons}
+          {amountInputs}
+          {split}
+          {confirm}
+          {feedback}
+        </div>
+        <div className="cx-side-col cx-receipt-col">
           {summary}
-        </details>
-        {paymentsList}
+          {paymentsList}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="cx-section">
-      <div className="cx-row cx-spread">
-        <h1 className="cx-h1">{title}</h1>
-        <Link href={`${base}/caixa`} className="cx-link">
-          ← Voltar
-        </Link>
+      <div className="cx-pagehead">
+        <div>
+          <Link href={`${base}/caixa`} className="cx-back">
+            <Icon name="undo" size={15} /> Voltar às comandas
+          </Link>
+          <h1 className="cx-h1">{title}</h1>
+        </div>
+        <span className="cx-pill" data-flag={open ? 'aberta' : 'quitada'}>
+          {open ? 'Em aberto' : tab.status === 'closed' ? 'Quitada' : 'Cancelada'}
+        </span>
       </div>
       {methods.length === 0 ? <p className="cx-error">Nenhuma forma de pagamento habilitada para o Caixa. Configure na Gestão.</p> : null}
       {body}
