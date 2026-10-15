@@ -1021,3 +1021,177 @@
   border-color: #f3e8da;
   color: #15110d !important;
 }
+
+/* Modelo padrão (m1): o caminho do pedido, em linguagem de dono de restaurante */
+.pl-m1-hero {
+  display: grid;
+  gap: 28px;
+  padding-top: clamp(56px, 9vw, 128px);
+}
+.pl-m1-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pl-ink-2);
+}
+.pl-m1-hero h1,
+.pl-m1-night h2,
+.pl-m1-guest h2,
+.pl-m1-final h2 {
+  font-family: var(--pl-serif), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+}
+.pl-m1-hero h1 {
+  font-size: clamp(2.6rem, 6.2vw, 5.4rem);
+  max-width: 17ch;
+  margin: 0;
+}
+.pl-m1-lede {
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+  color: var(--pl-ink-2);
+}
+.pl-m1-path {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 24px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--pl-line);
+}
+.pl-m1-path li {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding-right: 18px;
+}
+.pl-m1-path li::before {
+  content: '';
+  position: absolute;
+  top: -29px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--pl-ink);
+}
+.pl-m1-path span {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--pl-ink-2);
+}
+.pl-m1-path strong {
+  font-family: var(--pl-display), sans-serif;
+  font-size: 1.05rem;
+}
+.pl-m1-path em {
+  font-style: normal;
+  font-size: 0.9rem;
+  color: var(--pl-ink-2);
+}
+.pl-m1-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--pl-ink-2);
+}
+.pl-m1-night {
+  display: grid;
+  gap: 40px;
+}
+.pl-m1-night h2 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  max-width: 22ch;
+  margin: 12px 0 0;
+}
+.pl-m1-roles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--pl-line);
+}
+.pl-m1-roles article {
+  padding: 24px 24px 0 0;
+}
+.pl-m1-roles h3 {
+  margin: 0 0 10px;
+  font-family: var(--pl-serif), Georgia, serif;
+  font-weight: 500;
+  font-size: 1.6rem;
+}
+.pl-m1-roles p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--pl-ink-2);
+}
+.pl-m1-trust h2 {
+  font-family: var(--pl-serif), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  max-width: 24ch;
+  margin: 0 0 20px;
+}
+.pl-m1-trust p {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+.pl-m1-guest {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+.pl-m1-guest h2 {
+  font-family: var(--pl-serif), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  margin: 0;
+  max-width: 24ch;
+}
+.pl-m1-final {
+  display: grid;
+  gap: 24px;
+  justify-items: start;
+}
+.pl-m1-final h2 {
+  font-size: clamp(2.2rem, 4.6vw, 3.8rem);
+  margin: 0;
+  max-width: 20ch;
+}
+@media (max-width: 900px) {
+  .pl-m1-path,
+  .pl-m1-roles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pl-m1-path {
+    row-gap: 28px;
+  }
+  .pl-m1-path li::before {
+    top: -5px;
+  }
+}
+@media (max-width: 520px) {
+  .pl-m1-roles {
+    grid-template-columns: 1fr;
+  }
+  .pl-m1-path {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    margin-left: 4px;
+    padding: 0 0 0 26px;
+    border-top: 0;
+    border-left: 1px solid var(--pl-line);
+  }
+  .pl-m1-path li {
+    padding-right: 0;
+  }
+  .pl-m1-path li::before {
+    top: 4px;
+    left: -31px;
+  }
+}

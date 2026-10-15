@@ -224,69 +224,98 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
     );
   }
 
-  // ---------- m1 · Institucional clássico ----------
+  // ---------- m1 · Padrão: o caminho do pedido, para quem decide ----------
   return (
     <div className="pl-landing" data-template="m1">
-      <section className="pl-section pl-hero" aria-labelledby="hero-title">
-        <div className="pl-hero-copy">
-          <p className="pl-eyebrow">Plataforma para restaurantes</p>
-          <h1 id="hero-title">Cada área do restaurante no seu próprio aplicativo.</h1>
-          <p>
-            Atendimento, Cozinha, Caixa, Cardápio Digital, Delivery, Financeiro e Estoque trabalham juntos, com as mesmas mesas,
-            produtos e preços — e cada pessoa entra direto na sua área.
-          </p>
-          <Cta />
+      <section className="pl-section pl-m1-hero" aria-labelledby="hero-title">
+        <p className="pl-m1-kicker">Para donos de restaurante</p>
+        <h1 id="hero-title">O salão anda sozinho quando cada pedido sabe o próprio caminho.</h1>
+        <p className="pl-m1-lede">
+          O garçom lança na mesa, a cozinha recebe na hora, o caixa fecha sem redigitar. Você acompanha o dia inteiro do celular.
+        </p>
+        <Cta />
+        <ol className="pl-m1-path" aria-label="Caminho de um pedido">
+          <li>
+            <span>19:42</span>
+            <strong>Mesa 12 pede</strong>
+            <em>direto do garçom</em>
+          </li>
+          <li>
+            <span>19:43</span>
+            <strong>Cozinha recebe</strong>
+            <em>na ordem certa</em>
+          </li>
+          <li>
+            <span>20:05</span>
+            <strong>Prato sai</strong>
+            <em>e o garçom é avisado</em>
+          </li>
+          <li>
+            <span>21:30</span>
+            <strong>Conta fecha</strong>
+            <em>mesa liberada</em>
+          </li>
+        </ol>
+        <p className="pl-m1-note">Horários ilustrativos.</p>
+      </section>
+
+      <section className="pl-section pl-m1-night" aria-labelledby="night-title">
+        <div>
+          <p className="pl-m1-kicker">Uma sexta-feira, do ponto de vista da casa</p>
+          <h2 id="night-title" className="pl-h2">
+            Cada pessoa do turno faz a parte dela sem pedir ajuda ao colega.
+          </h2>
         </div>
-        <div className="pl-hero-board" aria-hidden="true">
-          <span className="pl-hero-live">Pedido ao vivo · Mesa 12</span>
-          <span>
-            <strong>
-              <Icon name="service" size={16} /> Atendimento
-            </strong>
-            Mesa 12 · pedido enviado
-          </span>
-          <span>
-            <strong>
-              <Icon name="chef" size={16} /> Cozinha
-            </strong>
-            Pedido #1046 em preparo
-          </span>
-          <span>
-            <strong>
-              <Icon name="cash" size={16} /> Caixa
-            </strong>
-            Comanda quitada
-          </span>
-          <span>
-            <strong>
-              <Icon name="dashboard" size={16} /> Gestão
-            </strong>
-            Mesa liberada
-          </span>
+        <div className="pl-m1-roles">
+          <article>
+            <h3>Garçom</h3>
+            <p>Anota na mesa, envia para a cozinha e sabe quando o prato sai. Não volta ao balcão a cada pedido.</p>
+          </article>
+          <article>
+            <h3>Cozinha</h3>
+            <p>Uma fila que segue a ordem de chegada e as prioridades da casa. Nenhum ticket perdido na bancada.</p>
+          </article>
+          <article>
+            <h3>Caixa</h3>
+            <p>A conta sai com o que foi consumido, a divisão e o troco. O fechamento do turno já vem pronto.</p>
+          </article>
+          <article>
+            <h3>Dono</h3>
+            <p>Vê o dia enquanto ele acontece: o que vendeu, o que falta no estoque, o que espera a sua decisão.</p>
+          </article>
         </div>
       </section>
-      <section className="pl-section" id="aplicativos" aria-labelledby="apps-title">
-        <p className="pl-eyebrow">Aplicativos</p>
-        <h2 id="apps-title" className="pl-h2">
-          Produtos independentes, operação integrada.
+
+      <section className="pl-section pl-band pl-m1-trust" aria-labelledby="trust-title">
+        <h2 id="trust-title" className="pl-h2">
+          A decisão é sua. Quem trabalha com você faz só o que lhe foi dado.
         </h2>
-        <Modules />
+        <p>
+          Cada pessoa entra na área da função dela. Quando algo sai do combinado, como um desconto maior ou um cancelamento depois
+          do preparo, o pedido vai para quem pode aprovar. Nada disso some sem registro.
+        </p>
       </section>
-      <section className="pl-section" aria-labelledby="principles-title">
-        <p className="pl-eyebrow">Como pensamos</p>
-        <h2 id="principles-title" className="pl-h2">
-          Simples para quem opera. Seguro para quem é dono.
+
+      <section className="pl-section pl-m1-guest" aria-labelledby="guest-title">
+        <p className="pl-m1-kicker">Do lado de quem come</p>
+        <h2 id="guest-title" className="pl-h2">
+          O cliente escolhe sozinho, com a cara da sua casa.
         </h2>
-        <Principles />
+        <p className="pl-m1-lede">
+          Cardápio pelo QR da mesa ou pelo link do delivery, com o seu nome, as suas fotos e os seus preços. Sua equipe deixa de
+          repetir o cardápio em voz alta.
+        </p>
       </section>
-      <section className="pl-section" aria-labelledby="flow-title">
-        <p className="pl-eyebrow">Começo rápido</p>
-        <h2 id="flow-title" className="pl-h2">
-          Do contrato à primeira mesa atendida.
-        </h2>
-        <Flow />
-      </section>
+
       {plansSection}
+
+      <section className="pl-section pl-m1-final" aria-labelledby="final-title">
+        <h2 id="final-title" className="pl-h2">
+          Sua próxima sexta começa com a primeira mesa.
+        </h2>
+        <Cta />
+        <p className="pl-m1-note">Gestão · Atendimento · Cozinha · Caixa · Cardápio Digital · Delivery · Financeiro · Estoque</p>
+      </section>
     </div>
   );
 }
