@@ -1548,3 +1548,26 @@
     grid-column: 3;
   }
 }
+
+/* Modelos dos canais do cliente (Cardápio e Delivery) */
+.gs-templates {
+  display: grid;
+  gap: 14px;
+}
+.gs-template-block {
+  display: grid;
+  gap: 10px;
+}
+.gs-template-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.gs-template-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.gs-templates .pdp-gallery {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}

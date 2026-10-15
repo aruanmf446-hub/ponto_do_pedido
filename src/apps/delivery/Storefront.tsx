@@ -1,9 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { Minus, Plus, Search, ShoppingBag } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import type { VisualModel } from '@/core/apps';
 import { formatCents, parseCents } from '@/core/money';
-import { mediaUrl } from '@/core/storage';
+import { FoodArt } from '@/core/ui/FoodArt';
+import { foodIcon, Icon } from '@/core/ui/Icon';
+import { ProductImage } from '@/core/ui/ProductImage';
 import { placeDeliveryOrder, type DeliveryMenu } from '@/apps/delivery/actions';
 
 type CartItem = { product_id: string; name: string; price_cents: number; quantity: number; notes: string };
@@ -20,7 +24,7 @@ function maskPhone(v: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryMenu; base: string }) {
+export function Storefront({ slug, menu, base, template }: { slug: string; menu: DeliveryMenu; base: string; template: VisualModel }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('contato');
   const [contact, setContact] = useState({ name: '', whatsapp: '' });
@@ -49,7 +53,15 @@ export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryM
   const fee = zoneData?.fee_cents ?? 0;
   const belowMin = zoneData ? items < zoneData.min_order_cents : false;
   const methodKind = menu.payment_methods?.find((m) => m.id === method)?.kind;
-  const products = useMemo(() => menu.categories?.find((c) => c.id === category)?.products ?? [], [menu.categories, category]);
+  const [query, setQuery] = useState('');
+  const products = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q) return (menu.categories ?? []).flatMap((c) => c.products).filter((p) => `${p.name} ${p.description ?? ''}`.toLowerCase().includes(q));
+    return menu.categories?.find((c) => c.id === category)?.products ?? [];
+  }, [menu.categories, category, query]);
+  const categoryName = menu.categories?.find((c) => c.id === category)?.name ?? '';
+  const featured = (menu.categories ?? []).flatMap((c) => c.products.map((p) => ({ ...p, category: c.name }))).filter((p) => p.available);
+  const count = cart.reduce((n, i) => n + i.quantity, 0);
 
   const add = (p: { id: string; name: string; price_cents: number }) =>
     setCart((c) => {
@@ -97,13 +109,18 @@ export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryM
 
   const cartBox = (
     <aside className="dl-cart" aria-label="Sacola">
-      <h2>Sua sacola</h2>
+      <h2>
+        <ShoppingBag size={20} aria-hidden="true" /> Sua sacola {count ? <span className="dl-count">{count}</span> : null}
+      </h2>
       {cart.length === 0 ? <p className="dl-muted">Vazia por enquanto.</p> : null}
       <ul>
         {cart.map((i) => (
           <li key={i.product_id}>
             <div className="dl-row">
-              <span>
+              <span className="dl-cart-thumb">
+                <FoodArt name={i.name} label="" />
+              </span>
+              <span className="dl-cart-name">
                 {i.quantity}× {i.name}
               </span>
               <span>{formatCents(i.price_cents * i.quantity)}</span>
@@ -111,10 +128,11 @@ export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryM
             <div className="dl-row">
               <div className="dl-qty">
                 <button type="button" aria-label="Diminuir" onClick={() => setCart(cart.flatMap((x) => (x === i ? (x.quantity > 1 ? [{ ...x, quantity: x.quantity - 1 }] : []) : [x])))}>
-                  −
+                  <Minus size={14} aria-hidden="true" />
                 </button>
+                <span>{i.quantity}</span>
                 <button type="button" aria-label="Aumentar" onClick={() => setCart(cart.map((x) => (x === i ? { ...x, quantity: Math.min(20, x.quantity + 1) } : x)))}>
-                  +
+                  <Plus size={14} aria-hidden="true" />
                 </button>
               </div>
               <input
@@ -144,10 +162,33 @@ export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryM
   );
 
   return (
-    <div className="dl-store">
+    <div className="dl-store" data-template={template}>
       <section className="dl-hero">
-        <h1>Sabor que chega até você</h1>
-        <p>{menu.eta_minutes ? `Entrega em cerca de ${menu.eta_minutes} minutos.` : 'Peça agora e acompanhe pelo link.'}</p>
+        <div className="dl-hero-text">
+          <p className="dl-eyebrow">{menu.tenant?.name ?? 'Delivery'}</p>
+          <h1>{template === 'm3' ? 'A casa vai até você' : template === 'm4' ? 'Peça em poucos toques' : 'Sabor que chega até você'}</h1>
+          <p>{menu.eta_minutes ? `Entrega em cerca de ${menu.eta_minutes} minutos.` : 'Peça agora e acompanhe pelo link.'}</p>
+          <ul className="dl-perks">
+            <li>
+              <Icon name="truck" size={16} /> Entrega rápida
+            </li>
+            <li>
+              <Icon name="shield" size={16} /> Pedido confirmado pela casa
+            </li>
+            <li>
+              <Icon name="pin" size={16} /> Acompanhe pelo link
+            </li>
+          </ul>
+        </div>
+        {(template === 'm2' || template === 'm3') && featured.length ? (
+          <div className="dl-hero-art" aria-hidden="true">
+            {featured.slice(0, template === 'm3' ? 1 : 3).map((p) => (
+              <span key={p.id} className="dl-hero-plate">
+                <ProductImage name={p.name} path={p.image_path} category={p.category} />
+              </span>
+            ))}
+          </div>
+        ) : null}
       </section>
       <ol className="dl-steps" aria-label="Etapas do pedido">
         {steps.map(([s, label], i) => (
@@ -188,32 +229,48 @@ export function Storefront({ slug, menu, base }: { slug: string; menu: DeliveryM
 
       {step === 'produtos' ? (
         <div className="dl-shop">
-          <div>
+          <div className="dl-catalog">
             <nav className="dl-cats" aria-label="Categorias">
               {menu.categories?.map((c) => (
-                <button key={c.id} type="button" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
-                  {c.name}
+                <button key={c.id} type="button" aria-pressed={category === c.id && !query} onClick={() => (setCategory(c.id), setQuery(''))}>
+                  <span className="dl-cat-icon">
+                    <Icon name={foodIcon(c.name)} size={template === 'm2' ? 22 : 17} />
+                  </span>
+                  <span>{c.name}</span>
                 </button>
               ))}
             </nav>
-            <div className="dl-products">
-              {products.map((p) => (
-                <article key={p.id} className="dl-product" data-available={p.available}>
-                  {p.image_path ? <img src={mediaUrl(p.image_path) ?? ''} alt="" loading="lazy" /> : <span className="dl-photo" aria-hidden="true" />}
-                  <div className="dl-product-body">
-                    <h3>{p.name}</h3>
-                    {p.description ? <p>{p.description}</p> : null}
-                    <div className="dl-row">
-                      <strong>{p.available ? formatCents(p.price_cents) : 'Indisponível'}</strong>
-                      {p.available ? (
-                        <button type="button" className="dl-add" onClick={() => add(p)} aria-label={`Adicionar ${p.name}`}>
-                          +
-                        </button>
-                      ) : null}
+            <div className="dl-list">
+              <div className="dl-list-head">
+                <h2>{query ? 'Resultados' : categoryName}</h2>
+                <label className="dl-search">
+                  <Search size={16} aria-hidden="true" />
+                  <span className="sr-only">Buscar no cardápio</span>
+                  <input type="search" placeholder="Buscar no cardápio" value={query} onChange={(e) => setQuery(e.target.value)} />
+                </label>
+              </div>
+              <div className="dl-products">
+                {products.map((p) => (
+                  <article key={p.id} className="dl-product" data-available={p.available}>
+                    <span className="dl-photo">
+                      <ProductImage name={p.name} path={p.image_path} category={categoryName} />
+                    </span>
+                    <div className="dl-product-body">
+                      <h3>{p.name}</h3>
+                      {p.description ? <p>{p.description}</p> : null}
+                      <div className="dl-row">
+                        <strong>{p.available ? formatCents(p.price_cents) : 'Indisponível'}</strong>
+                        {p.available ? (
+                          <button type="button" className="dl-add" onClick={() => add(p)} aria-label={`Adicionar ${p.name}`}>
+                            <Plus size={18} aria-hidden="true" />
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
+                {products.length === 0 ? <p className="dl-muted">Nada encontrado.</p> : null}
+              </div>
             </div>
           </div>
           <div className="dl-side">

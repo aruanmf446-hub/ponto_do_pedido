@@ -68,7 +68,7 @@ create or replace function public.public_templates(p_slug text)
 returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
     'cardapio', coalesce((select t.settings ->> 'cardapio_template' from public.tenants t where t.slug = lower(trim(p_slug))), 'm1'),
-    'delivery', coalesce((select t.settings ->> 'delivery_template' from public.tenants t where t.slug = lower(trim(p_slug))), 'm1')
+    'delivery', coalesce((select t.settings ->> 'delivery_template' from public.tenants t where t.slug = lower(trim(p_slug))), 'm2')
   );
 $$;
 

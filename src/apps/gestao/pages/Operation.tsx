@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { isVisualModel, type VisualModel } from '@/core/apps';
+import { CARDAPIO_TEMPLATES, DELIVERY_TEMPLATES } from '@/core/publicTemplates';
 import { ApprovalDialog } from '@/core/ui/ApprovalDialog';
+import { TemplateGallery } from '@/core/ui/TemplateGallery';
 import { useTenant } from '@/core/ui/TenantProvider';
 import { useAction } from '@/core/ui/useAction';
 import { saveSettings, setProcessOwnership } from '@/apps/gestao/actions';
@@ -44,6 +47,24 @@ export function OperationPage({
     });
   };
   const stages = Array.isArray(settings.kitchen_stages) ? (settings.kitchen_stages as string[]) : [];
+  const [templates, setTemplates] = useState<{ cardapio: VisualModel; delivery: VisualModel }>({
+    cardapio: isVisualModel(settings.cardapio_template) ? settings.cardapio_template : 'm1',
+    delivery: isVisualModel(settings.delivery_template) ? settings.delivery_template : 'm2',
+  });
+  const chooseTemplate = (channel: 'cardapio' | 'delivery', id: VisualModel) => {
+    const previous = templates[channel];
+    setTemplates((t) => ({ ...t, [channel]: id }));
+    setMsg(null);
+    const patch = { [`${channel}_template`]: id };
+    void action
+      .run(() => saveSettings(tenantId, patch), {
+        onSuccess: () => setMsg(channel === 'cardapio' ? 'Modelo do Cardápio Digital atualizado.' : 'Modelo do Delivery atualizado.'),
+        approval: { kind: 'settings.update', summary: channel === 'cardapio' ? 'Alterar modelo do Cardápio Digital' : 'Alterar modelo do Delivery', payload: { patch } },
+      })
+      .then((r) => {
+        if (!r.ok) setTemplates((t) => ({ ...t, [channel]: previous }));
+      });
+  };
   const hasStock = modules.includes('estoque');
   const hasFinance = modules.includes('financeiro');
 
@@ -52,6 +73,36 @@ export function OperationPage({
       <PageHead title="Configurações operacionais" subtitle="Regras de cada aplicativo contratado. Alterações valem para todos imediatamente." />
       {action.error ? <p className="gs-msg gs-msg--error">{action.error.message}</p> : null}
       {msg ? <p className="gs-msg gs-msg--ok">{msg}</p> : null}
+      {modules.includes('cardapio') || modules.includes('delivery') ? (
+        <section className="gs-card gs-templates" id="modelos" aria-labelledby="t-title">
+          <h2 id="t-title" className="gs-h2">
+            Aparência dos canais do cliente
+          </h2>
+          <p className="gs-meta">Escolha o modelo visual do Cardápio Digital e do Delivery. O cliente continua podendo alternar entre claro e escuro.</p>
+          {modules.includes('cardapio') ? (
+            <div className="gs-template-block">
+              <div className="gs-template-head">
+                <h3>Cardápio Digital</h3>
+                <a href={links.cardapio} target="_blank" rel="noreferrer" className="gs-link">
+                  Ver cardápio
+                </a>
+              </div>
+              <TemplateGallery options={CARDAPIO_TEMPLATES} current={templates.cardapio} disabled={action.pending} onSelect={(id) => chooseTemplate('cardapio', id)} />
+            </div>
+          ) : null}
+          {modules.includes('delivery') ? (
+            <div className="gs-template-block">
+              <div className="gs-template-head">
+                <h3>Delivery</h3>
+                <a href={links.delivery} target="_blank" rel="noreferrer" className="gs-link">
+                  Ver delivery
+                </a>
+              </div>
+              <TemplateGallery options={DELIVERY_TEMPLATES} current={templates.delivery} disabled={action.pending} onSelect={(id) => chooseTemplate('delivery', id)} />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
       <div className="gs-grid">
         {modules.includes('cardapio') ? (
           <section className="gs-card" id="cardapio" aria-labelledby="c-title">

@@ -510,7 +510,7 @@ describe('modelos públicos e configurações por área', () => {
   it('o restaurante escolhe os modelos do Cardápio e do Delivery; áreas não se misturam', async () => {
     const owner = await createUser('Titular Modelos');
     const { tenantId: tenant, slug } = await createTenant(owner);
-    expect(await val(anon, 'select public.public_templates($1)', [slug])).toEqual({ cardapio: 'm1', delivery: 'm1' });
+    expect(await val(anon, 'select public.public_templates($1)', [slug])).toEqual({ cardapio: 'm1', delivery: 'm2' });
     await q(as(owner), `select public.tenant_update_settings($1, '{"cardapio_template":"m3"}')`, [tenant]);
     await q(as(owner), `select public.tenant_update_settings($1, '{"delivery_template":"m2"}')`, [tenant]);
     expect(await val(anon, 'select public.public_templates($1)', [slug])).toEqual({ cardapio: 'm3', delivery: 'm2' });

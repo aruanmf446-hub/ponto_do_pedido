@@ -1,8 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { Minus, Plus, QrCode, Search } from 'lucide-react';
+import { useEffect, useMemo, useState, useTransition, type ReactNode } from 'react';
+import type { VisualModel } from '@/core/apps';
 import { formatCents } from '@/core/money';
-import { mediaUrl } from '@/core/storage';
+import { FoodArt } from '@/core/ui/FoodArt';
+import { foodIcon, Icon } from '@/core/ui/Icon';
+import { ProductImage } from '@/core/ui/ProductImage';
 import { placeTableOrder, refreshTableMenu, requestTableBill, type MenuCategory, type TableMenu } from '@/apps/cardapio/actions';
 
 type CartItem = { product_id: string; name: string; price_cents: number; quantity: number; notes: string };
@@ -43,44 +47,156 @@ function useGuestKey(qr: string | null) {
   return key;
 }
 
-export function CategoryList({ categories, onAdd }: { categories: MenuCategory[]; onAdd?: (p: MenuCategory['products'][number]) => void }) {
+type Product = MenuCategory['products'][number];
+
+/** Abertura do cardápio; a composição muda com o modelo escolhido pelo restaurante. */
+export function MenuHero({
+  template,
+  eyebrow,
+  title,
+  text,
+  warn,
+  categories,
+}: {
+  template: VisualModel;
+  eyebrow: string;
+  title: string;
+  text?: string;
+  warn?: string | null;
+  categories: MenuCategory[];
+}) {
+  const featured = categories.flatMap((c) => c.products.map((p) => ({ ...p, category: c.name }))).filter((p) => p.available);
   return (
-    <>
-      <nav className="cd-cats" aria-label="Categorias">
-        {categories.map((c) => (
-          <a key={c.id} href={`#cat-${c.id}`}>
-            {c.name}
-          </a>
-        ))}
-      </nav>
-      {categories.map((c) => (
-        <section key={c.id} id={`cat-${c.id}`} className="cd-category" aria-labelledby={`h-${c.id}`}>
-          <h2 id={`h-${c.id}`}>{c.name}</h2>
-          {c.description ? <p className="cd-desc">{c.description}</p> : null}
-          <ul className="cd-products">
-            {c.products.map((p) => (
-              <li key={p.id} className="cd-product" data-available={p.available}>
-                {p.image_path ? <img src={mediaUrl(p.image_path) ?? ''} alt="" loading="lazy" /> : <span className="cd-photo" aria-hidden="true" />}
-                <div>
-                  <h3>{p.name}</h3>
-                  {p.description ? <p>{p.description}</p> : null}
-                  <span className="cd-price">{p.available ? formatCents(p.price_cents) : 'Indisponível no momento'}</span>
-                </div>
-                {onAdd && p.available ? (
-                  <button type="button" className="cd-add" onClick={() => onAdd(p)} aria-label={`Adicionar ${p.name}`}>
-                    +
-                  </button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </>
+    <section className="cd-hero" data-template={template}>
+      <div className="cd-hero-text">
+        <p className="cd-eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        {text ? <p className="cd-desc">{text}</p> : null}
+        {warn ? <p className="cd-warn">{warn}</p> : null}
+        {template === 'm1' ? (
+          <p className="cd-qr-note">
+            <QrCode size={18} aria-hidden="true" /> Aponte a câmera para o QR Code da mesa e acompanhe tudo por aqui.
+          </p>
+        ) : null}
+      </div>
+      {template === 'm2' && featured.length ? (
+        <div className="cd-hero-art" aria-hidden="true">
+          {featured.slice(0, 3).map((p) => (
+            <span key={p.id} className="cd-hero-plate">
+              <ProductImage name={p.name} path={p.image_path} category={p.category} />
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {template === 'm3' && featured[0] ? (
+        <div className="cd-feature">
+          <span className="cd-feature-photo">
+            <ProductImage name={featured[0].name} path={featured[0].image_path} category={featured[0].category} />
+          </span>
+          <span className="cd-feature-text">
+            <small>Sugestão da casa</small>
+            <strong>{featured[0].name}</strong>
+            {featured[0].description ? <span>{featured[0].description}</span> : null}
+            <b>{formatCents(featured[0].price_cents)}</b>
+          </span>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
-export function TableMenuView({ qr, initial }: { qr: string; initial: TableMenu }) {
+/** Cardápio por categorias. A estrutura muda com o modelo: lista, vitrine, premium ou grade rápida. */
+export function MenuBody({
+  template,
+  categories,
+  hero,
+  aside,
+  onAdd,
+}: {
+  template: VisualModel;
+  categories: MenuCategory[];
+  hero: ReactNode;
+  aside?: ReactNode;
+  onAdd?: (p: Product) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const shown = q
+    ? categories.map((c) => ({ ...c, products: c.products.filter((p) => `${p.name} ${p.description}`.toLowerCase().includes(q)) })).filter((c) => c.products.length)
+    : categories;
+  const side = template === 'm3' || template === 'm4';
+
+  const nav = (
+    <nav className="cd-cats" aria-label="Categorias">
+      {categories.map((c) => (
+        <a key={c.id} href={`#cat-${c.id}`}>
+          <span className="cd-cat-icon">
+            <Icon name={foodIcon(c.name)} size={template === 'm2' ? 22 : 17} />
+          </span>
+          <span>{c.name}</span>
+        </a>
+      ))}
+    </nav>
+  );
+  const search = (
+    <label className="cd-search">
+      <Search size={16} aria-hidden="true" />
+      <span className="sr-only">Buscar no cardápio</span>
+      <input type="search" placeholder="Buscar prato ou bebida" value={query} onChange={(e) => setQuery(e.target.value)} />
+    </label>
+  );
+  const product = (p: Product, category: string) => (
+    <li key={p.id} className="cd-product" data-available={p.available}>
+      <span className="cd-photo">
+        <ProductImage name={p.name} path={p.image_path} category={category} />
+      </span>
+      <div className="cd-product-body">
+        <h3>{p.name}</h3>
+        {p.description ? <p>{p.description}</p> : null}
+        <span className="cd-price">{p.available ? formatCents(p.price_cents) : 'Indisponível no momento'}</span>
+      </div>
+      {onAdd && p.available ? (
+        <button type="button" className="cd-add" onClick={() => onAdd(p)} aria-label={`Adicionar ${p.name}`}>
+          <Plus size={18} aria-hidden="true" />
+        </button>
+      ) : null}
+    </li>
+  );
+  const sections = (
+    <div className="cd-sections">
+      {shown.map((c) => (
+        <section key={c.id} id={`cat-${c.id}`} className="cd-category" aria-labelledby={`h-${c.id}`}>
+          <h2 id={`h-${c.id}`}>
+            <span className="cd-cat-icon">
+              <Icon name={foodIcon(c.name)} size={18} />
+            </span>
+            {c.name}
+          </h2>
+          {c.description ? <p className="cd-desc">{c.description}</p> : null}
+          <ul className="cd-products">{c.products.map((p) => product(p, c.name))}</ul>
+        </section>
+      ))}
+      {shown.length === 0 ? <p className="cd-desc">Nada encontrado para “{query}”.</p> : null}
+    </div>
+  );
+
+  return (
+    <div className="cd-menu" data-template={template} data-has-aside={!!aside}>
+      {side ? <aside className="cd-rail">{nav}</aside> : null}
+      <div className="cd-content">
+        {hero}
+        <div className="cd-toolbar">
+          {side ? null : nav}
+          {search}
+        </div>
+        {sections}
+      </div>
+      {aside ? <div className="cd-aside">{aside}</div> : null}
+    </div>
+  );
+}
+
+export function TableMenuView({ qr, initial, template }: { qr: string; initial: TableMenu; template: VisualModel }) {
   const guest = useGuestKey(qr);
   const [menu, setMenu] = useState<TableMenu>(initial);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -139,27 +255,24 @@ export function TableMenuView({ qr, initial }: { qr: string; initial: TableMenu 
       if (r.ok) setMenu((m) => ({ ...m, bill_requested: true }));
     });
 
-  return (
-    <div className="cd-layout">
-      <div className="cd-hero">
-        <p className="cd-eyebrow">Mesa {menu.table?.label}</p>
-        <h1>Bem-vindo ao nosso cardápio</h1>
-        <p className="cd-desc">
-          {canOrder
-            ? menu.confirmation === 'atendente'
-              ? 'Escolha seus pratos e envie o pedido. Um atendente confirma antes de seguir para a cozinha.'
-              : 'Escolha seus pratos e envie o pedido direto para a cozinha.'
-            : 'Consulte o cardápio. Para pedir, chame um atendente.'}
-          {menu.service_fee_percent ? ` Taxa de serviço de ${Number(menu.service_fee_percent)}%.` : ''}
-        </p>
-        {!menu.open_now ? <p className="cd-warn">O restaurante está fechado no momento.</p> : null}
-      </div>
-
-      <div className="cd-columns">
-        <div>
-          <CategoryList categories={menu.categories ?? []} onAdd={canOrder && menu.open_now ? add : undefined} />
-        </div>
-        {canOrder || myOrders.length ? (
+  const hero = (
+    <MenuHero
+      template={template}
+      eyebrow={`Mesa ${menu.table?.label ?? ''}`}
+      title={template === 'm2' ? 'Peça sem esperar' : 'Bem-vindo ao nosso cardápio'}
+      text={`${
+        canOrder
+          ? menu.confirmation === 'atendente'
+            ? 'Escolha seus pratos e envie o pedido. Um atendente confirma antes de seguir para a cozinha.'
+            : 'Escolha seus pratos e envie o pedido direto para a cozinha.'
+          : 'Consulte o cardápio. Para pedir, chame um atendente.'
+      }${menu.service_fee_percent ? ` Taxa de serviço de ${Number(menu.service_fee_percent)}%.` : ''}`}
+      warn={!menu.open_now ? 'O restaurante está fechado no momento.' : null}
+      categories={menu.categories ?? []}
+    />
+  );
+  const aside =
+    canOrder || myOrders.length ? (
           <aside className="cd-cart" aria-label="Seu pedido">
             {canOrder ? (
               <section>
@@ -169,17 +282,20 @@ export function TableMenuView({ qr, initial }: { qr: string; initial: TableMenu 
                   {cart.map((i) => (
                     <li key={i.product_id}>
                       <div className="cd-row">
+                        <span className="cd-cart-thumb">
+                          <FoodArt name={i.name} label="" />
+                        </span>
                         <strong>{i.name}</strong>
                         <span>{formatCents(i.price_cents * i.quantity)}</span>
                       </div>
                       <div className="cd-row">
                         <div className="cd-qty">
                           <button type="button" aria-label="Diminuir" onClick={() => setCart(cart.flatMap((x) => (x === i ? (x.quantity > 1 ? [{ ...x, quantity: x.quantity - 1 }] : []) : [x])))}>
-                            −
+                            <Minus size={14} aria-hidden="true" />
                           </button>
                           <span>{i.quantity}</span>
                           <button type="button" aria-label="Aumentar" onClick={() => setCart(cart.map((x) => (x === i ? { ...x, quantity: Math.min(20, x.quantity + 1) } : x)))}>
-                            +
+                            <Plus size={14} aria-hidden="true" />
                           </button>
                         </div>
                         <input
@@ -234,8 +350,7 @@ export function TableMenuView({ qr, initial }: { qr: string; initial: TableMenu 
               </section>
             ) : null}
           </aside>
-        ) : null}
-      </div>
-    </div>
-  );
+    ) : null;
+
+  return <MenuBody template={template} categories={menu.categories ?? []} hero={hero} aside={aside} onAdd={canOrder && menu.open_now ? add : undefined} />;
 }
