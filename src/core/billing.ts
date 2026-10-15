@@ -8,7 +8,7 @@ import { getAccessToken } from '@/core/supabase/server';
 
 export type { BillingOverview, Invoice, Plan, Subscription } from '@/core/plans';
 export { planPriceLabel } from '@/core/plans';
-import type { BillingOverview, Plan } from '@/core/plans';
+import type { Plan } from '@/core/plans';
 
 /** Catálogo público de planos (RLS: somente planos ativos). */
 export async function fetchPlans(): Promise<Plan[]> {

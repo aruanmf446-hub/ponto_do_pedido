@@ -93,7 +93,8 @@ insert into public.permissions (code, module, label, action, supports_limit, app
   ('estoque.inventario.executar', 'estoque', 'Executar conferência e inventário', 'executar', false, false),
   ('estoque.lote.bloquear', 'estoque', 'Bloquear e liberar lotes', 'executar', false, true),
   ('estoque.solicitacao.criar', 'estoque', 'Solicitar materiais', 'executar', false, false),
-  ('estoque.solicitacao.atender', 'estoque', 'Atender solicitações de materiais', 'executar', false, false);
+  ('estoque.solicitacao.atender', 'estoque', 'Atender solicitações de materiais', 'executar', false, false)
+on conflict (code) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- Funções padrão (editáveis por estabelecimento; um cargo não implica as

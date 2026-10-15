@@ -39,7 +39,7 @@ npm run cf:build                    # build do Worker Cloudflare
 ## Documentação
 
 - [Arquitetura](docs/arquitetura.md)
-- [Supabase: projetos, tabelas, RLS e funções](docs/supabase.md)
+- [Supabase: projetos, tabelas, RLS e funções](docs/supabase.md) · [estado remoto](docs/supabase-remoto.md)
 - [Autenticação, permissões e aprovações](docs/permissoes.md)
 - [Modelos visuais](docs/modelos-visuais.md)
 - [Deploy na Cloudflare](docs/deploy.md)
