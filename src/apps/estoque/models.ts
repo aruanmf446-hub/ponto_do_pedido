@@ -1,3 +1,4 @@
+import type { IconName } from '@/core/ui/Icon';
 import type { ModelOption } from '@/core/ui/ModelPicker';
 
 export const ESTOQUE_MODELS: ModelOption[] = [
@@ -10,8 +11,8 @@ export const ESTOQUE_MODELS: ModelOption[] = [
   {
     id: 'm2',
     name: 'Lotes e Validade',
-    description: 'Tudo pelo vencimento: filtros laterais, faixas de risco e lotes por data.',
-    thumb: { bg: '#fbfaf7', surface: '#ffffff', ink: '#262219', accent: '#d9480f', nav: 'top', body: 'table' },
+    description: 'Tudo pelo vencimento: navegação no topo, filtros laterais e lotes por data.',
+    thumb: { bg: '#f6f8f3', surface: '#ffffff', ink: '#1f2a1a', accent: '#5a9a2f', nav: 'top', body: 'split' },
   },
   {
     id: 'm3',
@@ -22,17 +23,17 @@ export const ESTOQUE_MODELS: ModelOption[] = [
   {
     id: 'm4',
     name: 'Solicitações e Movimentações',
-    description: 'Pedidos dos setores, situação de cada um e linha do tempo do estoque.',
-    thumb: { bg: '#f1f5fb', surface: '#ffffff', ink: '#182233', accent: '#2563eb', nav: 'top', body: 'feed' },
+    description: 'Painel de solicitação, pedidos dos setores em tabela e movimentações recentes.',
+    thumb: { bg: '#f1f5fb', surface: '#ffffff', ink: '#182233', accent: '#2563eb', nav: 'top', body: 'split' },
   },
 ];
 
 export const ESTOQUE_NAV = [
-  { href: '/estoque', label: 'Saldos', icon: '▦' },
-  { href: '/estoque/lotes', label: 'Lotes e validade', icon: '⧗' },
-  { href: '/estoque/entrada', label: 'Entradas', icon: '⇣' },
-  { href: '/estoque/solicitacoes', label: 'Solicitações', icon: '✎' },
-  { href: '/estoque/inventario', label: 'Inventário', icon: '☑' },
-  { href: '/estoque/movimentos', label: 'Movimentações', icon: '⇄' },
-  { href: '/estoque/cadastros', label: 'Materiais e locais', icon: '⚙' },
-] as const;
+  { href: '/estoque', label: 'Saldos', icon: 'boxes' },
+  { href: '/estoque/lotes', label: 'Lotes e validade', icon: 'calendar' },
+  { href: '/estoque/entrada', label: 'Entradas', icon: 'package-check' },
+  { href: '/estoque/solicitacoes', label: 'Solicitações', icon: 'clipboard' },
+  { href: '/estoque/inventario', label: 'Inventário', icon: 'checklist' },
+  { href: '/estoque/movimentos', label: 'Movimentações', icon: 'transfer' },
+  { href: '/estoque/cadastros', label: 'Materiais e locais', icon: 'settings' },
+] as const satisfies readonly { href: string; label: string; icon: IconName }[];
