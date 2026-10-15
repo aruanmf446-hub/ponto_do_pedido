@@ -93,7 +93,10 @@ for (const [i, [kind, name]] of [['dinheiro', 'Dinheiro'], ['pix', 'Pix'], ['cre
   await rpc('payment_method_save', { p_tenant: tenant, p_id: null, p_kind: kind, p_name: name, p_active: true, p_channels: null, p_position: i });
 }
 await rpc('delivery_zone_save', { p_tenant: tenant, p_id: null, p_name: 'Centro', p_neighborhoods: ['Centro'], p_fee_cents: 800, p_min_order_cents: 3000, p_eta_minutes: 45, p_active: true });
-await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { delivery_enabled: true, local_order_mode: 'ambos', local_order_confirmation: 'atendente', service_fee_percent: 10, kitchen_stages: ['Preparo', 'Montagem', 'Finalização'] } });
+// Cada área de configuração é salva (e autorizada) separadamente
+await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { delivery_enabled: true } });
+await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { local_order_mode: 'ambos', local_order_confirmation: 'atendente' } });
+await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { service_fee_percent: 10, kitchen_stages: ['Preparo', 'Montagem', 'Finalização'] } });
 
 // Estoque e suprimentos de demonstração
 const deposito = await rpc('stock_location_save', { p_tenant: tenant, p_id: null, p_name: 'Depósito seco', p_kind: 'deposito', p_parent: null, p_active: true });
