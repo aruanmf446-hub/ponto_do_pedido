@@ -4,8 +4,8 @@
    m4 Pedido Rápido Moderno. O cliente escolhe só claro/escuro.
    ===================================================================== */
 .cd {
-  --cd-font: var(--cd-text), system-ui, sans-serif;
-  --cd-title: var(--cd-display), Georgia, serif;
+  --cd-font: var(--pdp-text), system-ui, sans-serif;
+  --cd-title: var(--pdp-serif), Georgia, serif;
   --cd-bg: #f7f0e5;
   --cd-surface: #fffaf2;
   --cd-surface-2: #f1e6d5;
@@ -571,8 +571,8 @@
    M3 · Experiência Premium — escuro, lateral de categorias, destaque
    ===================================================================== */
 .cd[data-template='m3'] {
-  --cd-font: var(--cd-f3), system-ui, sans-serif;
-  --cd-title: var(--cd-f3d), Georgia, serif;
+  --cd-font: var(--pdp-lato), system-ui, sans-serif;
+  --cd-title: var(--pdp-playfair), Georgia, serif;
   --cd-bg: #141210;
   --cd-surface: #1d1915;
   --cd-surface-2: #2a241d;
@@ -690,8 +690,8 @@
    M4 · Pedido Rápido Moderno — lateral, grade compacta, pedido ao lado
    ===================================================================== */
 .cd[data-template='m4'] {
-  --cd-font: var(--cd-f4), system-ui, sans-serif;
-  --cd-title: var(--cd-f4), system-ui, sans-serif;
+  --cd-font: var(--pdp-jakarta), system-ui, sans-serif;
+  --cd-title: var(--pdp-jakarta), system-ui, sans-serif;
   --cd-bg: #f3f7f2;
   --cd-surface: #ffffff;
   --cd-surface-2: #e7f0e6;

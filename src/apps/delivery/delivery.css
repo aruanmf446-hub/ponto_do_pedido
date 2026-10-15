@@ -648,7 +648,7 @@
 
 /* ---------- m1 · Elegante ---------- */
 .dl[data-template='m1'] {
-  --dl-title: var(--dl-f1d), Georgia, serif;
+  --dl-title: var(--pdp-serif), Georgia, serif;
   --dl-bg: #f7f0e5;
   --dl-surface: #fffaf2;
   --dl-ink: #33251a;
@@ -656,7 +656,7 @@
   --dl-line: #e8dcc8;
   --dl-accent: #b5653a;
   --dl-accent-2: #d99a6c;
-  font-family: var(--dl-f1), system-ui, sans-serif;
+  font-family: var(--pdp-text), system-ui, sans-serif;
 }
 .dl[data-template='m1'] .dl-hero {
   background:
@@ -725,7 +725,7 @@
 
 /* ---------- m3 · Premium ---------- */
 .dl[data-template='m3'] {
-  --dl-title: var(--dl-f3d), Georgia, serif;
+  --dl-title: var(--pdp-playfair), Georgia, serif;
   --dl-bg: #141210;
   --dl-surface: #1d1915;
   --dl-ink: #f3e9d8;
@@ -735,7 +735,7 @@
   --dl-accent-2: #e6c98c;
   --dl-accent-ink: #1a1307;
   --dl-radius: 6px;
-  font-family: var(--dl-f3), system-ui, sans-serif;
+  font-family: var(--pdp-lato), system-ui, sans-serif;
 }
 .dl[data-template='m3'] .dl-hero {
   border-radius: 6px;
@@ -803,7 +803,7 @@
 
 /* ---------- m4 · Pedido Rápido ---------- */
 .dl[data-template='m4'] {
-  --dl-title: var(--dl-f4), system-ui, sans-serif;
+  --dl-title: var(--pdp-jakarta), system-ui, sans-serif;
   --dl-bg: #f3f7f2;
   --dl-surface: #ffffff;
   --dl-ink: #1d2a1f;
@@ -812,7 +812,7 @@
   --dl-accent: #2f9e58;
   --dl-accent-2: #8fd19e;
   --dl-radius: 14px;
-  font-family: var(--dl-f4), system-ui, sans-serif;
+  font-family: var(--pdp-jakarta), system-ui, sans-serif;
 }
 .dl[data-template='m4'] .dl-hero {
   border-radius: 16px;
