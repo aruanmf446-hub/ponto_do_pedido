@@ -1,0 +1,230 @@
+/* Base mínima e neutra. Cada aplicativo define sua própria identidade visual. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, currentColor 55%, transparent);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Estrutura dos primitivos do núcleo (sem cores/tipografia) */
+.pdp-dialog {
+  padding: 0;
+  border: none;
+  max-width: min(560px, calc(100vw - 24px));
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+}
+.pdp-dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+.pdp-dialog-body {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 32px);
+}
+.pdp-dialog-header,
+.pdp-dialog-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pdp-dialog-header {
+  justify-content: space-between;
+}
+.pdp-dialog-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.pdp-dialog-content {
+  overflow: auto;
+}
+.pdp-dialog-footer {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.pdp-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.pdp-field {
+  display: grid;
+  gap: 6px;
+}
+.pdp-approval-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+}
+.pdp-approval-summary dt {
+  opacity: 0.7;
+}
+.pdp-approval-summary dd {
+  margin: 0;
+}
+.pdp-model-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.pdp-model-option {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+}
+.pdp-scheme {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  margin-top: 16px;
+}
+.pdp-tenant-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.pdp-tenant-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  flex: none;
+}
+.pdp-tenant-logo--initials {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+.pdp-tenant-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdp-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 0.72rem;
+  opacity: 0.72;
+}
+.pdp-footer a {
+  color: inherit;
+}
+.pdp-switcher {
+  position: relative;
+}
+.pdp-switcher > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdp-switcher > summary::-webkit-details-marker {
+  display: none;
+}
+.pdp-switcher > summary::after {
+  content: '▾';
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+.pdp-switcher-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  min-width: 220px;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  background: Canvas;
+  color: CanvasText;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 22%);
+}
+.pdp-switcher-apps {
+  display: grid;
+  gap: 4px;
+}
+.pdp-switcher-apps a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+.pdp-switcher-apps a:hover {
+  background: color-mix(in srgb, CanvasText 8%, transparent);
+}
+.pdp-switcher form {
+  margin: 0;
+}
+.pdp-switcher-exit {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+// Cria um restaurante de demonstração nos Supabase LOCAIS seguindo o fluxo real:
+// cadastro do titular → contratação (assinaturas) → sincronização da licença →
+// cadastros via RPC → equipe via Edge Function `team`.
+// Uso: node scripts/seed-local.mjs [slug]
+import { createClient } from '@supabase/supabase-js';
+
+const APP = process.env.SEED_APP_URL ?? 'http://127.0.0.1:54321';
+const BILLING = process.env.SEED_BILLING_URL ?? 'http://127.0.0.1:55321';
+const KEY = process.env.SEED_KEY ?? 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+const slug = process.argv[2] ?? `famiglia${Date.now().toString(36).slice(-5)}`;
+const password = 'Senha12345!';
+const ownerEmail = `dono+${slug}@teste.local`;
+
+async function call(url, token, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { apikey: KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!res.ok || json?.error) throw new Error(`${url}: ${JSON.stringify(json)}`);
+  return json;
+}
+
+const supabase = createClient(APP, KEY, { auth: { persistSession: false } });
+const { data: signUp, error } = await supabase.auth.signUp({ email: ownerEmail, password, options: { data: { full_name: 'Marco Rossi' } } });
+if (error) throw error;
+const token = signUp.session.access_token;
+
+await call(`${BILLING}/functions/v1/billing`, token, {
+  action: 'subscribe',
+  plan_code: 'diamond',
+  restaurant_name: 'Famiglia da Pizza',
+  restaurant_slug: slug,
+  accept_terms: true,
+  idempotency_key: slug,
+});
+const sync = await call(`${APP}/functions/v1/license-sync`, token, {});
+const tenant = sync.results.find((r) => r.slug === slug)?.tenant_id;
+if (!tenant) throw new Error(`Licença não sincronizada: ${JSON.stringify(sync)}`);
+
+async function rpc(fn, args) {
+  const { data, error: e } = await supabase.rpc(fn, args);
+  if (e) throw new Error(`${fn}: ${e.message}`);
+  return data;
+}
+
+const salao = await rpc('sector_save', { p_tenant: tenant, p_id: null, p_name: 'Salão Principal', p_kind: 'salao', p_active: true, p_position: 0 });
+await rpc('sector_save', { p_tenant: tenant, p_id: null, p_name: 'Varanda', p_kind: 'salao', p_active: true, p_position: 1 });
+for (let i = 1; i <= 8; i += 1) {
+  await rpc('table_save', { p_tenant: tenant, p_id: null, p_label: String(i).padStart(2, '0'), p_sector: salao, p_seats: 4, p_active: true, p_position: i });
+}
+const cats = {};
+for (const [i, name] of ['Pizzas', 'Entradas', 'Massas', 'Bebidas', 'Sobremesas'].entries()) {
+  cats[name] = await rpc('category_save', { p_tenant: tenant, p_id: null, p_name: name, p_description: '', p_position: i, p_active: true });
+}
+const products = [
+  ['Pizzas', 'Margherita', 'Molho de tomate, mussarela e manjericão', 4990],
+  ['Pizzas', 'Calabresa', 'Calabresa fatiada, cebola e azeitonas', 4790],
+  ['Pizzas', 'Portuguesa', 'Presunto, ovos, cebola e ervilha', 5290],
+  ['Pizzas', 'Quatro Queijos', 'Mussarela, provolone, parmesão e gorgonzola', 5590],
+  ['Entradas', 'Bruschetta', 'Pão italiano, tomate e manjericão', 2490],
+  ['Massas', 'Spaghetti ao Sugo', 'Molho de tomate artesanal', 3890],
+  ['Bebidas', 'Refrigerante Lata', '350 ml', 700],
+  ['Bebidas', 'Suco Natural', 'Laranja ou limão', 1100],
+  ['Sobremesas', 'Tiramisù', 'Receita da casa', 2200],
+];
+for (const [i, [cat, name, description, price]] of products.entries()) {
+  await rpc('product_save', {
+    p_tenant: tenant, p_id: null, p_category: cats[cat], p_name: name, p_description: description, p_price_cents: price,
+    p_image_path: null, p_available: true, p_active: true, p_channels: null, p_prep_sector: null, p_position: i,
+  });
+}
+for (const [i, [kind, name]] of [['dinheiro', 'Dinheiro'], ['pix', 'Pix'], ['credito', 'Crédito'], ['debito', 'Débito']].entries()) {
+  await rpc('payment_method_save', { p_tenant: tenant, p_id: null, p_kind: kind, p_name: name, p_active: true, p_channels: null, p_position: i });
+}
+await rpc('delivery_zone_save', { p_tenant: tenant, p_id: null, p_name: 'Centro', p_neighborhoods: ['Centro'], p_fee_cents: 800, p_min_order_cents: 3000, p_eta_minutes: 45, p_active: true });
+await rpc('tenant_update_settings', { p_tenant: tenant, p_patch: { delivery_enabled: true, local_order_mode: 'ambos', local_order_confirmation: 'atendente', service_fee_percent: 10, kitchen_stages: ['Montagem', 'Forno', 'Finalização'] } });
+
+const { data: roles } = await supabase.from('roles').select('id, name').eq('tenant_id', tenant);
+const roleId = (n) => roles.find((r) => r.name === n).id;
+const staff = [
+  ['garcom', 'Lucas Garçom', 'atendimento', ['Atendente']],
+  ['cozinha', 'Ana Cozinha', 'cozinha', ['Cozinha']],
+  ['caixa', 'Paula Caixa', 'caixa', ['Caixa']],
+  ['gestora', 'Júlia Gestora', 'gestao', ['Gestor']],
+  ['adm', 'Rafael Administrativo', 'financeiro', ['Administrativo']],
+  ['estoque', 'Bruno Estoque', 'estoque', ['Estoquista']],
+];
+const accounts = { owner: ownerEmail };
+for (const [key, name, app, roleNames] of staff) {
+  const email = `${key}+${slug}@teste.local`;
+  await call(`${APP}/functions/v1/team`, token, {
+    tenant_id: tenant, email, full_name: name, job_title: roleNames[0], primary_app: app,
+    role_ids: roleNames.map(roleId), temporary_password: password,
+  });
+  accounts[key] = email;
+}
+console.log(JSON.stringify({ slug, tenant, password, accounts }, null, 2));

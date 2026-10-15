@@ -1,0 +1,116 @@
+.ac-root {
+  --ac-bg: #f4f2ee;
+  --ac-card: #ffffff;
+  --ac-text: #1d1b18;
+  --ac-muted: #6f6a62;
+  --ac-line: #e2ddd5;
+  --ac-accent: #1f3a2e;
+  --ac-accent-text: #ffffff;
+  --ac-danger: #a3261b;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--ac-bg);
+  color: var(--ac-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+[data-scheme='dark'] .ac-root {
+  --ac-bg: #121311;
+  --ac-card: #1b1c1a;
+  --ac-text: #ecebe7;
+  --ac-muted: #a7a39b;
+  --ac-line: #2c2d2a;
+  --ac-accent: #9ec7ad;
+  --ac-accent-text: #0e1a13;
+  --ac-danger: #ff8a7e;
+}
+.ac-card {
+  width: min(400px, 100%);
+  background: var(--ac-card);
+  border: 1px solid var(--ac-line);
+  border-radius: 14px;
+  padding: 28px 24px;
+  display: grid;
+  gap: 16px;
+}
+.ac-mark .pdp-tenant-logo {
+  border-radius: 10px;
+  background: var(--ac-accent);
+  color: var(--ac-accent-text);
+}
+.ac-title {
+  margin: 4px 0 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+.ac-subtitle {
+  margin: -8px 0 0;
+  color: var(--ac-muted);
+}
+.ac-form {
+  display: grid;
+  gap: 14px;
+}
+.ac-form h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.ac-field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+.ac-field input {
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--ac-line);
+  padding: 0 12px;
+  background: transparent;
+}
+.ac-primary {
+  height: 46px;
+  border: none;
+  border-radius: 8px;
+  background: var(--ac-accent);
+  color: var(--ac-accent-text);
+  font-weight: 600;
+}
+.ac-link {
+  background: none;
+  border: none;
+  color: var(--ac-muted);
+  text-decoration: underline;
+  justify-self: start;
+  padding: 0;
+}
+.ac-error {
+  color: var(--ac-danger);
+  margin: 0;
+}
+.ac-ok {
+  margin: 0;
+}
+.ac-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ac-actions a,
+.ac-actions button {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--ac-line);
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+}
+.ac-footer {
+  margin-top: 24px;
+  justify-content: center;
+  color: var(--ac-muted);
+}

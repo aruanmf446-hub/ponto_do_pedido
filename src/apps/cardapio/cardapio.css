@@ -1,0 +1,331 @@
+/* CARDÁPIO DIGITAL LOCAL — experiência gastronômica para consumo presencial. */
+.cd {
+  --cd-bg: #f8f3ea;
+  --cd-surface: #fffdf8;
+  --cd-ink: #2a2017;
+  --cd-muted: #7d6c59;
+  --cd-line: #e8dcc8;
+  --cd-accent: #9c3d1f;
+  --cd-accent-ink: #fff;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--cd-bg);
+  color: var(--cd-ink);
+  font-family: var(--cd-text), system-ui, sans-serif;
+}
+[data-scheme='dark'] .cd {
+  --cd-bg: #15110d;
+  --cd-surface: #1e1914;
+  --cd-ink: #f3e8da;
+  --cd-muted: #b19e89;
+  --cd-line: #3a3027;
+  --cd-accent: #e0956b;
+  --cd-accent-ink: #1a0f08;
+}
+.cd-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--cd-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--cd-line);
+}
+.cd-brand .pdp-tenant-logo {
+  border-radius: 50%;
+  background: var(--cd-accent);
+  color: var(--cd-accent-ink);
+}
+.cd-brand .pdp-tenant-name {
+  font-family: var(--cd-display), Georgia, serif;
+  font-size: 1.3rem;
+}
+.cd-sub {
+  color: var(--cd-muted);
+  font-size: 0.9rem;
+}
+.cd-scheme {
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--cd-line);
+  background: var(--cd-surface);
+}
+.cd-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.cd-footer {
+  justify-content: center;
+  padding: 16px;
+  color: var(--cd-muted);
+}
+.cd-hero {
+  padding: clamp(20px, 5vw, 48px) 0 18px;
+  max-width: 620px;
+}
+.cd-hero h1 {
+  font-family: var(--cd-display), Georgia, serif;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0 0 10px;
+}
+.cd-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  color: var(--cd-accent);
+  margin: 0 0 8px;
+}
+.cd-desc {
+  color: var(--cd-muted);
+  margin: 0;
+}
+.cd-warn {
+  color: var(--cd-accent);
+  font-weight: 600;
+}
+.cd-cats {
+  position: sticky;
+  top: 66px;
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 0;
+  background: var(--cd-bg);
+}
+.cd-cats a {
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--cd-ink);
+  padding: 8px 16px;
+  border: 1px solid var(--cd-line);
+  border-radius: 999px;
+  background: var(--cd-surface);
+}
+.cd-category {
+  padding: 18px 0;
+  scroll-margin-top: 130px;
+}
+.cd-category h2 {
+  font-family: var(--cd-display), Georgia, serif;
+  font-size: 1.9rem;
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.cd-products {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.cd-product {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--cd-surface);
+  border: 1px solid var(--cd-line);
+}
+.cd-product[data-available='false'] {
+  opacity: 0.55;
+}
+.cd-product img,
+.cd-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: radial-gradient(circle at 30% 30%, var(--cd-line), var(--cd-bg));
+}
+.cd-product h3 {
+  margin: 0;
+  font-family: var(--cd-display), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+.cd-product p {
+  margin: 2px 0 6px;
+  color: var(--cd-muted);
+  font-size: 0.92rem;
+}
+.cd-price {
+  font-weight: 600;
+  color: var(--cd-accent);
+}
+.cd-add {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--cd-accent);
+  color: var(--cd-accent-ink);
+  font-size: 1.5rem;
+}
+.cd-columns {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  align-items: start;
+}
+.cd-columns > :only-child {
+  grid-column: 1 / -1;
+}
+.cd-cart {
+  position: sticky;
+  top: 80px;
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--cd-surface);
+  border: 1px solid var(--cd-line);
+}
+.cd-cart h2 {
+  font-family: var(--cd-display), Georgia, serif;
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+}
+.cd-cart section {
+  display: grid;
+  gap: 10px;
+}
+.cd-cart-items,
+.cd-orders {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.cd-cart-items li,
+.cd-orders li {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--cd-line);
+}
+.cd-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+.cd-row input,
+.cd-input {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--cd-line);
+  background: var(--cd-bg);
+  padding: 0 10px;
+  min-width: 0;
+}
+.cd-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--cd-line);
+  border-radius: 999px;
+}
+.cd-qty button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+}
+.cd-qty span {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+.cd-btn {
+  min-height: 50px;
+  border-radius: 999px;
+  border: 1px solid var(--cd-accent);
+  background: var(--cd-accent);
+  color: var(--cd-accent-ink);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.cd-btn--ghost {
+  background: transparent;
+  color: var(--cd-accent);
+}
+.cd-btn:disabled {
+  opacity: 0.5;
+}
+.cd-ok {
+  color: #3c7d4a;
+  font-weight: 600;
+  margin: 0;
+}
+[data-scheme='dark'] .cd-ok {
+  color: #8fd19e;
+}
+.cd-error {
+  color: #b3261e;
+  font-weight: 600;
+  margin: 0;
+}
+.cd-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cd-accent);
+}
+.cd-status[data-status='ready'],
+.cd-status[data-status='delivered'] {
+  color: #3c7d4a;
+}
+.cd-message {
+  padding: 48px 16px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+.cd-message h1 {
+  font-family: var(--cd-display), Georgia, serif;
+  font-size: 2rem;
+  margin: 0;
+}
+@media (max-width: 860px) {
+  .cd-columns {
+    grid-template-columns: 1fr;
+  }
+  .cd-cart {
+    position: sticky;
+    bottom: 0;
+    top: auto;
+    max-height: 60dvh;
+    overflow: auto;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 30px rgb(0 0 0 / 12%);
+  }
+}
+@media (max-width: 480px) {
+  .cd-product {
+    grid-template-columns: 72px 1fr auto;
+    gap: 10px;
+  }
+  .cd-product img,
+  .cd-photo {
+    width: 72px;
+    height: 72px;
+  }
+  .cd-product h3 {
+    font-size: 1.15rem;
+  }
+}
