@@ -1,0 +1,63 @@
+name: Deploy Cloudflare
+
+# Publica o Worker (OpenNext) após o CI verde na main. Só executa quando os
+# segredos da Cloudflare e as variáveis públicas do Supabase estão configurados
+# no repositório; caso contrário, registra o motivo e encerra sem publicar.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Públicos (protegidos por RLS); embutidos no bundle durante o build
+      PDP_ROOT_DOMAIN: ${{ vars.PDP_ROOT_DOMAIN || 'pontodopedido.com' }}
+      PDP_PATH_TENANTS: '0'
+      PDP_APP_SUPABASE_URL: ${{ vars.PDP_APP_SUPABASE_URL }}
+      PDP_APP_SUPABASE_PUBLISHABLE_KEY: ${{ vars.PDP_APP_SUPABASE_PUBLISHABLE_KEY }}
+      PDP_BILLING_SUPABASE_URL: ${{ vars.PDP_BILLING_SUPABASE_URL }}
+      PDP_BILLING_SUPABASE_PUBLISHABLE_KEY: ${{ vars.PDP_BILLING_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - name: Verificar configuração
+        id: cfg
+        run: |
+          missing=""
+          for v in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID PDP_APP_SUPABASE_URL PDP_APP_SUPABASE_PUBLISHABLE_KEY PDP_BILLING_SUPABASE_URL PDP_BILLING_SUPABASE_PUBLISHABLE_KEY; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning::Deploy não executado. Configure no repositório:$missing"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.cfg.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - if: steps.cfg.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.cfg.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.cfg.outputs.ready == 'true'
+        name: Build e deploy (OpenNext → Workers)
+        run: npm run cf:deploy
