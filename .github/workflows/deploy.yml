@@ -59,6 +59,10 @@ jobs:
           cache: npm
       - if: steps.cfg.outputs.ready == 'true'
         run: npm ci
+      # Falha cedo, com a causa (token inválido ou sem permissão), antes do build.
+      - if: steps.cfg.outputs.ready == 'true'
+        name: Verificar token Cloudflare
+        run: npm run cf:preflight
       - if: steps.cfg.outputs.ready == 'true'
         name: Build e deploy (OpenNext → Workers)
         run: npm run cf:deploy

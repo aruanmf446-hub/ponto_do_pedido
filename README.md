@@ -41,7 +41,9 @@ npm run cf:build                    # build do Worker Cloudflare
 Itens que dependem do titular (não podem ser feitos pelo código):
 
 - [ ] **Publicação na Cloudflare** — no GitHub (Settings → Secrets and variables → Actions):
-  - segredos `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`;
+  - segredos `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`. O token precisa de
+    `Account → Workers Scripts → Edit` e `Account → Account Settings → Read`, limitado à conta.
+    O job `deploy` roda `npm run cf:preflight` antes do build e falha com a causa se o token estiver errado;
   - variáveis públicas `PDP_APP_SUPABASE_URL`, `PDP_APP_SUPABASE_PUBLISHABLE_KEY`,
     `PDP_BILLING_SUPABASE_URL`, `PDP_BILLING_SUPABASE_PUBLISHABLE_KEY` (e opcionais `PDP_ROOT_DOMAIN`
     e `PDP_SITE_TEMPLATE` — modelo do site institucional, `m1` a `m4`; veja as prévias em `/modelos`).

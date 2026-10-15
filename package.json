@@ -18,6 +18,7 @@
     "test:db": "vitest run -c vitest.db.config.ts",
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "cf:preflight": "node scripts/cf-preflight.mjs",
     "cf:build": "node scripts/cf-build.mjs",
     "cf:preview": "node scripts/cf-build.mjs && opennextjs-cloudflare preview",
     "cf:deploy": "node scripts/cf-build.mjs && opennextjs-cloudflare deploy"
