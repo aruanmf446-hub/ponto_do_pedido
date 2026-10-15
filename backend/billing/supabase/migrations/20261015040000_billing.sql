@@ -216,7 +216,7 @@ begin
   return v_result;
 end $$;
 
-create or replace function billing_lock_subscription(p_identity uuid, p_subscription uuid)
+create or replace function public.billing_lock_subscription(p_identity uuid, p_subscription uuid)
 returns public.subscriptions language plpgsql security definer set search_path = '' as $$
 declare v public.subscriptions;
 begin
@@ -236,7 +236,7 @@ declare
   v_end timestamptz;
   v_price bigint;
 begin
-  v := billing_lock_subscription(p_identity, p_subscription);
+  v := public.billing_lock_subscription(p_identity, p_subscription);
   if v.status = 'cancelled' and v.current_period_end is not null and v.current_period_end < now() - interval '90 days' then
     raise exception using message = 'Assinatura encerrada há mais de 90 dias. Contrate novamente.', detail = 'INVALID_STATE';
   end if;
@@ -257,7 +257,7 @@ create or replace function public.billing_change_plan(p_identity uuid, p_subscri
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v public.subscriptions;
 begin
-  v := billing_lock_subscription(p_identity, p_subscription);
+  v := public.billing_lock_subscription(p_identity, p_subscription);
   if not exists (select 1 from public.plans where code = p_plan and active) then
     raise exception using message = 'Plano indisponível.', detail = 'INVALID_PLAN';
   end if;
@@ -280,7 +280,7 @@ create or replace function public.billing_cancel(p_identity uuid, p_subscription
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v public.subscriptions;
 begin
-  v := billing_lock_subscription(p_identity, p_subscription);
+  v := public.billing_lock_subscription(p_identity, p_subscription);
   if p_undo then
     if v.status <> 'active' or not v.cancel_at_period_end then
       raise exception using message = 'Não há cancelamento agendado.', detail = 'INVALID_STATE';
