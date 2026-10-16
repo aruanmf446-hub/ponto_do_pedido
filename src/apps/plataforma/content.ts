@@ -34,7 +34,7 @@ export const MODULES = [
 export const PRINCIPLES = [
   { title: 'Um aplicativo para cada função', text: 'Cada área trabalha na própria tela, com navegação e identidade próprias.' },
   { title: 'Autoridade sob controle', text: 'O titular define quem faz o quê, com limites, aprovações e auditoria.' },
-  { title: 'Seu restaurante, seu endereço', text: 'Cada estabelecimento acessa pelo próprio subdomínio, com dados isolados.' },
+  { title: 'Seu restaurante, seu endereço', text: 'Cada estabelecimento tem um endereço de acesso, com dados isolados.' },
   { title: 'Sem retrabalho', text: 'Mesas, produtos e preços são cadastrados uma vez e usados por todos os aplicativos.' },
 ];
 

@@ -19,7 +19,8 @@ Leia também `AGENTS.md` (regras do Next.js 16 instaladas pelo framework).
   **Proibido importar de outro `src/apps/*`** (o ESLint bloqueia). Compartilhado só via `src/core`.
 - `src/core` nunca importa de `src/apps`.
 - Restaurante resolvido pelo hostname em `src/proxy.ts` (`<slug>.pontodopedido.com` → `/r/<slug>/...`).
-  `/r/<slug>` direto só com `PDP_PATH_TENANTS=1` (dev/prévias).
+  `/r/<slug>` direto com `PDP_PATH_TENANTS=1`, inclusive como fallback da produção.
+  Só anunciar subdomínios após DNS/Vercel/TLS comprovados e `PDP_TENANT_SUBDOMAINS_READY=1`.
 - Sem tela de seleção de aplicativos: após o login vai para a área principal autorizada (`landingApp`).
 
 ## Segurança e autoridade

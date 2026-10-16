@@ -3,6 +3,7 @@
 
 export const config = {
   rootDomain: process.env.NEXT_PUBLIC_PDP_ROOT_DOMAIN ?? 'pontodopedido.com',
+  tenantSubdomainsReady: process.env.NEXT_PUBLIC_PDP_TENANT_SUBDOMAINS_READY === '1',
   pathTenants: process.env.NEXT_PUBLIC_PDP_PATH_TENANTS === '1',
   /** Modelo do site institucional (m1..m4); PDP_SITE_TEMPLATE. */
   siteTemplate: process.env.NEXT_PUBLIC_PDP_SITE_TEMPLATE ?? 'm1',

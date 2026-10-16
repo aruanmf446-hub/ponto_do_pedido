@@ -40,7 +40,8 @@ aplicativos; rotas de um aplicativo não importam código de outro.
 - `pontodopedido.com` — site, planos, cadastro, contratação e `/portal`.
 - `<slug>.pontodopedido.com` — restaurante. O proxy reescreve para `/r/<slug>/...` e envia
   `x-pdp-tenant` e `x-pdp-base`. O cookie de sessão usa o domínio `.pontodopedido.com`.
-- `/r/<slug>/...` direto só quando `PDP_PATH_TENANTS=1` (desenvolvimento e prévias).
+- `/r/<slug>/...` direto só quando `PDP_PATH_TENANTS=1` (inclusive fallback de produção enquanto o domínio não está operacional).
+- Links preferem subdomínios apenas com `PDP_TENANT_SUBDOMAINS_READY=1`, após validar propriedade, Vercel, wildcard DNS e TLS. Essa preferência não desativa o fallback.
 
 ## Fluxo de contratação e licença
 
