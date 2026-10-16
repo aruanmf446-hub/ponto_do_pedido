@@ -1958,3 +1958,51 @@
     stroke-dashoffset: 0 !important;
   }
 }
+
+
+/* Vitrine comercial integrada à azulejaria padrão. */
+.pl-landing[data-template='m1'] .pl-m1-brand { color: #cc5435; font-weight: 800; }
+.pl-landing[data-template='m1'] .pl-app-story {
+  --story-orange: #cc5435;
+  padding: clamp(56px, 9vw, 112px) clamp(20px, 5vw, 80px);
+  background: #fcf8f3;
+  color: #211b16;
+  border-top: 1px solid #ebd8c9;
+  border-bottom: 1px solid #ebd8c9;
+}
+.pl-app-story-head { display: flex; justify-content: space-between; align-items: end; gap: 22px; max-width: 1250px; margin: auto; }
+.pl-app-story-kicker { text-transform: uppercase; letter-spacing: .16em; font-size: .75rem; color: #9c4a2d; font-weight: 700; }
+.pl-app-story-head h2 { font-size: clamp(2.3rem, 5vw, 5rem); line-height: 1.02; letter-spacing: -.045em; }
+.pl-app-story-navigation { display: flex; align-items: center; gap: 12px; white-space: nowrap; font-weight: 700; }
+.pl-app-story-navigation button { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #bfa99b; background: white; color: #211b16; cursor: pointer; font-size: 1.3rem; }
+.pl-app-story-navigation button:hover, .pl-app-story-navigation button:focus-visible { background: #cc5435; border-color: #cc5435; color: white; }
+.pl-app-story-content { max-width: 1250px; margin: 38px auto 24px; background: #fff; border: 1px solid #e9d6c6; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); min-height: 450px; overflow: hidden; }
+.pl-app-story-text { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(28px,5vw,64px); }
+.pl-app-story-number { color: #cc5435; font-size: .9rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
+.pl-app-story-text h3 { margin: 18px 0; font-size: clamp(2rem,3.5vw,3.5rem); line-height: 1.05; }
+.pl-app-story-text p { max-width: 42ch; line-height: 1.5; }
+.pl-app-story-text .pl-app-story-price { font-weight: 700; }
+.pl-app-story-text .pl-btn { margin-top: 16px; background: #cc5435; border-color: #cc5435; color: white !important; border-radius: 12px; }
+.pl-app-story-diagram { background: #f6ece3; display: flex; flex-direction: column; gap: 10px; justify-content: center; padding: clamp(25px,5vw,60px); }
+.pl-app-story-node { position: relative; min-height: 42px; display: flex; align-items: center; gap: 16px; background: #fffaf6; border: 1px solid #dcbfa8; padding: 9px 16px; }
+.pl-app-story-node span { font-size: .75rem; color: #a84d31; font-weight: 800; }
+.pl-app-story-node strong { font-size: clamp(.87rem,1.2vw,1.05rem); }
+.pl-app-story-node i { position: absolute; z-index: 1; left: 50%; bottom: -14px; color: #cc5435; font-style: normal; font-size: 1.05rem; }
+.pl-app-story-dots { display: flex; justify-content: center; gap: 9px; }
+.pl-app-story-dots button { width: 36px; height: 36px; border: 1px solid #d8bda9; background: transparent; color: #6f4434; cursor: pointer; border-radius: 50%; font-size: .85rem; }
+.pl-app-story-dots button.is-active, .pl-app-story-dots button:hover { background: #cc5435; border-color: #cc5435; color: white; }
+@media (max-width: 700px) {
+  .pl-app-story-head { align-items: flex-start; flex-direction: column; }
+  .pl-app-story-navigation { align-self: flex-end; }
+  .pl-app-story-content { grid-template-columns: 1fr; margin-top: 22px; }
+  .pl-app-story-diagram { padding: 25px; }
+  .pl-app-story-text { padding: 28px; }
+  .pl-app-story-dots { gap: 5px; }
+  .pl-app-story-dots button { width: 32px; height: 32px; }
+}
+[data-scheme='dark'] .pl-landing[data-template='m1'] .pl-app-story { background: #201a17; color: #f9f1ea; border-color: #4d3226; }
+[data-scheme='dark'] .pl-app-story-content { background: #2b211d; border-color: #5c3a2e; }
+[data-scheme='dark'] .pl-app-story-diagram { background: #38251d; }
+[data-scheme='dark'] .pl-app-story-node { background: #251b18; border-color: #714332; }
+[data-scheme='dark'] .pl-app-story-navigation button { background: #38251d; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .pl-app-story * { scroll-behavior: auto !important; } }
