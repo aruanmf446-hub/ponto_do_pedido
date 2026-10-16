@@ -1,5 +1,7 @@
 # Continuação da integração — 16/10/2026, UTC
 
+> Complemento posterior: [billing central multiproduto CRM PLUS](./billing-multiproduto-20261016.md).
+
 Continuação do relatório `integracao-20261016.md`, a partir de `c9e78ed`.
 As evidências anteriores permanecem preservadas. Este documento distingue os
 testes reais em produção dos testes das stacks locais no CI.

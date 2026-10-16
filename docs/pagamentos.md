@@ -1,5 +1,8 @@
 # Pagamentos (Mercado Pago)
 
+> Arquitetura central multiproduto e implantação pendente: [billing CRM PLUS](./billing-multiproduto-20261016.md).
+> O Auth de cada SaaS é independente; o domínio do Ponto do Pedido não é destino global.
+
 > Inventário remoto atualizado e limitações dos testes:
 > [auditoria de 16/10/2026](./integracao-20261016.md). As referências de estado
 > abaixo descrevem momentos anteriores e não devem substituir a consulta remota.
@@ -55,9 +58,9 @@ Portal / login ── license-sync ──► app libera o restaurante conforme a
    ```
    supabase secrets set --project-ref bjtlookhgkdltdohzxnq \
      MP_ACCESS_TOKEN=<access token de teste> \
-     MP_WEBHOOK_SECRET=<chave secreta do webhook> \
-     MP_BACK_URL=https://pontodopedido.com/portal
+     MP_WEBHOOK_SECRET=<chave secreta do webhook>
    ```
+   O retorno é definido por produto em `products`, não por `MP_BACK_URL` global.
 4. **Migração** `20261016100000_mercadopago` aplicada no projeto assinaturas.
 5. **Funções**: `supabase functions deploy billing mercadopago-webhook --project-ref bjtlookhgkdltdohzxnq`.
 6. **Preços**: defina `plans.price_cents` (decisão comercial do titular).
