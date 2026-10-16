@@ -3,10 +3,17 @@ import pg from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 
 // Projeto comercial (assinaturas): ciclo de vida da assinatura e isolamento.
-const pool = new pg.Pool({ connectionString: process.env.PDP_TEST_BILLING_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres', max: 4 });
+const pool = new pg.Pool({
+  connectionString: process.env.PDP_TEST_BILLING_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres',
+  max: 4,
+});
 afterAll(() => pool.end());
 
-async function q<T = Record<string, unknown>>(role: 'service_role' | 'anon' | 'authenticated', sql: string, params: unknown[] = []): Promise<T[]> {
+async function q<T = Record<string, unknown>>(
+  role: 'service_role' | 'anon' | 'authenticated',
+  sql: string,
+  params: unknown[] = [],
+): Promise<T[]> {
   const c = await pool.connect();
   try {
     await c.query('begin');
@@ -21,7 +28,8 @@ async function q<T = Record<string, unknown>>(role: 'service_role' | 'anon' | 'a
     c.release();
   }
 }
-const val = async <T,>(sql: string, params: unknown[] = []) => Object.values((await q('service_role', sql, params))[0] ?? {})[0] as T;
+const val = async <T>(sql: string, params: unknown[] = []) =>
+  Object.values((await q('service_role', sql, params))[0] ?? {})[0] as T;
 async function code(fn: () => Promise<unknown>) {
   try {
     await fn();
@@ -67,7 +75,9 @@ describe('assinaturas', () => {
     expect(await val<boolean>('select cancel_at_period_end from public.subscriptions where id = $1', [sub])).toBe(false);
     // Vence o período com cancelamento agendado → encerra
     await q('service_role', 'select public.billing_cancel($1, $2, false)', [id, sub]);
-    await q('service_role', `update public.subscriptions set current_period_end = now() - interval '1 minute' where id = $1`, [sub]);
+    await q('service_role', `update public.subscriptions set current_period_end = now() - interval '1 minute' where id = $1`, [
+      sub,
+    ]);
     await q('service_role', 'select public.billing_settle_expired()');
     expect(await val<string>('select status::text from public.subscriptions where id = $1', [sub])).toBe('cancelled');
   });
@@ -82,9 +92,12 @@ describe('assinaturas', () => {
   });
 
   it('navegador só lê o catálogo de planos, sem preços inventados', async () => {
-    const plans = await q<{ code: string; price_cents: number | null }>('anon', 'select code, price_cents from public.plans order by position');
+    const plans = await q<{ code: string; price_cents: number | null }>(
+      'anon',
+      'select code, price_cents from public.plans order by position',
+    );
     expect(plans.map((p) => p.code)).toEqual(['start', 'plus', 'diamond']);
-    expect(plans.every((p) => p.price_cents === null)).toBe(true);
+    expect(plans.map((p) => Number(p.price_cents))).toEqual([4999, 8000, 15000]);
     expect(await code(() => q('anon', 'select * from public.subscriptions'))).not.toBe('NO_ERROR');
     expect(await code(() => q('authenticated', `select public.billing_overview(gen_random_uuid())`))).not.toBe('NO_ERROR');
   });

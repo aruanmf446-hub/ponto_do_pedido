@@ -53,6 +53,13 @@ evidência para declarar resolvido o `AUTH_REQUIRED` com uma sessão válida.
    Removidas essas constantes e adicionada exportação para GITHUB_ENV apenas
    das chaves públicas locais de cada projeto, obtidas pelo status da CLI sem
    imprimir o JSON completo (que inclui credenciais administrativas).
+5. **Expectativas de banco anteriores à migração de preços:** o CI conseguiu
+   iniciar as stacks e executar 50 testes: 48 passaram e 2 falharam porque
+   ainda esperavam planos sem preço. Atualizados os testes de catálogo para
+   4999/8000/15000 e os eventos de pagamento para START a 49,99. O caso
+   PRICE_UNDEFINED agora usa um plano isolado numa transação revertida, sem
+   sobrescrever o preço de qualquer plano oficial. Execução inicial:
+   [CI 38967479524](https://github.com/aruanmf446-hub/ponto_do_pedido/actions/runs/38967479524).
 
 Billing v3 e team v2 foram obtidos pelo conector. Seus fontes e dependências
 coincidem com o repositório, desconsiderando newline final. Todas as quatro

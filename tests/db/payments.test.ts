@@ -3,7 +3,7 @@ import pg from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 
 // Pagamento por Mercado Pago no projeto assinaturas. Tudo roda dentro de uma
-// transação revertida: configuração do provedor e preços de teste não vazam.
+// transação revertida: configuração do provedor e fixtures não vazam.
 const pool = new pg.Pool({
   connectionString: process.env.PDP_TEST_BILLING_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres',
   max: 2,
@@ -47,12 +47,14 @@ describe('pagamento online (Mercado Pago)', () => {
   it('fluxo completo: contratar, iniciar, aprovar, falhar, cancelar, com idempotência', async () => {
     await withTx(async (run, fails) => {
       const identity = randomUUID();
-      const subscribe = async () =>
+      const subscribe = async (plan = 'start') =>
         (
-          await run(
-            `select public.billing_subscribe($1, 'dono@teste.local', 'Dono', 'start', 'Restaurante', $2, 'vitest', $3) as r`,
-            [identity, slug(), randomUUID()],
-          )
+          await run(`select public.billing_subscribe($1, 'dono@teste.local', 'Dono', $4, 'Restaurante', $2, 'vitest', $3) as r`, [
+            identity,
+            slug(),
+            randomUUID(),
+            plan,
+          ])
         )[0]!.r as { subscription_id: string; status: string };
 
       // Sem provedor habilitado, nada de pagamento e a renovação manual segue valendo.
@@ -64,13 +66,15 @@ describe('pagamento online (Mercado Pago)', () => {
       const { subscription_id: sub, status } = await subscribe();
       expect(status).toBe('pending_payment');
 
-      // Plano sem preço definido: não inicia cobrança.
-      expect(await fails(`select public.billing_payment_context($1, $2)`, [identity, sub])).toBe('PRICE_UNDEFINED');
-
-      // Só para o teste (revertido ao fim): preço fictício.
-      await run(`update public.plans set price_cents = 1000 where code = 'start'`);
+      // Plano isolado sem preço: preserva os valores oficiais e reverte a fixture ao fim.
+      await run(`insert into public.plans (code, name, modules, price_cents)
+        values ('test_price_undefined', 'Teste sem preço', array['gestao'], null)`);
+      const undefinedPrice = await subscribe('test_price_undefined');
+      expect(await fails(`select public.billing_payment_context($1, $2)`, [identity, undefinedPrice.subscription_id])).toBe(
+        'PRICE_UNDEFINED',
+      );
       const ctx = (await run(`select public.billing_payment_context($1, $2) as c`, [identity, sub]))[0]!.c as Json;
-      expect(ctx.amount_cents).toBe(1000);
+      expect(ctx.amount_cents).toBe(4999);
       expect(ctx.checkout_url).toBeNull();
 
       await run(`select public.billing_payment_started($1, 'prea-1', 'https://mp.test/checkout/prea-1')`, [sub]);
@@ -120,7 +124,7 @@ describe('pagamento online (Mercado Pago)', () => {
               preapproval_id: 'prea-1',
               status: 'processed',
               currency_id: 'USD',
-              transaction_amount: 10,
+              transaction_amount: 49.99,
               payment: { id: 'pay-usd', status: 'approved' },
             }),
           ],
@@ -145,7 +149,7 @@ describe('pagamento online (Mercado Pago)', () => {
         status: 'processed',
         payment: { id: 'pay-1', status: 'approved' },
         currency_id: 'BRL',
-        transaction_amount: 10,
+        transaction_amount: 49.99,
       };
       const first = (
         await run(
@@ -165,7 +169,7 @@ describe('pagamento online (Mercado Pago)', () => {
         `select status::text as s, amount_cents::int as a, provider_reference as r from public.invoices where subscription_id = $1`,
         [sub],
       );
-      expect(invoices).toEqual([{ s: 'paid', a: 1000, r: 'pay-1' }]);
+      expect(invoices).toEqual([{ s: 'paid', a: 4999, r: 'pay-1' }]);
 
       // Notificação repetida e outro evento do mesmo pagamento não duplicam nada.
       const dup = (
@@ -193,7 +197,7 @@ describe('pagamento online (Mercado Pago)', () => {
             preapproval_id: 'prea-1',
             status: 'recycling',
             payment: { id: 'pay-2', status: 'rejected' },
-            transaction_amount: 10,
+            transaction_amount: 49.99,
           }),
         ],
       );
@@ -209,7 +213,7 @@ describe('pagamento online (Mercado Pago)', () => {
             status: 'processed',
             payment: { id: 'pay-3', status: 'approved' },
             currency_id: 'BRL',
-            transaction_amount: 10,
+            transaction_amount: 49.99,
           }),
         ],
       );
