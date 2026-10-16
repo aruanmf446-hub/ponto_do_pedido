@@ -2200,3 +2200,17 @@
   .pl-landing[data-template='m1'] .pl-m1-order--kitchen { left: 4px; }
   .pl-landing[data-template='m1'] .pl-m1-order--table { left: 0; rotate: 0deg; }
 }
+
+/* Telas estreitas: títulos quebram naturalmente; a marca nunca fica cortada. */
+@media (max-width: 599px) {
+  .pl-landing[data-template='m1'] .pl-m1-hero h1 span {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    overflow-wrap: normal;
+  }
+}
+@media (max-width: 360px) {
+  .pl-header .pl-mark-text { display: none; }
+  .pl-header .pl-mark-logo { width: 30px; height: 30px; flex-basis: 30px; }
+}
