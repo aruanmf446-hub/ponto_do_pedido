@@ -5,64 +5,84 @@ import { useEffect, useState } from 'react';
 import type { Plan } from '@/core/plans';
 import { planPriceLabel } from '@/core/plans';
 
-const steps = [
-  { title: 'O primeiro passo', flow: ['Atendimento', 'Mesas e pedidos', 'Fluxo organizado'] },
-  { title: 'Áreas conectadas', flow: ['Atendimento', 'Cozinha', 'Pedido em produção'] },
-  { title: 'Da mesa ao recebimento', flow: ['Atendimento', 'Cozinha', 'Caixa'] },
-  { title: 'A rotina ganha controle', flow: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão'] },
-  { title: 'O cliente participa', flow: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão', 'Cardápio'] },
-  { title: 'Mais canais para vender', flow: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão', 'Cardápio', 'Delivery'] },
-  { title: 'Uma operação mais completa', flow: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão', 'Cardápio', 'Delivery', 'Estoque'] },
-];
+/** Exemplos de combinações e fluxo, não uma promessa dos módulos inclusos em cada plano. */
+const STEPS = [
+  { title: 'Comece pelo atendimento', apps: ['Atendimento'], flow: ['Mesa', 'Pedido', 'Acompanhamento'] },
+  { title: 'Salão e cozinha alinhados', apps: ['Atendimento', 'Cozinha'], flow: ['Mesa', 'Pedido', 'Preparo'] },
+  { title: 'Do pedido à conta', apps: ['Atendimento', 'Cozinha', 'Caixa'], flow: ['Pedido', 'Preparo', 'Recebimento'] },
+  { title: 'Mais controle da operação', apps: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão'], flow: ['Pedido', 'Produção', 'Fechamento'] },
+  { title: 'O cardápio chega à mesa', apps: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão', 'Cardápio'], flow: ['Cardápio', 'Pedido', 'Cozinha'] },
+  { title: 'Venda também pelo delivery', apps: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão', 'Cardápio', 'Delivery'], flow: ['Escolha', 'Pedido', 'Entrega'] },
+  { title: 'Tudo conectado', apps: ['Atendimento', 'Cozinha', 'Caixa', 'Gestão', 'Cardápio', 'Delivery', 'Estoque'], flow: ['Pedido', 'Produção', 'Estoque'] },
+] as const;
 
 export function AppPlansCarousel({ plans }: { plans: Plan[] }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    if (paused) return;
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (media.matches) return;
-    const timer = window.setInterval(() => setActive((value) => (value + 1) % steps.length), 15000);
-    return () => window.clearInterval(timer);
-  }, [paused]);
 
-  const step = steps[active] ?? steps[0]!;
+  useEffect(() => {
+    if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const interval = window.setInterval(() => setActive((current) => (current + 1) % STEPS.length), 15000);
+    return () => window.clearInterval(interval);
+  }, [active, paused]);
+
+  const current = STEPS[active] ?? STEPS[0]!;
   const available = plans.filter((plan) => plan.modules.length === active + 1);
-  const lowestPriced = available.reduce<Plan | null>((best, plan) => {
-    if (!best) return plan;
-    if (plan.price_cents == null) return best;
-    return best.price_cents == null || plan.price_cents < best.price_cents ? plan : best;
+  const best = available.reduce<Plan | null>((chosen, plan) => {
+    if (!chosen) return plan;
+    if (plan.price_cents == null) return chosen;
+    return chosen.price_cents == null || plan.price_cents < chosen.price_cents ? plan : chosen;
   }, null);
+
   return (
-    <section className="pl-app-story" aria-labelledby="app-story-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}>
+    <section
+      className="pl-app-story"
+      aria-label="Conheça combinações de um a sete aplicativos"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}
+    >
       <div className="pl-app-story-head">
-        <div><p className="pl-app-story-kicker">Uma operação que cresce com você</p><h2 id="app-story-title">De 1 a 7 aplicativos.<br />Do seu jeito.</h2></div>
+        <p>DO PRIMEIRO APLICATIVO À OPERAÇÃO COMPLETA</p>
         <div className="pl-app-story-navigation">
-          <span aria-live="polite">{String(active + 1).padStart(2, '0')} / 07</span>
-          <button type="button" onClick={() => setActive((value) => (value + 6) % 7)} aria-label="Etapa anterior">←</button>
-          <button type="button" onClick={() => setActive((value) => (value + 1) % 7)} aria-label="Próxima etapa">→</button>
+          <span aria-live="off">{String(active + 1).padStart(2, '0')} / 07</span>
+          <button type="button" aria-label="Aplicativos anteriores" onClick={() => setActive((index) => (index + STEPS.length - 1) % STEPS.length)}>←</button>
+          <button type="button" aria-label="Próximos aplicativos" onClick={() => setActive((index) => (index + 1) % STEPS.length)}>→</button>
         </div>
       </div>
-      <div className="pl-app-story-content" aria-live="polite" aria-atomic="true">
-        <div className="pl-app-story-text">
-          <span className="pl-app-story-number">{active + 1} {active === 0 ? 'aplicativo' : 'aplicativos'}</span>
-          <h3>{step.title}</h3>
-          <p>Veja um exemplo de como as áreas podem se conectar. Os aplicativos incluídos dependem do plano escolhido.</p>
-          {lowestPriced ? <p className="pl-app-story-price">Planos disponíveis: {planPriceLabel(lowestPriced)}</p> : <p className="pl-app-story-price">Consulte as opções disponíveis</p>}
-          <Link href="/planos" className="pl-btn">Conheça nossos planos ↗</Link>
+      <div className="pl-app-story-slide" aria-live="polite" aria-atomic="true">
+        <div className="pl-app-story-title">
+          <span>{active + 1} {active === 0 ? 'aplicativo' : 'aplicativos'}</span>
+          <h2>{current.title}</h2>
         </div>
-        <div className="pl-app-story-diagram" aria-label="Exemplo ilustrativo de fluxo entre aplicativos">
-          {step.flow.map((item, index) => (
-            <div className="pl-app-story-node" key={item}>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <strong>{item}</strong>
-              {index < step.flow.length - 1 && <i aria-hidden="true">↓</i>}
-            </div>
+        <div className="pl-app-story-apps" aria-label="Aplicativos ilustrativos desta combinação">
+          {current.apps.map((app) => <span key={app}>{app}</span>)}
+        </div>
+        <div className="pl-app-story-diagram" aria-label="Exemplo de processo">
+          {current.flow.map((stage, index) => (
+            <span key={stage} className="pl-app-story-stage">
+              {index > 0 && <span className="pl-app-story-arrow" aria-hidden="true">→</span>}
+              <span>{stage}</span>
+            </span>
           ))}
         </div>
+        <div className="pl-app-story-bottom">
+          <span>{best ? planPriceLabel(best) : 'Combinações ilustrativas · consulte os planos'}</span>
+          <Link href="/planos">Conheça nossos planos <span aria-hidden="true">↗</span></Link>
+        </div>
       </div>
-      <div className="pl-app-story-dots" aria-label="Escolha a quantidade de aplicativos">
-        {steps.map((_, index) => <button key={index} type="button" onClick={() => setActive(index)} aria-current={active === index ? 'step' : undefined} aria-label={`Mostrar ${index + 1} aplicativos`} className={active === index ? 'is-active' : ''}>{index + 1}</button>)}
+      <div className="pl-app-story-dots" aria-label="Quantidade de aplicativos">
+        {STEPS.map((_, index) => (
+          <button
+            type="button"
+            key={index}
+            className={active === index ? 'is-active' : undefined}
+            aria-label={`Mostrar ${index + 1} ${index === 0 ? 'aplicativo' : 'aplicativos'}`}
+            aria-current={active === index ? 'step' : undefined}
+            onClick={() => setActive(index)}
+          >{index + 1}</button>
+        ))}
       </div>
     </section>
   );
