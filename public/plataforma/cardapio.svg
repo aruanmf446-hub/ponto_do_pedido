@@ -4,7 +4,7 @@
  <path d="M131 32H229" stroke="#1A1410" stroke-width="9" stroke-linecap="round"/>
  <path d="M24 66H336V190H24Z" fill="#CC5435"/>
  <g stroke="#FFFFFF" stroke-width="1.5"><path d="M37 79H323V178H37ZM50 92H310V165H50"/><path d="M53 98Q83 127 53 158Q24 127 53 98ZM307 98Q337 127 307 158Q278 127 307 98"/></g>
- <g font-family="inherit" fill="#FFFFFF" text-anchor="middle"><text x="180" y="126" font-size="25" font-weight="700">Casa do Azulejo</text><text x="180" y="150" font-size="12">Cozinha de casa, mesa cheia.</text></g>
+ <g font-family="inherit" fill="#FFFFFF" text-anchor="middle"><text x="180" y="126" font-size="25" font-weight="700">Bistrô do Largo</text><text x="180" y="150" font-size="12">Cozinha de casa, mesa cheia.</text></g>
  <g font-family="inherit" fill="#1A1410"><text x="44" y="221" font-size="12">Mesa 12</text><text x="44" y="258" font-size="26" font-weight="700">Da nossa cozinha</text><text x="44" y="284" font-size="13">Feito para dividir a mesa.</text></g>
  <rect x="44" y="308" width="272" height="154" fill="#CC5435"/>
  <g stroke="#FFFFFF" stroke-width="2"><ellipse cx="180" cy="385" rx="91" ry="53"/><ellipse cx="180" cy="385" rx="75" ry="39"/><path d="M125 387Q146 355 171 374Q201 349 231 380Q211 411 180 400Q149 413 125 387ZM150 386L163 379M184 385L197 374M205 395L216 387M136 397L148 394"/></g>

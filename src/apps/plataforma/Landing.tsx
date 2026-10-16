@@ -426,7 +426,7 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           className="pl-m1-phone"
           viewBox="0 0 360 680"
           role="img"
-          aria-label="Celular com o cardápio ilustrativo da Casa do Azulejo, restaurante fictício, sem preços."
+          aria-label="Celular com o cardápio ilustrativo do Bistrô do Largo, restaurante fictício, sem preços."
         >
           <use href="/plataforma/cardapio.svg#cardapio" />
         </svg>
@@ -434,9 +434,10 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
 
       <section className="pl-m1-final" aria-labelledby="final-title">
         <div className="pl-m1-final-tile">
-          <span className="pl-m1-flower" aria-hidden="true">
-            ✳
-          </span>
+          <svg className="pl-m1-flower" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M32 4C40 18 42 24 32 32C22 24 24 18 32 4ZM60 32C46 40 40 42 32 32C40 22 46 24 60 32ZM32 60C24 46 22 40 32 32C42 40 40 46 32 60ZM4 32C18 24 24 22 32 32C24 42 18 40 4 32Z" />
+            <circle cx="32" cy="32" r="4" />
+          </svg>
           <h2 id="final-title">
             Sexta que vem
             <br />
