@@ -47,7 +47,9 @@ evidência para declarar resolvido o `AUTH_REQUIRED` com uma sessão válida.
    `/r/...` devolvia 404, e não há domínio curinga configurado para os subdomínios
    gerados. Alterado PDP_PATH_TENANTS para 1 em ambos os ambientes, preservando
    a arquitetura existente. Rótulos do Portal e contratação agora mostram o
-   endereço por caminho quando esse modo está ativo. Bundle depende de novo deploy.
+   endereço por caminho quando esse modo está ativo. Alteração publicada na Vercel;
+   `/r/audit-20261016` chega ao renderer e retorna 404 por restaurante inexistente,
+   sem a antiga rejeição do proxy.
 4. **Chaves fixas no CI:** o workflow repetia a mesma chave publicável estática
    para app e billing, apesar de cada stack local gerar sua própria chave.
    Removidas essas constantes e adicionada exportação para GITHUB_ENV apenas
@@ -87,8 +89,11 @@ sessão; não foram lidos valores de secrets. No license-sync remoto, a resposta
   `failed to register layer: no space left on device` ao baixar
   supabase/postgres:17.11.0.004. Tentativa interrompida; nenhum teste de banco é
   declarado aprovado. Não foi executada limpeza destrutiva nem alterado o Docker.
-- E2E autenticado local/remoto: **NÃO TESTADO**; stack local indisponível e
-  identidade remota não fornecida. Nenhum seed foi executado contra produção.
+- E2E autenticado local no CI: **APROVADO**, 28 testes passaram; os 3 testes
+  públicos de produção opt-in ficaram pulados nessa suíte local. Seed local de
+  cadastro, contratação, sincronização e equipe concluído.
+  E2E autenticado remoto: **NÃO TESTADO**, identidade não fornecida. Nenhum seed
+  foi executado contra produção.
 - Vercel: deploy inicial READY em main no commit
   `8c5a8ebc70da23c20668d1804bdc3e7dda11bc4f`.
   Leitura de variáveis por project ID e sem teamId funcionou: Production e
@@ -102,6 +107,34 @@ sessão; não foram lidos valores de secrets. No license-sync remoto, a resposta
   é bloqueio por padrão. Referências:
   [RPCs públicas](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable),
   [RPCs autenticadas](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+
+## Encerramento — evidências do CI e do deploy
+
+- Código validado: `00103a9768402a4b8018a88154c46d7c51466151`, na main.
+- [CI 38968139693](https://github.com/aruanmf446-hub/ponto_do_pedido/actions/runs/38968139693):
+  **APROVADO**, lint, tipos, 47 unitários, build, **50 testes de banco** e
+  **28 E2E** (3 testes opt-in de produção pulados somente na suíte local).
+  A falha de infraestrutura deste executor não impediu validar banco/E2E no runner.
+- Vercel: **APROVADO**, deploy `dpl_EaXy9xDS61bPt1ALMX2NEXPLmQ2d` READY,
+  associado a `pontodopedido.vercel.app`, commit `00103a9`. Os 3 testes públicos
+  Playwright já passaram contra a aplicação publicada depois das correções de código.
+- Supabase app: amostra de logs das últimas 24 horas, consultada apenas por
+  agregação: 10 function_logs, 4 function_edge_logs e 3 auth_logs, nenhum padrão
+  completo `sb_secret_` encontrado. Isso não comprova ausência de todo tipo de
+  credencial nem substitui a leitura dos logs Vercel bloqueados.
+- Check adicional **REPROVADO por configuração de infraestrutura**:
+  Cloudflare Workers tenta `npm run cf:build`, script ausente. Causa confirmada
+  pelos logs do build `29dbd3a2-b4b8-47e1-b69b-8b38ebb9f22d`. É um vínculo de
+  deploy adicional ao destino oficial Vercel. Não foi adicionada arquitetura
+  Cloudflare nem alterado esse vínculo; sua remoção/reconfiguração exige definir
+  o destino pretendido para essa integração antiga.
+- Billing, team e mercadopago-webhook remotos e suas dependências conferem com
+  os fontes do repositório desconsiderando newline final. License-sync mantém
+  as diferenças explícitas descritas acima.
+
+Esta última atualização é documental e usa `[skip ci]` para evitar repetir as
+stacks sem alteração de código; as provas acima referem-se ao commit de código
+validado, cujos arquivos permanecem idênticos.
 
 ## Critério de conclusão
 
