@@ -94,36 +94,49 @@ describe('pagamento online (Mercado Pago)', () => {
       const underpaid = (
         await run(
           `select public.billing_apply_mercadopago('authorized_payment:underpaid:processed:approved', 'authorized_payment', $1::jsonb) as r`,
-          [JSON.stringify({
-            id: 'underpaid', preapproval_id: 'prea-1', status: 'processed',
-            currency_id: 'BRL', transaction_amount: 1,
-            payment: { id: 'pay-underpaid', status: 'approved' },
-          })],
+          [
+            JSON.stringify({
+              id: 'underpaid',
+              preapproval_id: 'prea-1',
+              status: 'processed',
+              currency_id: 'BRL',
+              transaction_amount: 1,
+              payment: { id: 'pay-underpaid', status: 'approved' },
+            }),
+          ],
         )
       )[0]!.r as Json;
       expect(underpaid.reason).toBe('PAYMENT_AMOUNT_MISMATCH');
-      expect((await run(`select status::text as s from public.subscriptions where id = $1`, [sub]))[0]!.s).toBe('pending_payment');
+      expect((await run(`select status::text as s from public.subscriptions where id = $1`, [sub]))[0]!.s).toBe(
+        'pending_payment',
+      );
 
       const wrongCurrency = (
         await run(
           `select public.billing_apply_mercadopago('authorized_payment:usd:processed:approved', 'authorized_payment', $1::jsonb) as r`,
-          [JSON.stringify({
-            id: 'usd', preapproval_id: 'prea-1', status: 'processed',
-            currency_id: 'USD', transaction_amount: 10,
-            payment: { id: 'pay-usd', status: 'approved' },
-          })],
+          [
+            JSON.stringify({
+              id: 'usd',
+              preapproval_id: 'prea-1',
+              status: 'processed',
+              currency_id: 'USD',
+              transaction_amount: 10,
+              payment: { id: 'pay-usd', status: 'approved' },
+            }),
+          ],
         )
       )[0]!.r as Json;
       expect(wrongCurrency.reason).toBe('PAYMENT_AMOUNT_MISMATCH');
 
       const unrelated = (
-        await run(
-          `select public.billing_apply_mercadopago('preapproval:other:authorized:', 'preapproval', $1::jsonb) as r`,
-          [JSON.stringify({ id: 'other', status: 'authorized', external_reference: sub })],
-        )
+        await run(`select public.billing_apply_mercadopago('preapproval:other:authorized:', 'preapproval', $1::jsonb) as r`, [
+          JSON.stringify({ id: 'other', status: 'authorized', external_reference: sub }),
+        ])
       )[0]!.r as Json;
       expect(unrelated.ignored).toBe(true);
-      expect((await run(`select provider_subscription_id as id from public.subscriptions where id = $1`, [sub]))[0]!.id).toBe('prea-1');
+      expect((await run(`select provider_subscription_id as id from public.subscriptions where id = $1`, [sub]))[0]!.id).toBe(
+        'prea-1',
+      );
 
       // Cobrança aprovada: ativa, fatura paga, período definido.
       const approved = {
@@ -225,6 +238,20 @@ describe('pagamento online (Mercado Pago)', () => {
       expect((await run(`select error from public.payment_events where event_key = 'preapproval:x:authorized:'`))[0]!.error).toBe(
         'Assinatura não encontrada.',
       );
+    });
+  });
+
+  it('ligar o provedor basta para exigir pagamento: não ativa na contratação', async () => {
+    await withTx(async (run) => {
+      // activation_mode continua 'immediate' de propósito.
+      await run(`update public.platform_settings set value = '"mercadopago"' where key = 'payment_provider'`);
+      const r = (
+        await run(
+          `select public.billing_subscribe($1, 'dono@teste.local', 'Dono', 'start', 'Restaurante', $2, 'vitest', $3) as r`,
+          [randomUUID(), slug(), randomUUID()],
+        )
+      )[0]!.r as { status: string };
+      expect(r.status).toBe('pending_payment');
     });
   });
 

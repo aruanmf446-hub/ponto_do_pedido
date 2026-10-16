@@ -60,11 +60,12 @@ Portal / login ── license-sync ──► app libera o restaurante conforme a
 7. **Ligar** (decisão do titular):
    ```sql
    update public.platform_settings set value = '"mercadopago"' where key = 'payment_provider';
-   update public.platform_settings set value = '"on_payment"' where key = 'activation_mode';
    ```
 8. **Teste** com usuários de teste do Mercado Pago. Só depois troque para as credenciais de produção.
 
-Para desligar: volte `payment_provider` para `'null'::jsonb` e `activation_mode` para `"immediate"`.
+Com `payment_provider` ligado, a contratação sempre nasce pendente e só ativa com pagamento confirmado (migração `20261016120000`),
+mesmo que `activation_mode` continue `immediate`.
+Para desligar: volte `payment_provider` para `'null'::jsonb`.
 
 ## Verificação feita
 - Banco: fluxo completo (contratar, iniciar, aprovar, recusar, cancelar), idempotência, bloqueio de renovação manual e permissões (`tests/db/payments.test.ts`).
