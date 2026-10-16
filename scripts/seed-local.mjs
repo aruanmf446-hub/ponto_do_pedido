@@ -5,20 +5,33 @@
 // Uso: node scripts/seed-local.mjs [slug] [--e2e]
 // --e2e: dispensa a troca de senha do primeiro acesso (apenas no banco LOCAL de testes).
 import { createClient } from '@supabase/supabase-js';
+import { execFileSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const APP = process.env.SEED_APP_URL ?? 'http://127.0.0.1:54321';
 const BILLING = process.env.SEED_BILLING_URL ?? 'http://127.0.0.1:55321';
-const KEY = process.env.SEED_KEY ?? 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+// Cada instância Supabase gera sua própria chave publicável.
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+function localPublishableKey(project) {
+  const cwd = join(root, 'backend', project);
+  const info = JSON.parse(execFileSync('npx', ['supabase', 'status', '-o', 'json'], { cwd, encoding: 'utf8' }));
+  const key = info.PUBLISHABLE_KEY ?? info.ANON_KEY;
+  if (!key) throw new Error(`Chave publicável local ausente no projeto ${project}.`);
+  return key;
+}
+const APP_KEY = process.env.SEED_APP_PUBLISHABLE_KEY ?? localPublishableKey('app');
+const BILLING_KEY = process.env.SEED_BILLING_PUBLISHABLE_KEY ?? localPublishableKey('billing');
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const e2e = process.argv.includes('--e2e');
 const slug = args[0] ?? `aurora${Date.now().toString(36).slice(-5)}`;
 const password = 'Senha12345!';
 const ownerEmail = `dono+${slug}@teste.local`;
 
-async function call(url, token, body) {
+async function call(url, token, body, key) {
   const res = await fetch(url, {
     method: 'POST',
-    headers: { apikey: KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { apikey: key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   const json = await res.json();
@@ -26,10 +39,11 @@ async function call(url, token, body) {
   return json;
 }
 
-const supabase = createClient(APP, KEY, { auth: { persistSession: false } });
+const supabase = createClient(APP, APP_KEY, { auth: { persistSession: false } });
 const { data: signUp, error } = await supabase.auth.signUp({ email: ownerEmail, password, options: { data: { full_name: 'Helena Prado' } } });
 if (error) throw error;
-const token = signUp.session.access_token;
+const token = signUp.session?.access_token;
+if (!token) throw new Error('Cadastro sem sessão: confira a política de confirmação de e-mail no Auth local do aplicativo.');
 
 await call(`${BILLING}/functions/v1/billing`, token, {
   action: 'subscribe',
@@ -38,8 +52,8 @@ await call(`${BILLING}/functions/v1/billing`, token, {
   restaurant_slug: slug,
   accept_terms: true,
   idempotency_key: slug,
-});
-const sync = await call(`${APP}/functions/v1/license-sync`, token, {});
+}, BILLING_KEY);
+const sync = await call(`${APP}/functions/v1/license-sync`, token, {}, APP_KEY);
 const tenant = sync.results.find((r) => r.slug === slug)?.tenant_id;
 if (!tenant) throw new Error(`Licença não sincronizada: ${JSON.stringify(sync)}`);
 
@@ -132,7 +146,7 @@ for (const [key, name, app, roleNames] of staff) {
   await call(`${APP}/functions/v1/team`, token, {
     tenant_id: tenant, email, full_name: name, job_title: roleNames[0], primary_app: app,
     role_ids: roleNames.map(roleId), temporary_password: password,
-  });
+  }, APP_KEY);
   accounts[key] = email;
 }
 if (e2e) {
