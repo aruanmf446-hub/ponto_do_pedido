@@ -80,13 +80,20 @@
   text-decoration: none;
   white-space: nowrap;
 }
-.pl-mark-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--pl-ink);
-  box-shadow: 6px 0 0 var(--pl-accent);
-  margin-right: 6px;
+.pl-mark {
+  color: var(--pl-ink);
+}
+.pl-mark-logo {
+  width: 30px;
+  height: 30px;
+  flex: none;
+}
+.pl-mark-text {
+  font-size: 1.125rem;
+  letter-spacing: -0.035em;
+}
+.pl-mark-text > span {
+  color: var(--pl-accent);
 }
 .pl-nav {
   display: flex;
@@ -1022,44 +1029,52 @@
   color: #15110d !important;
 }
 
-/* Modelo padrão (m1): azulejaria. Estilos confinados à landing padrão. */
+/* Modelo padrão (m1): azulejaria em laranja sobre branco, com as cores da marca
+   (laranja e verde-oliva do logo). Estilos confinados à landing padrão. */
 .pl-landing[data-template='m1'] {
-  --m1-cobalt: #1b3fa0;
-  --m1-night: #0e2366;
-  --m1-chalk: #f7f4ec;
-  --m1-tomato: #e8432b;
-  --m1-lime: #d9e84a;
-  --m1-ground: var(--m1-cobalt);
-  --m1-light: var(--m1-chalk);
-  --m1-ink: var(--m1-night);
+  --m1-orange: #cc5435;
+  --m1-orange-deep: #b9401c;
+  --m1-olive: #717f62;
+  --m1-olive-deep: #566443;
+  --m1-ink: #1a1410;
+  --m1-white: #ffffff;
+  --m1-wash: #fff6f0;
+  --m1-rule: #f0cdbb;
+  --m1-shadow: #f6d6c5;
+  --m1-ground: #ffffff;
+  --m1-light: #ffffff;
   --m1-gutter: clamp(24px, 4.45vw, 80px);
   display: block;
   background: var(--m1-ground);
-  color: var(--m1-chalk);
+  color: var(--m1-ink);
   font-family: var(--pl-text), sans-serif;
   isolation: isolate;
 }
 .pl:has(.pl-landing[data-template='m1']) {
-  --pl-bg: #f7f4ec;
-  --pl-surface: #f7f4ec;
-  --pl-ink: #0e2366;
-  --pl-ink-2: #0e2366;
-  --pl-line: #1b3fa0;
-  --pl-accent: #e8432b;
+  --pl-bg: #ffffff;
+  --pl-surface: #ffffff;
+  --pl-ink: #1a1410;
+  --pl-ink-2: #3d322b;
+  --pl-line: #f0cdbb;
+  --pl-accent: #cc5435;
 }
 .pl:has(.pl-landing[data-template='m1']) .pl-header {
   background: var(--pl-bg);
   backdrop-filter: none;
   border-bottom: 1px solid var(--pl-line);
 }
-.pl:has(.pl-landing[data-template='m1']) .pl-nav .pl-btn {
-  background: transparent;
-  color: var(--pl-ink) !important;
-  border-color: var(--pl-ink);
-  border-radius: 2px;
+.pl:has(.pl-landing[data-template='m1']) .pl-nav a:not(.pl-btn):hover {
+  color: var(--pl-accent);
 }
-.pl:has(.pl-landing[data-template='m1']) .pl-mark-dot {
-  background: #000000;
+.pl:has(.pl-landing[data-template='m1']) .pl-nav .pl-btn {
+  background: var(--pl-accent);
+  color: #ffffff !important;
+  border-color: var(--pl-accent);
+  border-radius: 8px;
+  font-weight: 700;
+}
+.pl:has(.pl-landing[data-template='m1']) .pl-footer {
+  background: #fff6f0;
 }
 .pl:has(.pl-landing[data-template='m1']) :focus-visible {
   outline: 3px solid var(--pl-ink);
@@ -1078,23 +1093,25 @@
   max-width: 48ch;
 }
 .pl-landing[data-template='m1'] .pl-btn {
-  background: var(--m1-tomato);
-  border: 2px solid var(--m1-tomato);
-  color: var(--m1-chalk) !important;
-  border-radius: 2px;
+  background: var(--m1-orange);
+  border: 2px solid var(--m1-orange);
+  color: var(--m1-white) !important;
+  border-radius: 8px;
   min-height: 56px;
   height: auto;
   padding: 12px 24px;
-  /* 20px/700 é texto grande WCAG: branco-cal/tomate = 3,63:1. */
+  /* 20px/700 é texto grande WCAG: branco/laranja da marca = 4,2:1. */
   font-size: 1.25rem;
   font-weight: 700;
 }
 .pl-landing[data-template='m1'] .pl-btn--ghost {
   background: transparent;
   border-color: transparent;
-  color: inherit !important;
+  color: var(--m1-ink) !important;
   padding-inline: 0;
   text-decoration: underline;
+  text-decoration-color: var(--m1-orange);
+  text-decoration-thickness: 2px;
   text-underline-offset: 5px;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -1124,9 +1141,14 @@
   inset: 0;
   background: url('/plataforma/azulejos.svg') repeat;
   background-size: 240px 240px;
-  opacity: 0.36;
   pointer-events: none;
   z-index: -1;
+}
+.pl-m1-hero::before {
+  /* O azulejo some à esquerda, onde fica o texto, e aparece à direita. */
+  opacity: 0.7;
+  -webkit-mask-image: linear-gradient(90deg, transparent 26%, #000 70%);
+  mask-image: linear-gradient(90deg, transparent 26%, #000 70%);
 }
 .pl-m1-hero,
 .pl-m1-final {
@@ -1142,20 +1164,21 @@
 }
 .pl-m1-hero h1 span {
   display: table;
-  background: var(--m1-ground);
   padding: 0 8px 7px 0;
+}
+.pl-m1-hero h1 span:nth-child(2) {
+  color: var(--m1-orange);
 }
 .pl-m1-hero-copy > p {
   max-width: 40ch;
   margin: 0 0 32px;
   font-size: 1.125rem;
   line-height: 1.65;
-  background: var(--m1-ground);
+  color: var(--pl-ink-2);
   padding: 10px 16px 10px 0;
 }
 .pl-m1-hero .pl-cta {
   width: fit-content;
-  background: var(--m1-ground);
 }
 .pl-m1-orders {
   position: relative;
@@ -1167,12 +1190,13 @@
   width: 480px;
   min-height: 244px;
   padding: 24px 32px;
-  border: 2px solid var(--m1-night);
-  outline: 1px solid var(--m1-cobalt);
+  border: 2px solid var(--m1-orange);
+  outline: 1px solid var(--m1-rule);
   outline-offset: -10px;
-  background: var(--m1-chalk);
-  color: var(--m1-night);
-  box-shadow: 10px 10px 0 var(--m1-night);
+  border-radius: 4px;
+  background: var(--m1-white);
+  color: var(--m1-ink);
+  box-shadow: 10px 10px 0 var(--m1-shadow);
   animation: pl-m1-place 650ms cubic-bezier(0.22, 0.7, 0.25, 1) both;
 }
 .pl-m1-order > header {
@@ -1199,7 +1223,7 @@
 }
 .pl-m1-order--bill {
   top: 0;
-  left: 32%;
+  left: 24%;
   animation-delay: 0ms;
 }
 .pl-m1-split {
@@ -1213,10 +1237,10 @@
 }
 .pl-m1-order--kitchen {
   top: 168px;
-  left: 17%;
-  background: var(--m1-night);
-  color: var(--m1-chalk);
-  outline-color: var(--m1-chalk);
+  left: 12%;
+  background: var(--m1-orange);
+  color: var(--m1-white);
+  outline-color: rgba(255, 255, 255, 0.55);
   animation-delay: 90ms;
 }
 .pl-m1-ready {
@@ -1224,13 +1248,13 @@
   justify-content: space-between;
   width: 140px;
   padding: 6px 10px;
-  background: var(--m1-lime);
-  color: var(--m1-night);
+  background: var(--m1-olive-deep);
+  color: var(--m1-white);
   font-weight: 700;
 }
 .pl-m1-order--table {
   top: 372px;
-  left: 1%;
+  left: 0;
   rotate: -3deg;
   animation-delay: 180ms;
 }
@@ -1268,7 +1292,8 @@
   margin: 0;
   font-size: 0.8125rem;
   padding: 12px 0;
-  border-top: 1px solid var(--m1-chalk);
+  border-top: 1px solid var(--m1-rule);
+  color: var(--pl-ink-2);
   background: var(--m1-ground);
 }
 .pl-m1-scroll span {
@@ -1286,6 +1311,7 @@
 .pl-m1-night {
   background: var(--m1-light);
   color: var(--m1-ink);
+  --m1-draw: var(--m1-orange);
 }
 .pl-m1-night-heading {
   padding: 48px var(--m1-gutter) 32px;
@@ -1293,7 +1319,7 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 32px;
-  border-bottom: 1px solid var(--m1-ink);
+  border-bottom: 1px solid var(--m1-rule);
 }
 .pl-m1-night-heading h2 {
   font-size: clamp(2.625rem, 4.2vw, 4.75rem);
@@ -1315,13 +1341,13 @@
   gap: 32px;
   padding: 36px var(--m1-gutter) 86px;
   min-height: 590px;
-  border-bottom: 1px solid var(--m1-ink);
+  border-bottom: 1px solid var(--m1-rule);
 }
 .pl-m1-drawing {
   display: block;
   width: 100%;
   height: auto;
-  color: var(--m1-ink);
+  color: var(--m1-draw);
   stroke-dasharray: 1000;
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 1000ms ease;
@@ -1349,9 +1375,11 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
+  color: var(--m1-orange-deep);
 }
 .pl-m1-time > span {
   font-size: 2rem;
+  color: var(--m1-orange);
 }
 .pl-m1-panel h3 {
   font-size: clamp(1.75rem, 2.7vw, 2.75rem);
@@ -1368,8 +1396,8 @@
   margin-top: 28px;
 }
 .pl-m1-kitchen-status > span {
-  background: var(--m1-lime);
-  color: var(--m1-night);
+  background: var(--m1-olive-deep);
+  color: var(--m1-white);
   display: inline-block;
   font-weight: 700;
   padding: 6px 12px;
@@ -1386,11 +1414,11 @@
 }
 .pl-m1-progress > span {
   padding-top: 8px;
-  border-top: 1px solid currentColor;
+  border-top: 1px solid var(--m1-rule);
   font-size: 0.8125rem;
 }
 .pl-m1-progress > span[data-current='true'] {
-  border-top: 4px solid currentColor;
+  border-top: 4px solid var(--m1-orange);
   padding-top: 5px;
   font-weight: 800;
 }
@@ -1458,8 +1486,8 @@
   align-items: center;
   gap: 64px;
   padding: 96px var(--m1-gutter);
-  background: var(--m1-tomato);
-  color: var(--m1-chalk);
+  background: var(--m1-orange);
+  color: var(--m1-white);
 }
 .pl-m1-trust h2 {
   font-size: clamp(3.75rem, 6.5vw, 6.5rem);
@@ -1511,7 +1539,7 @@
   width: 120px;
   height: 120px;
   flex: 0 0 120px;
-  background: var(--m1-tomato);
+  background: var(--m1-orange);
 }
 .pl-m1-flow-step span {
   font-size: 1.25rem;
@@ -1527,7 +1555,7 @@
   align-items: center;
   gap: 56px;
   padding: 88px var(--m1-gutter);
-  background: var(--m1-ground);
+  background: var(--m1-wash);
   overflow: clip;
 }
 .pl-m1-guest::before {
@@ -1537,9 +1565,11 @@
   z-index: -1;
   background: url('/plataforma/mosaico-marca.svg') repeat;
   background-size: 240px 240px;
+  opacity: 0.6;
+  -webkit-mask-image: linear-gradient(270deg, #000 15%, transparent 75%);
+  mask-image: linear-gradient(270deg, #000 15%, transparent 75%);
 }
 .pl-m1-guest-copy {
-  background: var(--m1-ground);
   padding: 32px 24px 32px 0;
 }
 .pl-m1-guest h2 {
@@ -1554,7 +1584,7 @@
   width: min(100%, 360px);
   height: auto;
   justify-self: center;
-  filter: drop-shadow(12px 12px 0 var(--m1-night));
+  filter: drop-shadow(12px 12px 0 var(--m1-shadow));
   font-family: var(--pl-text), sans-serif;
 }
 
@@ -1563,7 +1593,7 @@
   padding: 96px var(--m1-gutter) 32px;
 }
 .pl-m1-final::before {
-  opacity: 1;
+  opacity: 0.75;
   background-size: 480px 480px;
 }
 .pl-m1-final-tile {
@@ -1577,10 +1607,11 @@
   max-width: 1080px;
   background: var(--m1-light);
   color: var(--m1-ink);
-  border: 2px solid var(--m1-night);
-  outline: 1px solid var(--m1-ink);
+  border: 2px solid var(--m1-orange);
+  outline: 1px solid var(--m1-rule);
   outline-offset: -16px;
-  box-shadow: 12px 12px 0 var(--m1-night);
+  border-radius: 4px;
+  box-shadow: 12px 12px 0 var(--m1-shadow);
 }
 .pl-m1-final h2 {
   font-size: clamp(3.5rem, 7vw, 7rem);
@@ -1588,7 +1619,7 @@
 .pl-m1-flower {
   font-size: 4.5rem;
   line-height: 1;
-  color: var(--m1-ink);
+  color: var(--m1-orange);
 }
 .pl-m1-final .pl-cta {
   justify-content: center;
@@ -1601,24 +1632,65 @@
   list-style: none;
   padding: 20px;
   margin: 56px 0 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pl-ink-2);
   background: var(--m1-ground);
+  border: 1px solid var(--m1-rule);
+  border-radius: 4px;
   scroll-margin-top: 90px;
 }
 [data-scheme='dark'] .pl:has(.pl-landing[data-template='m1']) {
-  --pl-bg: #0e2366;
-  --pl-surface: #0e2366;
-  --pl-ink: #f7f4ec;
-  --pl-ink-2: #f7f4ec;
+  --pl-bg: #17110e;
+  --pl-surface: #17110e;
+  --pl-ink: #fff4ec;
+  --pl-ink-2: #e7d5c9;
+  --pl-line: #3a2a22;
+  --pl-accent: #e06a47;
+}
+[data-scheme='dark'] .pl:has(.pl-landing[data-template='m1']) .pl-footer {
+  background: #1f1713;
+}
+[data-scheme='dark'] .pl:has(.pl-landing[data-template='m1']) .pl-nav .pl-btn {
+  color: #17110e !important;
 }
 [data-scheme='dark'] .pl-landing[data-template='m1'] {
-  --m1-ground: var(--m1-night);
-  --m1-light: var(--m1-night);
-  --m1-ink: var(--m1-chalk);
+  --m1-ground: #17110e;
+  --m1-light: #17110e;
+  --m1-wash: #1f1713;
+  --m1-ink: #fff4ec;
+  --m1-rule: #4a3228;
+  --m1-shadow: #2d1f18;
+  --m1-orange: #e06a47;
+  --m1-orange-deep: #f08a68;
+  --m1-white: #fff4ec;
+  --m1-olive-deep: #7e8f6c;
+}
+[data-scheme='dark'] .pl-landing[data-template='m1'] .pl-btn:not(.pl-btn--ghost) {
+  color: #17110e !important;
 }
 [data-scheme='dark'] .pl-m1-hero::before,
 [data-scheme='dark'] .pl-m1-final::before {
-  opacity: 0.2;
+  background-image: url('/plataforma/azulejos-escuro.svg');
+  opacity: 1;
+}
+[data-scheme='dark'] .pl-m1-guest::before {
+  opacity: 0.35;
+}
+[data-scheme='dark'] .pl-m1-order,
+[data-scheme='dark'] .pl-m1-final-tile {
+  background: #1f1713;
+}
+[data-scheme='dark'] .pl-m1-order--kitchen,
+[data-scheme='dark'] .pl-m1-trust {
+  color: #17110e;
+}
+[data-scheme='dark'] .pl-m1-order--kitchen {
+  background: var(--m1-orange);
+}
+[data-scheme='dark'] .pl-m1-ready,
+[data-scheme='dark'] .pl-m1-kitchen-status > span {
+  color: #17110e;
 }
 
 @media (max-width: 1100px) {
@@ -1657,6 +1729,11 @@
     gap: 44px;
     min-height: auto;
     padding-top: 56px;
+  }
+  .pl-m1-hero::before {
+    /* Coluna única: o azulejo aparece embaixo, atrás dos pedidos, e não sob o texto. */
+    -webkit-mask-image: linear-gradient(180deg, transparent 30%, #000 72%);
+    mask-image: linear-gradient(180deg, transparent 30%, #000 72%);
   }
   .pl-m1-hero h1 {
     font-size: clamp(3rem, 8.4vw, 5.5rem);
@@ -1768,6 +1845,12 @@
   .pl-m1-order {
     width: 330px;
     padding: 24px 20px;
+  }
+  .pl-m1-order--bill {
+    left: 24px;
+  }
+  .pl-m1-order--kitchen {
+    left: 12px;
   }
   .pl-m1-order--table {
     left: 4px;
