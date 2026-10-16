@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import { AppPlansCarousel } from '@/apps/plataforma/AppPlansCarousel';
+import { HeroPanels } from '@/apps/plataforma/HeroPanels';
 import Script from 'next/script';
 import { azulejo } from '@/apps/plataforma/fonts';
 import Link from 'next/link';
@@ -236,65 +237,23 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
     { className: `pl-landing ${azulejo.variable}`, 'data-template': 'm1' },
     <>
       <section className="pl-m1-hero" aria-labelledby="hero-title">
-        <div className="pl-m1-hero-copy">
-          <h1 id="hero-title">
-            <span>Seu salão cheio.</span>
-            <span>Sua operação leve.</span>
-            <span>Tudo no controle.</span>
-          </h1>
-          <p>
-            O <strong className="pl-m1-brand">Ponto do Pedido</strong> conecta a operação do seu negócio em uma interface limpa e personalizável.
-            Não perca o controle do seu restaurante. Tenha tudo na palma da mão.
-          </p>
-          <AppPlansCarousel plans={plans} />
-          <Cta />
-        </div>
-        <div
-          className="pl-m1-orders"
-          role="img"
-          aria-label="Um mesmo pedido da mesa 12 acompanhado no salão, na cozinha e no caixa. Exemplo ilustrativo."
-        >
-          <div className="pl-m1-order pl-m1-order--bill" aria-hidden="true">
-            <header>
-              <span>Conta da mesa</span>
-              <strong>12</strong>
-            </header>
-            <div className="pl-m1-split">
-              <span>Pessoa 1</span>
-              <span>Pessoa 2</span>
-            </div>
-            <p>Dividida em duas. Conferida na mesa.</p>
-          </div>
-          <div className="pl-m1-order pl-m1-order--kitchen" aria-hidden="true">
-            <header>
-              <span>Pedido na cozinha</span>
-              <strong>12</strong>
-            </header>
-            <p>Arroz da casa</p>
-            <span className="pl-m1-ready">
-              Pronto <span>↗</span>
-            </span>
-          </div>
-          <div className="pl-m1-order pl-m1-order--table" aria-hidden="true">
-            <header>
-              <span>Pedido do salão</span>
-              <strong>Mesa 12</strong>
-            </header>
-            <ul>
-              <li>
-                <span>Arroz da casa</span>
-                <span>Na cozinha</span>
-              </li>
-              <li>
-                <span>Suco da estação</span>
-                <span>Na mesa</span>
-              </li>
-            </ul>
-            <footer>
-              Um pedido. A casa inteira sabe. <span>↗</span>
-            </footer>
-          </div>
-        </div>
+        <HeroPanels
+          introduction={
+            <>
+              <h1 id="hero-title">
+                <span>Seu salão cheio.</span>
+                <span>Sua operação leve.</span>
+                <span>Tudo no controle.</span>
+              </h1>
+              <p>
+                O <strong className="pl-m1-brand">Ponto do Pedido</strong> conecta a operação do seu negócio em uma interface limpa e personalizável.
+                Não perca o controle do seu restaurante. Tenha tudo na palma da mão.
+              </p>
+              <Cta />
+            </>
+          }
+          applications={<AppPlansCarousel />}
+        />
         <p className="pl-m1-scroll" aria-hidden="true">
           Acompanhe uma sexta <span>↓</span>
         </p>
