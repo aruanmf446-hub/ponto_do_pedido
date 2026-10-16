@@ -506,7 +506,7 @@ begin
   update public.payables set status = 'paid', paid_at = now(), paid_by = (select auth.uid()),
     paid_method = p_paid_method, proof_document_id = p_proof_document where id = p_payable;
   insert into public.financial_entries (tenant_id, direction, amount_cents, occurred_on, description, source, source_id, created_by)
-    values (p_tenant, 'out', v_payable.amount_cents, current_date, v_payable.description, 'payable', p_payable, (select auth.uid()))
+    values (p_tenant, 'out', v_payable.amount_cents, (now() at time zone coalesce((select t.timezone from public.tenants t where t.id = p_tenant), 'America/Sao_Paulo'))::date, v_payable.description, 'payable', p_payable, (select auth.uid()))
     on conflict do nothing;
   if v_payable.kind = 'reembolso' then
     update public.reimbursements set status = 'paid' where payable_id = p_payable;
@@ -550,7 +550,7 @@ begin
   update public.receivables set status = 'received', received_at = now(), received_by = (select auth.uid()), received_note = p_note
     where id = p_receivable;
   insert into public.financial_entries (tenant_id, direction, amount_cents, occurred_on, description, source, source_id, created_by)
-    values (p_tenant, 'in', v_rec.amount_cents, current_date, v_rec.description, 'receivable', p_receivable, (select auth.uid()))
+    values (p_tenant, 'in', v_rec.amount_cents, (now() at time zone coalesce((select t.timezone from public.tenants t where t.id = p_tenant), 'America/Sao_Paulo'))::date, v_rec.description, 'receivable', p_receivable, (select auth.uid()))
     on conflict do nothing;
   perform private.audit(p_tenant, 'financeiro', 'receivable.settled', 'receivable', p_receivable::text, jsonb_build_object('amount_cents', v_rec.amount_cents));
 end $$;
@@ -602,7 +602,7 @@ begin
   end if;
   if p_approve and private.process_internal(p_tenant, 'contas_pagar') then
     insert into public.payables (tenant_id, kind, description, category, amount_cents, due_date, document_id, created_by)
-      values (p_tenant, 'reembolso', 'Reembolso: ' || v_r.description, v_r.category, v_r.amount_cents, current_date + 7, v_r.document_id, (select auth.uid()))
+      values (p_tenant, 'reembolso', 'Reembolso: ' || v_r.description, v_r.category, v_r.amount_cents, (now() at time zone coalesce((select t.timezone from public.tenants t where t.id = p_tenant), 'America/Sao_Paulo'))::date + 7, v_r.document_id, (select auth.uid()))
       returning id into v_payable;
   end if;
   update public.reimbursements set status = case when p_approve then 'approved' else 'rejected' end,
