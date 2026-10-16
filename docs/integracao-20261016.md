@@ -48,6 +48,11 @@ evidência para declarar resolvido o `AUTH_REQUIRED` com uma sessão válida.
    gerados. Alterado PDP_PATH_TENANTS para 1 em ambos os ambientes, preservando
    a arquitetura existente. Rótulos do Portal e contratação agora mostram o
    endereço por caminho quando esse modo está ativo. Bundle depende de novo deploy.
+4. **Chaves fixas no CI:** o workflow repetia a mesma chave publicável estática
+   para app e billing, apesar de cada stack local gerar sua própria chave.
+   Removidas essas constantes e adicionada exportação para GITHUB_ENV apenas
+   das chaves públicas locais de cada projeto, obtidas pelo status da CLI sem
+   imprimir o JSON completo (que inclui credenciais administrativas).
 
 Billing v3 e team v2 foram obtidos pelo conector. Seus fontes e dependências
 coincidem com o repositório, desconsiderando newline final. Todas as quatro
