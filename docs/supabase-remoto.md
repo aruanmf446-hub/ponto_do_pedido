@@ -14,40 +14,41 @@ Não criar terceiro projeto. Chaves `sb_secret_` e `service_role` nunca pertence
 
 ## Estado confirmado
 
-### App — `qmhtzosfbosgolevnybd`
+### App — `qmhtzosfbosgolevnybd` (atualizado em 16/10/2026)
 
-Histórico remoto:
-- `20261015105703_core`: conteúdo idêntico a `backend/app/supabase/migrations/20261015035134_core.sql`.
-- `20261015110239_permissions_catalog`: parte do catálogo de permissões.
-- `20261015110258_permissions_default_roles`: função de papéis padrão.
+**Todas as 11 migrações autorizadas foram aplicadas no remoto, em ordem, sem falhas:**
 
-**Atenção:** os dois registros de permissões não representam todo o arquivo
-`20261015035352_permissions_admin.sql`. Não se comprovou equivalência literal
-com o arquivo completo. Não executar `migration repair` nem reaplicar o arquivo
-inteiro às cegas: inspecionar objetos existentes e preparar apenas o restante necessário.
+| Versão registrada no Supabase | Arquivo de origem |
+| --- | --- |
+| `20261016034558_permissions_admin_20261015035352` | `20261015035352_permissions_admin.sql` |
+| `20261016034608_20261015035354_catalog` | `20261015035354_catalog.sql` |
+| `20261016034611_20261015035356_operation` | `20261015035356_operation.sql` |
+| `20261016034614_20261015035358_public_channels` | `20261015035358_public_channels.sql` |
+| `20261016034626_20261015035400_finance` | `20261015035400_finance.sql` |
+| `20261016034628_20261015035402_stock` | `20261015035402_stock.sql` |
+| `20261016034631_20261015035404_reports_onboarding` | `20261015035404_reports_onboarding.sql` |
+| `20261016034633_20261015035406_approvals_grants` | `20261015035406_approvals_grants.sql` |
+| `20261016034644_20261015035408_storage_realtime` | `20261015035408_storage_realtime.sql` |
+| `20261016034646_20261015043604_approval_kinds_catalog` | `20261015043604_approval_kinds_catalog.sql` |
+| `20261016034648_20261015154053_public_templates` | `20261015154053_public_templates.sql` |
 
-Sequência de **arquivos pendentes**, respeitando as dependências:
-1. Restante de `20261015035352_permissions_admin.sql` — reconciliar com os dois registros parciais.
-2. `20261015035354_catalog.sql`
-3. `20261015035356_operation.sql`
-4. `20261015035358_public_channels.sql`
-5. `20261015035400_finance.sql`
-6. `20261015035402_stock.sql`
-7. `20261015035404_reports_onboarding.sql`
-8. `20261015035406_approvals_grants.sql`
-9. `20261015035408_storage_realtime.sql`
-10. `20261015043604_approval_kinds_catalog.sql`
-11. `20261015154053_public_templates.sql`
-12. `20261016090000_slug_available.sql`
+Três migrações anteriores (`core`, `permissions_catalog`,
+`permissions_default_roles`) permaneceram intactas. A migração
+`20261016090000_slug_available.sql` foi propositalmente **pulada**, porque
+`slug_available(text)` já foi criada em `permissions_admin`.
 
-`public_templates` depende da definição de `tenant_update_settings` em
-`permissions_admin`, por isso não se aplica primeiro apesar de ter sido inicialmente solicitada assim.
-`slug_available` é requerida no fluxo `billing.subscribe`.
+Consulta solicitada pelo titular (`pg_get_functiondef`, MD5) executada em leitura,
+com o resultado **completo** de 141 definições (38 private, 103 public):
+[auditoria-funcoes-app-20261016.md](./auditoria-funcoes-app-20261016.md).
 
-Funções remotas do app: **nenhuma**. Pendentes `license-sync` e `team`,
-ambas projetadas com `verify_jwt=false` e validação própria via
-`/auth/v1/user`. Não implantá-las antes das RPCs de que dependem
-(`admin_sync_license`, `admin_attach_member`, `admin_find_user_by_email`).
+Edge Functions verificadas:
+- `team`: **ACTIVE**, versão 1, `verify_jwt=false`.
+- `license-sync`: **NÃO IMPLANTADA**. A tentativa pelo plugin foi bloqueada
+  pela camada de segurança da plataforma; não contornar a restrição.
+  A função `admin_sync_license` já existe no banco, mas não substitui a Edge Function.
+
+Após a execução: 0 usuários e 0 restaurantes. O fluxo de licença de ponta a ponta
+continua pendente até a implantação autorizada de `license-sync` e teste real.
 
 ### Billing — `bjtlookhgkdltdohzxnq`
 
