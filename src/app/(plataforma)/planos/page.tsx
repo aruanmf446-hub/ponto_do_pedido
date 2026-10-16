@@ -12,8 +12,9 @@ export default async function PlansPage() {
   const plans = await fetchPlans();
   return (
     <section className="pl-section">
-      <p className="pl-eyebrow">Planos</p>
-      <h1 className="pl-h2">Escolha os aplicativos da sua operação.</h1>
+      <p className="pl-eyebrow">Preços e assinaturas</p>
+      <h1 className="pl-h2">Planos para o tamanho da sua operação.</h1>
+      <p className="pl-muted">Compare os aplicativos e escolha a assinatura que faz sentido para seu restaurante. Valores e condições são consultados no catálogo oficial.</p>
       {plans.length === 0 ? (
         <p className="pl-muted">Os planos estão temporariamente indisponíveis. Tente novamente em instantes.</p>
       ) : (
