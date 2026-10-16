@@ -10,14 +10,33 @@ export type { BillingOverview, Invoice, Plan, Subscription } from '@/core/plans'
 export { planPriceLabel } from '@/core/plans';
 import type { Plan } from '@/core/plans';
 
+const PRODUCT_ID = 'ponto_do_pedido';
+
 /** Catálogo público de planos (RLS: somente planos ativos). */
 export async function fetchPlans(): Promise<Plan[]> {
   if (!config.billing.url) return [];
   try {
-    const res = await fetch(`${config.billing.url}/rest/v1/plans?select=*&active=eq.true&order=position`, {
+    const catalog = `${config.billing.url}/rest/v1/plans?select=*&active=eq.true&order=position`;
+    let res = await fetch(`${catalog}&product_id=eq.${PRODUCT_ID}`, {
       headers: { apikey: config.billing.publishableKey },
       cache: 'no-store',
     });
+    // Só o banco legado, que ainda não possui product_id, permite este fallback.
+    // Falha de rede, função ausente ou produto inexistente nunca mistura catálogos.
+    if (
+      res.status === 400 &&
+      (
+        await res
+          .clone()
+          .json()
+          .catch(() => null)
+      )?.code === '42703'
+    ) {
+      res = await fetch(catalog, {
+        headers: { apikey: config.billing.publishableKey },
+        cache: 'no-store',
+      });
+    }
     if (!res.ok) return [];
     return (await res.json()) as Plan[];
   } catch {
@@ -33,7 +52,7 @@ export async function billingCall<T>(action: string, payload: Record<string, unk
     res = await fetch(`${config.billing.url}/functions/v1/billing`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, apikey: config.billing.publishableKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...payload }),
+      body: JSON.stringify({ ...payload, action, product_id: PRODUCT_ID }),
       cache: 'no-store',
     });
   } catch {
@@ -62,7 +81,8 @@ export async function syncLicenses(): Promise<ActionResult<{ results: { slug: st
     return failure('SYNC_UNAVAILABLE', 'Não foi possível sincronizar a licença. Tente novamente.');
   }
   const body = await res.json().catch(() => null);
-  if (!res.ok || body?.error) return failure(body?.error?.code ?? 'SYNC_ERROR', body?.error?.message ?? 'Não foi possível sincronizar a licença.');
+  if (!res.ok || body?.error)
+    return failure(body?.error?.code ?? 'SYNC_ERROR', body?.error?.message ?? 'Não foi possível sincronizar a licença.');
   if (!Array.isArray(body?.results)) return failure('SYNC_ERROR', 'Resposta inválida ao sincronizar a licença.');
   return ok(body);
 }

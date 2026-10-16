@@ -2,7 +2,7 @@
 // APIs REST e Auth do próprio projeto.
 
 const ALLOWED_ORIGIN = Deno.env.get('PDP_ALLOWED_ORIGIN') ?? '*';
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 
 export const cors = {
   'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
@@ -21,14 +21,22 @@ export function fail(code: string, message: string, status = 400) {
 function fromKeys(name: string, legacy: string): string {
   const keys = Deno.env.get(name);
   if (keys) {
-    const parsed = JSON.parse(keys) as Record<string, string>;
-    if (parsed.default) return parsed.default;
+    try {
+      const parsed = JSON.parse(keys) as Record<string, string>;
+      if (parsed.default) return parsed.default;
+    } catch {
+      /* Compatibilidade com a chave legada fornecida pela plataforma. */
+    }
   }
-  return Deno.env.get(legacy)!;
+  return Deno.env.get(legacy) ?? '';
 }
 
 const SECRET_KEY = fromKeys('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY');
 export const PUBLISHABLE_KEY = fromKeys('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_ANON_KEY');
+
+export function integrationConfigured(): boolean {
+  return Boolean(SUPABASE_URL && SECRET_KEY && PUBLISHABLE_KEY);
+}
 
 /** Cabeçalhos com a chave secreta (novas chaves vão só no apikey). */
 function adminHeaders(): Record<string, string> {
@@ -49,7 +57,10 @@ async function rpcCall<T>(fn: string, args: unknown, headers: Record<string, str
 
 /** RPC com a chave secreta (ignora RLS; usar apenas após validar a identidade). */
 export function adminRpc<T>(fn: string, args: unknown) {
-  return rpcCall<T>(fn, args, adminHeaders());
+  return rpcCall<T>(fn, args, adminHeaders()).catch(() => ({
+    data: null,
+    error: { message: 'Falha ao consultar o banco operacional.' },
+  }));
 }
 
 /** RPC com a identidade do usuário (respeita RLS e as regras das funções). */

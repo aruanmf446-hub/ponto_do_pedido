@@ -12,6 +12,7 @@ function setup() {
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
   const shared = {
     adminRpc: rpc,
+    integrationConfigured: () => true,
     currentUser,
     cors: {},
     json,
@@ -27,7 +28,7 @@ function setup() {
     Response,
     console,
     Deno: {
-      env: { get: () => undefined },
+      env: { get: () => 'unit-public-key' },
       serve: (fn: typeof handler) => {
         handler = fn;
       },
@@ -101,4 +102,19 @@ describe('license-sync: fronteiras de confiança e falhas do billing', () => {
       }),
     );
   });
+});
+
+it('não sincroniza licenças retornadas para outro produto', async () => {
+  const s = setup();
+  s.fetch.mockResolvedValue(Response.json({ product_id: 'oficina_unit', subscriptions: [] }));
+  expect((await s.call()).status).toBe(502);
+  expect(s.rpc).not.toHaveBeenCalled();
+});
+it('não sincroniza assinatura de outro produto mesmo dentro de resposta do Ponto do Pedido', async () => {
+  const s = setup();
+  s.fetch.mockResolvedValue(
+    Response.json({ product_id: 'ponto_do_pedido', subscriptions: [{ product_id: 'oficina_unit', status: 'active' }] }),
+  );
+  expect((await s.call()).status).toBe(502);
+  expect(s.rpc).not.toHaveBeenCalled();
 });

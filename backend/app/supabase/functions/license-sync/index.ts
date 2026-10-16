@@ -7,13 +7,14 @@
 //    são retornadas;
 // 3. grava estabelecimento, status, vigência e módulos com a chave secreta.
 // O navegador não informa plano, módulos nem vigência: tudo vem da origem oficial.
-import { adminRpc, bearer, cors, currentUser, fail, json } from '../_shared/http.ts';
+import { adminRpc, bearer, cors, currentUser, fail, integrationConfigured, json } from '../_shared/http.ts';
 
 const BILLING_URL = Deno.env.get('PDP_BILLING_URL') ?? 'https://bjtlookhgkdltdohzxnq.supabase.co';
-const BILLING_PUBLISHABLE_KEY = Deno.env.get('PDP_BILLING_PUBLISHABLE_KEY') ?? 'sb_publishable_AcIiDIvMmRmlaP1ll7mvTA_8Ll8wucS';
+const BILLING_PUBLISHABLE_KEY = Deno.env.get('PDP_BILLING_PUBLISHABLE_KEY') ?? '';
 
 type Subscription = {
   id: string;
+  product_id?: string;
   plan_code: string;
   modules: string[];
   status: 'pending_payment' | 'active' | 'past_due' | 'suspended' | 'cancelled';
@@ -39,6 +40,9 @@ function tenantStatus(s: Subscription): 'pending' | 'active' | 'suspended' | 'ca
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return fail('METHOD', 'Use POST.', 405);
+  if (!integrationConfigured() || !BILLING_PUBLISHABLE_KEY) {
+    return fail('CONFIG_ERROR', 'Configuração de integração incompleta.', 503);
+  }
   const token = bearer(req);
   if (!token) return fail('AUTH_REQUIRED', 'Sessão expirada.', 401);
   const user = await currentUser(token);
@@ -49,14 +53,17 @@ Deno.serve(async (req) => {
     const res = await fetch(`${BILLING_URL}/functions/v1/billing`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, apikey: BILLING_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'entitlements' }),
+      body: JSON.stringify({ action: 'entitlements', product_id: 'ponto_do_pedido' }),
     });
     if (!res.ok) {
       return fail('BILLING_UNAVAILABLE', 'Não foi possível consultar as assinaturas no momento.', 502);
     }
-    const overview = (await res.json()) as { subscriptions?: unknown };
+    const overview = (await res.json()) as { product_id?: string; subscriptions?: unknown };
     if (!Array.isArray(overview.subscriptions)) throw new Error('Invalid entitlements');
+    if (overview.product_id !== undefined && overview.product_id !== 'ponto_do_pedido') throw new Error('Invalid product');
     subscriptions = overview.subscriptions as Subscription[];
+    if (subscriptions.some((s) => s.product_id !== undefined && s.product_id !== 'ponto_do_pedido'))
+      throw new Error('Invalid subscription product');
   } catch {
     // Não registrar payloads nem detalhes da rede: podem conter credenciais.
     return fail('BILLING_UNAVAILABLE', 'Não foi possível consultar as assinaturas no momento.', 502);
