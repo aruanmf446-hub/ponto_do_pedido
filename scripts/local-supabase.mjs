@@ -65,12 +65,12 @@ if (command === 'start') {
   const appChanged = writeIfChanged(
     join(projects.app.dir, 'supabase/functions/.env'),
     [`PDP_BILLING_URL=http://supabase_kong_assinaturas:8000`,
-     `PDP_BILLING_PUBLISHABLE_KEY=${billingKey}`, ''].join('\\n'),
+     `PDP_BILLING_PUBLISHABLE_KEY=${billingKey}`, ''].join('\n'),
   );
   const billingChanged = writeIfChanged(
     join(projects.billing.dir, 'supabase/functions/.env'),
     [`PDP_IDENTITY_URL=http://supabase_kong_pontodopedido:8000`,
-     `PDP_IDENTITY_PUBLISHABLE_KEY=${appKey}`, ''].join('\\n'),
+     `PDP_IDENTITY_PUBLISHABLE_KEY=${appKey}`, ''].join('\n'),
   );
 
   if (appChanged || billingChanged) {
