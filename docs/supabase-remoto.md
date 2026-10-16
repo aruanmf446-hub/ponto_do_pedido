@@ -57,6 +57,26 @@ ambas projetadas com `verify_jwt=false` e validação própria via
 - Edge Function `billing` implantada, versão 1, `verify_jwt=false`; código idêntico ao GitHub no momento da auditoria.
 - Não há migração do billing pendente naquele inventário.
 
+### Preços e confirmação de pagamento — 16/10/2026
+
+- `20261016120000_payment_requires_confirmation.sql` aplicado como
+  `20261016032611_payment_requires_confirmation_20261016120000`.
+  `billing_subscribe` exige estado pendente sempre que `payment_provider` não for nulo.
+- `20261016130000_precos_planos.sql` aplicado como
+  `20261016032640_precos_planos_20261016130000`.
+  START R$ 49,99/mês (`4999` centavos), PLUS R$ 80,00/mês (`8000`),
+  DIAMOND R$ 150,00/mês (`15000`). Valores conferidos no banco.
+- `payment_provider` permaneceu `null` e `activation_mode` permaneceu
+  `immediate`: **ainda não habilitar contratação pública paga ou emitir cobranças**.
+- **Bloqueio do fluxo:** no app `qmhtzosfbosgolevnybd`, não há Edge Functions,
+  `admin_sync_license` nem `slug_available`. Contratação real e liberação da
+  licença exigem primeiro as migrações operacionais e o deploy de `license-sync`.
+- Secrets do Mercado Pago foram cadastrados pelo titular, mas o valor/ambiente
+  (teste versus produção) não foi comprovado pelo plugin.
+- Um teste sintético de assinatura inválida no webhook **não valida pagamento**.
+  É necessário um evento oficial do provedor e comprovar idempotência, atualização
+  da fatura e somente então habilitar o provedor.
+
 ### Mercado Pago — implantação posterior (16/10/2026)
 
 - Migração local `backend/billing/supabase/migrations/20261016100000_mercadopago.sql`
