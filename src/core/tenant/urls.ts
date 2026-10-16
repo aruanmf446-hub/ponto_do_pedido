@@ -10,5 +10,6 @@ export function tenantUrl(slug: string, path = ''): string {
 }
 
 export function tenantDisplayUrl(slug: string): string {
+  if (config.pathTenants) return `${config.rootDomain}/r/${slug}`;
   return `${slug}.${config.rootDomain}`;
 }

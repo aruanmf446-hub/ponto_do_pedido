@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import type { Plan } from '@/core/plans';
+import { config } from '@/core/config';
 import { checkSlug, subscribe } from '@/apps/plataforma/actions';
 
 function toSlug(name: string): string {
@@ -70,7 +71,9 @@ export function SubscribeForm({ plans, initialPlan, rootDomain }: { plans: Plan[
           aria-describedby="slug-help"
         />
         <small id="slug-help">
-          {effectiveSlug ? `${effectiveSlug}.${rootDomain}` : `seurestaurante.${rootDomain}`} —{' '}
+          {config.pathTenants
+            ? `${rootDomain}/r/${effectiveSlug || 'seurestaurante'}`
+            : `${effectiveSlug || 'seurestaurante'}.${rootDomain}`} —{' '}
           {status === true ? 'disponível' : status === false ? 'indisponível' : 'letras minúsculas, números e hífen'}
         </small>
       </label>

@@ -1,5 +1,9 @@
 # Supabase remoto — auditoria e saneamento
 
+> Estado mais recente: [auditoria da integração de 16/10/2026](./integracao-20261016.md).
+> Os inventários abaixo são históricos e contêm estados posteriormente superados
+> (especialmente implantação de license-sync, migrações e preços).
+
 Atualizado em 15/10/2026. Fonte: leitura direta pelo plugin Supabase + arquivos da branch `main`.
 **Este documento não autoriza alterações automáticas em produção.** É preciso aprovação específica por migração, deploy, mudança de Auth e operação destrutiva.
 

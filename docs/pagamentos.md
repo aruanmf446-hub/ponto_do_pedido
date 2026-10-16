@@ -1,5 +1,9 @@
 # Pagamentos (Mercado Pago)
 
+> Inventário remoto atualizado e limitações dos testes:
+> [auditoria de 16/10/2026](./integracao-20261016.md). As referências de estado
+> abaixo descrevem momentos anteriores e não devem substituir a consulta remota.
+
 A cobrança das assinaturas é **exclusiva do projeto Supabase `assinaturas`** (`backend/billing`).
 O banco do restaurante (`pontodopedido`) não guarda dados do Mercado Pago; ele só recebe o
 resultado como licença, pelo `license-sync`, que lê a assinatura já ativa no billing.

@@ -15,7 +15,10 @@ export default defineConfig({
   use: {
     baseURL: process.env.PDP_E2E_BASE_URL ?? 'http://localhost:3000',
     trace: 'retain-on-failure',
-    launchOptions: executablePath ? { executablePath } : {},
+    launchOptions: {
+      ...(executablePath ? { executablePath } : {}),
+      ...(process.env.PDP_E2E_PROXY ? { proxy: { server: process.env.PDP_E2E_PROXY } } : {}),
+    },
   },
   webServer: process.env.PDP_E2E_START
     ? { command: 'npm run start', url: 'http://localhost:3000/', reuseExistingServer: true, timeout: 120_000 }
