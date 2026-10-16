@@ -26,8 +26,13 @@ export function AppPlansCarousel({ plans }: { plans: Plan[] }) {
     return () => window.clearInterval(timer);
   }, [paused]);
 
-  const step = steps[active];
+  const step = steps[active] ?? steps[0]!;
   const available = plans.filter((plan) => plan.modules.length === active + 1);
+  const lowestPriced = available.reduce<Plan | null>((best, plan) => {
+    if (!best) return plan;
+    if (plan.price_cents == null) return best;
+    return best.price_cents == null || plan.price_cents < best.price_cents ? plan : best;
+  }, null);
   return (
     <section className="pl-app-story" aria-labelledby="app-story-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}>
       <div className="pl-app-story-head">
@@ -43,7 +48,7 @@ export function AppPlansCarousel({ plans }: { plans: Plan[] }) {
           <span className="pl-app-story-number">{active + 1} {active === 0 ? 'aplicativo' : 'aplicativos'}</span>
           <h3>{step.title}</h3>
           <p>Veja um exemplo de como as áreas podem se conectar. Os aplicativos incluídos dependem do plano escolhido.</p>
-          {available.length > 0 ? <p className="pl-app-story-price">Planos disponíveis a partir de {planPriceLabel(available.reduce((best, plan) => (plan.price_cents != null && (best.price_cents == null || plan.price_cents < best.price_cents) ? plan : best), available[0]))}</p> : <p className="pl-app-story-price">Consulte as opções disponíveis</p>}
+          {lowestPriced ? <p className="pl-app-story-price">Planos disponíveis: {planPriceLabel(lowestPriced)}</p> : <p className="pl-app-story-price">Consulte as opções disponíveis</p>}
           <Link href="/planos" className="pl-btn">Conheça nossos planos ↗</Link>
         </div>
         <div className="pl-app-story-diagram" aria-label="Exemplo ilustrativo de fluxo entre aplicativos">
