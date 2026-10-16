@@ -52,6 +52,8 @@ Itens que dependem do titular (não podem ser feitos pelo código):
   incluindo `20261015154053_public_templates` (modelos do Cardápio e do Delivery).
 - [ ] **Comercial** — os preços aparecem como "Valor sob consulta" e não há provedor de pagamento
   configurado (nenhuma cobrança real é feita) até a decisão do titular.
+- [ ] **Mercado Pago** — integração pronta e desligada; configurar credenciais, webhook, secrets e preços
+  conforme [docs/pagamentos.md](docs/pagamentos.md) e só então ligar `payment_provider`.
 
 ## Documentação
 
@@ -59,6 +61,7 @@ Itens que dependem do titular (não podem ser feitos pelo código):
 - [Supabase: projetos, tabelas, RLS e funções](docs/supabase.md) · [estado remoto](docs/supabase-remoto.md)
 - [Autenticação, permissões e aprovações](docs/permissoes.md)
 - [Modelos visuais](docs/modelos-visuais.md)
+- [Pagamentos (Mercado Pago)](docs/pagamentos.md)
 - [Deploy na Vercel](docs/deploy.md)
 - Aplicativos: [docs/apps](docs/apps)
 - Regras permanentes para agentes: [CLAUDE.md](CLAUDE.md)

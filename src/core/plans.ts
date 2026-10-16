@@ -36,6 +36,9 @@ export type Subscription = {
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   created_at: string;
+  provider_status?: string | null;
+  next_payment_at?: string | null;
+  payment_url?: string | null;
   invoices: Invoice[];
 };
 

@@ -41,6 +41,9 @@ Leia também `AGENTS.md` (regras do Next.js 16 instaladas pelo framework).
 ## Comercial
 - Não inventar preços, condições ou dados bancários. Plano sem preço = "Valor sob consulta".
 - Não executar cobranças reais. `platform_settings.payment_provider` fica nulo até decisão do titular.
+- Pagamento por Mercado Pago é **exclusivo do projeto assinaturas** (`backend/billing`, ver `docs/pagamentos.md`).
+  Segredos `MP_*` só como secrets das Edge Functions do billing; nunca no Next.js, no navegador nem no banco do restaurante.
+  Ligar o provedor e definir preços é decisão do titular.
 - Não afirmar que a produção está publicada sem verificar o deploy real.
 
 ## Fluxo de trabalho

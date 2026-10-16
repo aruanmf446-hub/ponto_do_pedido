@@ -9,7 +9,7 @@ import { formatDate } from '@/core/dates';
 import { formatCents } from '@/core/money';
 import { Dialog } from '@/core/ui/Dialog';
 import { tenantDisplayUrl, tenantUrl } from '@/core/tenant/urls';
-import { subscriptionAction } from '@/apps/plataforma/actions';
+import { startPayment, subscriptionAction } from '@/apps/plataforma/actions';
 
 const STATUS: Record<Subscription['status'], { label: string; tone: string }> = {
   active: { label: 'Ativa', tone: 'ok' },
@@ -23,10 +23,12 @@ export function SubscriptionCard({
   sub,
   plans,
   onboardingDone,
+  paymentProvider,
 }: {
   sub: Subscription;
   plans: Plan[];
   onboardingDone: boolean;
+  paymentProvider?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -35,6 +37,17 @@ export function SubscriptionCard({
   const [plan, setPlan] = useState(sub.plan_code);
   const status = STATUS[sub.status];
   const operational = sub.status === 'active' || sub.status === 'past_due';
+
+  const online = paymentProvider === 'mercadopago';
+  const awaitingPayment = online && (sub.status === 'pending_payment' || sub.status === 'past_due');
+
+  const pay = () =>
+    start(async () => {
+      setError(null);
+      const result = await startPayment(sub.id);
+      if (!result.ok) setError(result.message);
+      else window.location.assign(result.data.checkout_url);
+    });
 
   const run = (action: Parameters<typeof subscriptionAction>[0], planCode?: string) =>
     start(async () => {
@@ -101,9 +114,16 @@ export function SubscriptionCard({
             Continuar primeiro acesso
           </a>
         ) : null}
-        <button type="button" className="pl-btn pl-btn--ghost" disabled={pending} onClick={() => run('renew')}>
-          Renovar
-        </button>
+        {awaitingPayment ? (
+          <button type="button" className="pl-btn" disabled={pending} onClick={pay}>
+            Pagar agora
+          </button>
+        ) : null}
+        {!online ? (
+          <button type="button" className="pl-btn pl-btn--ghost" disabled={pending} onClick={() => run('renew')}>
+            Renovar
+          </button>
+        ) : null}
         {operational ? (
           <button type="button" className="pl-btn pl-btn--ghost" disabled={pending} onClick={() => setDialog('plan')}>
             Alterar plano
@@ -169,7 +189,12 @@ export function SubscriptionCard({
           </label>
           <p className="pl-muted">Os aplicativos do novo plano ficam disponíveis imediatamente após a confirmação.</p>
           <div className="pl-dialog-actions">
-            <button type="button" className="pl-btn" disabled={pending || plan === sub.plan_code} onClick={() => run('change_plan', plan)}>
+            <button
+              type="button"
+              className="pl-btn"
+              disabled={pending || plan === sub.plan_code}
+              onClick={() => run('change_plan', plan)}
+            >
               Confirmar alteração
             </button>
           </div>
@@ -177,8 +202,8 @@ export function SubscriptionCard({
       </Dialog>
       <Dialog open={dialog === 'cancel'} onClose={() => setDialog(null)} title="Cancelar assinatura">
         <p>
-          O cancelamento é efetivado ao fim do período vigente ({formatDate(sub.current_period_end)}). Até lá, o restaurante continua
-          operando e você pode desistir do cancelamento.
+          O cancelamento é efetivado ao fim do período vigente ({formatDate(sub.current_period_end)}). Até lá, o restaurante
+          continua operando e você pode desistir do cancelamento.
         </p>
         <div className="pl-dialog-actions">
           <button type="button" className="pl-btn pl-btn--danger" disabled={pending} onClick={() => run('cancel')}>

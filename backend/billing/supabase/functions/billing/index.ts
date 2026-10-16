@@ -4,11 +4,13 @@
 // `pontodopedido` (autoridade de identidade). A função valida o token
 // consultando `/auth/v1/user` daquele projeto — nunca confia em ids enviados
 // pelo navegador. Somente então executa a operação com a chave secreta deste
-// projeto. Nenhuma cobrança real é executada aqui. Sem dependências externas.
+// projeto. A cobrança só ocorre quando o titular habilita o provedor de
+// pagamento (platform_settings.payment_provider). Sem dependências externas.
+import { buildPreapprovalBody, MP_API } from '../_shared/mercadopago.ts';
 
 // Configuração pública (não secreta) do projeto de identidade. Pode ser
 // sobrescrita por variáveis de ambiente no desenvolvimento local.
-const IDENTITY_URL = Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmhtzosfbosgolevnybd.supabase.co';
+const IDENTITY_URL = Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmntzosfbosgolevnybd.supabase.co';
 const IDENTITY_PUBLISHABLE_KEY =
   Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY') ?? 'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -54,6 +56,16 @@ async function rpc<T>(fn: string, args: unknown): Promise<{ data: T | null; erro
   if (!res.ok) return { data: null, error: body ?? { message: res.statusText } };
   return { data: body as T, error: null };
 }
+
+type PaymentContext = {
+  subscription_id: string;
+  plan_name: string;
+  amount_cents: number;
+  billing_period: 'monthly' | 'yearly';
+  restaurant_name: string;
+  payer_email: string;
+  checkout_url: string | null;
+};
 
 type Identity = { id: string; email: string; name: string };
 
@@ -121,6 +133,42 @@ Deno.serve(async (req) => {
         p_idempotency_key: `${identity.id}:${String(body.idempotency_key ?? crypto.randomUUID())}`,
       });
       return error ? failure(error) : json(data);
+    }
+    case 'start_payment': {
+      const { data: ctx, error: ctxError } = await rpc<PaymentContext>('billing_payment_context', {
+        p_identity: identity.id,
+        p_subscription: body.subscription_id,
+      });
+      if (ctxError || !ctx) return failure(ctxError ?? {});
+      if (ctx.checkout_url) return json({ checkout_url: ctx.checkout_url });
+      const accessToken = Deno.env.get('MP_ACCESS_TOKEN');
+      if (!accessToken) return fail('PAYMENT_NOT_CONFIGURED', 'O pagamento online ainda não está configurado.', 503);
+      const backUrl = Deno.env.get('MP_BACK_URL') ?? 'https://pontodopedido.com/portal';
+      const res = await fetch(`${MP_API}/preapproval`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': ctx.subscription_id },
+        body: JSON.stringify(
+          buildPreapprovalBody({
+            subscriptionId: ctx.subscription_id,
+            reason: `Ponto do Pedido · plano ${ctx.plan_name} · ${ctx.restaurant_name}`,
+            payerEmail: ctx.payer_email,
+            amountCents: ctx.amount_cents,
+            period: ctx.billing_period,
+            backUrl,
+          }),
+        ),
+      });
+      const created = (await res.json().catch(() => null)) as { id?: string; init_point?: string } | null;
+      if (!res.ok || !created?.id || !created.init_point) {
+        return fail('PAYMENT_PROVIDER_ERROR', 'Não foi possível iniciar o pagamento agora. Tente novamente em instantes.', 502);
+      }
+      const { error: startError } = await rpc('billing_payment_started', {
+        p_subscription: ctx.subscription_id,
+        p_provider_subscription_id: created.id,
+        p_checkout_url: created.init_point,
+      });
+      if (startError) return failure(startError);
+      return json({ checkout_url: created.init_point });
     }
     case 'renew': {
       const { data, error } = await rpc('billing_renew', { p_identity: identity.id, p_subscription: body.subscription_id });

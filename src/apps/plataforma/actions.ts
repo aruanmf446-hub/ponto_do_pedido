@@ -36,10 +36,16 @@ export async function signUpSubscriber(_prev: SignupState, form: FormData): Prom
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { full_name: parsed.data.name }, emailRedirectTo: `${await origin()}/auth/confirm?next=${encodeURIComponent(next)}` },
+    options: {
+      data: { full_name: parsed.data.name },
+      emailRedirectTo: `${await origin()}/auth/confirm?next=${encodeURIComponent(next)}`,
+    },
   });
   if (error) {
-    return failure('SIGNUP_FAILED', /already/i.test(error.message) ? 'Este e-mail já possui conta. Entre para continuar.' : error.message);
+    return failure(
+      'SIGNUP_FAILED',
+      /already/i.test(error.message) ? 'Este e-mail já possui conta. Entre para continuar.' : error.message,
+    );
   }
   if (!data.session) return { ok: true, confirm: true, email: parsed.data.email };
   redirect(next);
@@ -96,9 +102,20 @@ export async function subscribe(_prev: ActionFail | null, form: FormData): Promi
   if (!result.ok) return result;
   // Uma contratação pendente já foi registrada no billing: não trate a falta
   // de licença ativa como falha nem refaça a assinatura na tentativa seguinte.
-  if (result.data.status === 'pending_payment') redirect('/portal');
+  if (result.data.status === 'pending_payment') {
+    // Com cobrança online habilitada, segue para o checkout. Sem ela (ou se falhar),
+    // o Portal mostra a pendência e permite tentar de novo.
+    const payment = await billingCall<{ checkout_url: string }>('start_payment', {
+      subscription_id: result.data.subscription_id,
+    });
+    if (payment.ok) redirect(payment.data.checkout_url);
+    redirect('/portal');
+  }
   if (result.data.status !== 'active') {
-    return failure('SUBSCRIPTION_NOT_ACTIVE', 'Sua assinatura foi registrada, mas ainda não está ativa. Consulte o Portal do Assinante.');
+    return failure(
+      'SUBSCRIPTION_NOT_ACTIVE',
+      'Sua assinatura foi registrada, mas ainda não está ativa. Consulte o Portal do Assinante.',
+    );
   }
   const sync = await syncLicenses();
   if (!sync.ok) return sync;
@@ -117,6 +134,11 @@ export async function subscriptionAction(
   const sync = await syncLicenses();
   if (!sync.ok) return sync;
   return ok(null);
+}
+
+/** Inicia (ou retoma) o pagamento online; devolve o link do checkout do Mercado Pago. */
+export async function startPayment(subscriptionId: string): Promise<ActionResult<{ checkout_url: string }>> {
+  return billingCall<{ checkout_url: string }>('start_payment', { subscription_id: subscriptionId });
 }
 
 export async function refreshLicenses(): Promise<ActionResult<null>> {

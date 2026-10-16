@@ -10,7 +10,14 @@ import { tenantDisplayUrl, tenantUrl } from '@/core/tenant/urls';
 
 export const metadata: Metadata = { title: 'Portal do Assinante' };
 
-type MyTenant = { id: string; slug: string; name: string; is_owner: boolean; onboarding_completed_at: string | null; subscription_id: string | null };
+type MyTenant = {
+  id: string;
+  slug: string;
+  name: string;
+  is_owner: boolean;
+  onboarding_completed_at: string | null;
+  subscription_id: string | null;
+};
 
 export default async function PortalPage() {
   const user = await getCurrentUser();
@@ -93,7 +100,13 @@ export default async function PortalPage() {
       ) : null}
       <div style={{ display: 'grid', gap: 16 }}>
         {subscriptions.map((sub) => (
-          <SubscriptionCard key={sub.id} sub={sub} plans={plans} onboardingDone={onboardingBySlug.get(sub.restaurant_slug) ?? false} />
+          <SubscriptionCard
+            key={sub.id}
+            sub={sub}
+            plans={plans}
+            onboardingDone={onboardingBySlug.get(sub.restaurant_slug) ?? false}
+            paymentProvider={overview.ok ? overview.data.payment_provider : null}
+          />
         ))}
       </div>
       <section className="pl-card" style={{ marginTop: 24 }} aria-labelledby="acessos">
