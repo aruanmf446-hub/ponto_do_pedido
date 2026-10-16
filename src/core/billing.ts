@@ -62,6 +62,7 @@ export async function syncLicenses(): Promise<ActionResult<{ results: { slug: st
     return failure('SYNC_UNAVAILABLE', 'Não foi possível sincronizar a licença. Tente novamente.');
   }
   const body = await res.json().catch(() => null);
-  if (!res.ok) return failure(body?.error?.code ?? 'SYNC_ERROR', body?.error?.message ?? 'Não foi possível sincronizar a licença.');
+  if (!res.ok || body?.error) return failure(body?.error?.code ?? 'SYNC_ERROR', body?.error?.message ?? 'Não foi possível sincronizar a licença.');
+  if (!Array.isArray(body?.results)) return failure('SYNC_ERROR', 'Resposta inválida ao sincronizar a licença.');
   return ok(body);
 }

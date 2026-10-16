@@ -26,7 +26,8 @@ export default async function PortalPage() {
   const overview = await billingCall<BillingOverview>('overview');
   const subscriptions = overview.ok ? overview.data.subscriptions : [];
   // Mantém licenças do projeto operacional alinhadas com a origem comercial
-  if (subscriptions.length > 0) await syncLicenses();
+  const sync = subscriptions.length > 0 ? await syncLicenses() : null;
+  const syncError = sync && (!sync.ok ? sync.message : sync.data.results.find((result) => result.error)?.error);
   const [plans, tenants] = await Promise.all([fetchPlans(), rpcRead<MyTenant[]>('my_tenants', {})]);
   const isHolder = subscriptions.length > 0;
 
@@ -96,6 +97,11 @@ export default async function PortalPage() {
         <p className="pl-note" style={{ marginTop: 0 }}>
           Cobrança: o meio de pagamento da plataforma ainda não está configurado. As faturas ficam registradas em aberto e nenhuma
           cobrança automática é realizada.
+        </p>
+      ) : null}
+      {syncError ? (
+        <p className="pl-error" role="alert">
+          {syncError}
         </p>
       ) : null}
       <div style={{ display: 'grid', gap: 16 }}>

@@ -119,8 +119,10 @@ export async function subscribe(_prev: ActionFail | null, form: FormData): Promi
   }
   const sync = await syncLicenses();
   if (!sync.ok) return sync;
-  const failed = sync.data.results.find((r) => r.slug === parsed.data.slug && r.error);
-  if (failed) return failure('SYNC_ERROR', failed.error ?? 'Não foi possível ativar o restaurante.');
+  const provisioned = sync.data.results.find((r) => r.slug === parsed.data.slug);
+  if (!provisioned?.tenant_id || provisioned.error) {
+    return failure('SYNC_ERROR', provisioned?.error ?? 'A licença ainda não foi sincronizada. Tente novamente pelo Portal.');
+  }
   redirect(`/portal/boas-vindas?r=${parsed.data.slug}`);
 }
 
@@ -133,7 +135,8 @@ export async function subscriptionAction(
   if (!result.ok) return result;
   const sync = await syncLicenses();
   if (!sync.ok) return sync;
-  return ok(null);
+  const failed = sync.data.results.find((result) => result.error);
+  return failed ? failure('SYNC_ERROR', failed.error!) : ok(null);
 }
 
 /** Inicia (ou retoma) o pagamento online; devolve o link do checkout do Mercado Pago. */
@@ -143,7 +146,9 @@ export async function startPayment(subscriptionId: string): Promise<ActionResult
 
 export async function refreshLicenses(): Promise<ActionResult<null>> {
   const sync = await syncLicenses();
-  return sync.ok ? ok(null) : sync;
+  if (!sync.ok) return sync;
+  const failed = sync.data.results.find((result) => result.error);
+  return failed ? failure('SYNC_ERROR', failed.error!) : ok(null);
 }
 
 export async function getOverview(): Promise<ActionResult<BillingOverview>> {
