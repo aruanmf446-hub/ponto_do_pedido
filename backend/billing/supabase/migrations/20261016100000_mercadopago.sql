@@ -91,6 +91,7 @@ declare
   v_start timestamptz;
   v_end timestamptz;
   v_invoice uuid;
+  v_plan_amount bigint;
 begin
   insert into public.payment_events (provider, event_key, kind, resource_id, payload)
     values ('mercadopago', p_event_key, p_kind, p_resource ->> 'id', p_resource)
@@ -111,6 +112,17 @@ begin
   end if;
   if v_sub.id is null then
     update public.payment_events set error = 'Assinatura não encontrada.' where provider = 'mercadopago' and event_key = p_event_key;
+    return jsonb_build_object('ignored', true);
+  end if;
+
+  -- O provedor pode enviar notificações atrasadas ou de um contrato diferente.
+  -- Nunca associar um ID externo que não corresponde ao contrato registrado.
+  if p_kind = 'preapproval' and (
+    nullif(p_resource ->> 'id', '') is null
+    or (v_sub.provider_subscription_id is not null and v_sub.provider_subscription_id <> p_resource ->> 'id')
+  ) then
+    update public.payment_events set error = 'Identificador do contrato incompatível.'
+      where provider = 'mercadopago' and event_key = p_event_key;
     return jsonb_build_object('ignored', true);
   end if;
 
@@ -137,6 +149,23 @@ begin
   -- Cobrança (authorized_payment)
   v_pay_status := p_resource #>> '{payment,status}';
   v_pay_id := p_resource #>> '{payment,id}';
+
+  -- Autorizar acesso somente com cobrança aprovada, na moeda e valor do plano.
+  -- O payload já foi consultado diretamente na API do Mercado Pago pelo webhook.
+  -- Não usar os dados de uma cobrança incompatível para ativar ou estender licença.
+  if v_pay_status = 'approved' then
+    select price_cents into v_plan_amount from public.plans where code = v_sub.plan_code;
+    if (p_resource ->> 'currency_id') is distinct from 'BRL'
+      or v_plan_amount is null or v_plan_amount <= 0
+      or (p_resource ->> 'transaction_amount') is null
+      or round(((p_resource ->> 'transaction_amount')::numeric) * 100)::bigint <> v_plan_amount
+    then
+      update public.payment_events set error = 'Moeda ou valor incompatível com o plano.'
+        where provider = 'mercadopago' and event_key = p_event_key;
+      return jsonb_build_object('ignored', true, 'reason', 'PAYMENT_AMOUNT_MISMATCH');
+    end if;
+  end if;
+
   v_amount := round(coalesce((p_resource ->> 'transaction_amount')::numeric, 0) * 100)::bigint;
 
   if v_pay_status = 'approved' and v_pay_id is not null then
