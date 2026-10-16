@@ -48,7 +48,7 @@ export function PlatformChrome({ children, signedIn, portal }: { children: React
             <>
               <Link href="/entrar">Entrar</Link>
               <Link href="/planos" className="pl-btn pl-btn--small">
-                Assinar
+                Nossos planos
               </Link>
             </>
           )}
