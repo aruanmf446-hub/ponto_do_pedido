@@ -94,6 +94,12 @@ export async function subscribe(_prev: ActionFail | null, form: FormData): Promi
     idempotency_key: parsed.data.key,
   });
   if (!result.ok) return result;
+  // Uma contratação pendente já foi registrada no billing: não trate a falta
+  // de licença ativa como falha nem refaça a assinatura na tentativa seguinte.
+  if (result.data.status === 'pending_payment') redirect('/portal');
+  if (result.data.status !== 'active') {
+    return failure('SUBSCRIPTION_NOT_ACTIVE', 'Sua assinatura foi registrada, mas ainda não está ativa. Consulte o Portal do Assinante.');
+  }
   const sync = await syncLicenses();
   if (!sync.ok) return sync;
   const failed = sync.data.results.find((r) => r.slug === parsed.data.slug && r.error);
