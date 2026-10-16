@@ -57,6 +57,24 @@ ambas projetadas com `verify_jwt=false` e validação própria via
 - Edge Function `billing` implantada, versão 1, `verify_jwt=false`; código idêntico ao GitHub no momento da auditoria.
 - Não há migração do billing pendente naquele inventário.
 
+### Mercado Pago — implantação posterior (16/10/2026)
+
+- Migração local `backend/billing/supabase/migrations/20261016100000_mercadopago.sql`
+  aplicada no remoto com histórico `20261016031437_mercadopago_20261016100000`.
+  **A versão remota usa timestamp gerado pelo plugin, não o prefixo do arquivo**:
+  comparar conteúdo antes de qualquer tentativa de reaplicar.
+- Verificado: `public.payment_events` existe com RLS ativo; 5 campos de provider
+  existem em `subscriptions`; 4 RPCs financeiras possuem execução para
+  `service_role` e não para `anon`/`authenticated`.
+- Edge Function `mercadopago-webhook`: implantada, versão 1, ativa,
+  `verify_jwt=false`, autenticidade das notificações validada no código.
+- Edge Function `billing`: ativa, versão 3, `verify_jwt=false`.
+- **Cobrança NÃO ativada**: `payment_provider = null`; `activation_mode = "immediate"`.
+  Os planos START, PLUS e DIAMOND seguem com `price_cents = null`.
+- Ainda não verificado: notificação real do Mercado Pago, validade do conteúdo
+  dos três secrets e fluxo completo de pagamento. Webhook cadastrado na conta do
+  Mercado Pago também precisa ser validado fora do Supabase.
+
 **Decisão comercial pendente:** `platform_settings.activation_mode = "immediate"`
 e `payment_provider = null`. Assim, criar e renovar uma assinatura não comprova
 pagamento: o fluxo pode conceder ou prolongar acesso sem cobrança real.
