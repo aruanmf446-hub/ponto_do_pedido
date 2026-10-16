@@ -66,12 +66,22 @@ export type AuthUser = { id: string; email: string; user_metadata?: { full_name?
 
 /** Valida o token no Auth deste projeto (autoridade de identidade). */
 export async function currentUser(token: string): Promise<AuthUser | null> {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: PUBLISHABLE_KEY, Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) return null;
-  const user = (await res.json()) as AuthUser;
-  return user?.id ? user : null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: PUBLISHABLE_KEY, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      // Apenas status HTTP: nunca registrar token, chaves, cabeçalhos ou payload do Auth.
+      console.warn('AUTH_USER_REJECTED', { status: res.status });
+      return null;
+    }
+    const user = (await res.json()) as AuthUser;
+    if (!user?.id) console.warn('AUTH_USER_MISSING_ID');
+    return user?.id ? user : null;
+  } catch (error) {
+    console.error('AUTH_USER_UNREACHABLE', { cause: error instanceof Error ? error.name : 'unknown' });
+    return null;
+  }
 }
 
 export async function adminCreateUser(email: string, password: string, fullName: string) {
