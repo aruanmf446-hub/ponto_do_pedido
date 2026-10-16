@@ -44,18 +44,26 @@ Deno.serve(async (req) => {
   const user = await currentUser(token);
   if (!user) return fail('AUTH_REQUIRED', 'Sessão expirada.', 401);
 
-  const res = await fetch(`${BILLING_URL}/functions/v1/billing`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, apikey: BILLING_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'entitlements' }),
-  });
-  if (!res.ok) {
+  let subscriptions: Subscription[];
+  try {
+    const res = await fetch(`${BILLING_URL}/functions/v1/billing`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, apikey: BILLING_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'entitlements' }),
+    });
+    if (!res.ok) {
+      return fail('BILLING_UNAVAILABLE', 'Não foi possível consultar as assinaturas no momento.', 502);
+    }
+    const overview = (await res.json()) as { subscriptions?: unknown };
+    if (!Array.isArray(overview.subscriptions)) throw new Error('Invalid entitlements');
+    subscriptions = overview.subscriptions as Subscription[];
+  } catch {
+    // Não registrar payloads nem detalhes da rede: podem conter credenciais.
     return fail('BILLING_UNAVAILABLE', 'Não foi possível consultar as assinaturas no momento.', 502);
   }
-  const overview = (await res.json()) as { subscriptions: Subscription[] };
   const results: { slug: string; tenant_id?: string; error?: string }[] = [];
 
-  for (const s of overview.subscriptions ?? []) {
+  for (const s of subscriptions) {
     if (s.status === 'pending_payment') {
       results.push({ slug: s.restaurant_slug, error: 'Aguardando ativação da assinatura.' });
       continue;
@@ -70,7 +78,9 @@ Deno.serve(async (req) => {
       p_valid_until: s.current_period_end,
       p_modules: s.modules,
     });
-    results.push(error ? { slug: s.restaurant_slug, error: error.message } : { slug: s.restaurant_slug, tenant_id: data ?? undefined });
+    results.push(
+      error ? { slug: s.restaurant_slug, error: error.message } : { slug: s.restaurant_slug, tenant_id: data ?? undefined },
+    );
   }
   return json({ results });
 });
