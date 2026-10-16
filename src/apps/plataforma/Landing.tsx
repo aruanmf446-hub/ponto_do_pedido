@@ -1,4 +1,5 @@
 import { createElement } from 'react';
+import { AppPlansCarousel } from '@/apps/plataforma/AppPlansCarousel';
 import Script from 'next/script';
 import { azulejo } from '@/apps/plataforma/fonts';
 import Link from 'next/link';
@@ -237,13 +238,13 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
       <section className="pl-m1-hero" aria-labelledby="hero-title">
         <div className="pl-m1-hero-copy">
           <h1 id="hero-title">
-            <span>Pedido na mesa.</span>
-            <span>Cozinha já sabe.</span>
-            <span>Conta na mão.</span>
+            <span>Seu salão cheio.</span>
+            <span>Sua operação leve.</span>
+            <span>Tudo no controle.</span>
           </h1>
           <p>
-            O Ponto do Pedido liga garçom, cozinha e caixa no mesmo pedido. Você olha o salão do celular e para de correr atrás de
-            comanda.
+            O <strong className="pl-m1-brand">Ponto do Pedido</strong> conecta a operação do seu negócio em uma interface limpa e personalizável.
+            Não perca o controle do seu restaurante. Tenha tudo na palma da mão.
           </p>
           <Cta />
         </div>
@@ -297,6 +298,8 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           Acompanhe uma sexta <span>↓</span>
         </p>
       </section>
+
+      <AppPlansCarousel plans={plans} />
 
       <section className="pl-m1-night" id="aplicativos" aria-labelledby="night-title">
         <div className="pl-m1-sticky">
