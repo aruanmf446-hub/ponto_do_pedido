@@ -5,7 +5,7 @@
 //
 // Uso: node scripts/local-supabase.mjs start|stop|status
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,26 +41,45 @@ if (command === 'stop') {
   process.exit(0);
 }
 
+function writeIfChanged(path, content) {
+  try {
+    if (readFileSync(path, 'utf8') === content) return false;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  writeFileSync(path, content);
+  return true;
+}
+
 if (command === 'start') {
-  // Variáveis das funções (lidas na inicialização do Edge Runtime)
-  writeFileSync(
+  // Primeira inicialização: a CLI gera as chaves reais de cada instância.
+  // Em seguida, configura a comunicação cruzada e reinicia os runtimes
+  // somente se as variáveis das funções foram alteradas.
+  for (const p of Object.values(projects)) sb(p, ['start', '-x', p.id === 'pontodopedido' ? exclude : `${exclude},realtime,storage-api`]);
+  const appLocal = status(projects.app);
+  const billingLocal = status(projects.billing);
+  const appKey = appLocal.PUBLISHABLE_KEY ?? appLocal.ANON_KEY;
+  const billingKey = billingLocal.PUBLISHABLE_KEY ?? billingLocal.ANON_KEY;
+  if (!appKey || !billingKey) throw new Error('As chaves publicáveis locais não estão disponíveis no status da CLI.');
+
+  const appChanged = writeIfChanged(
     join(projects.app.dir, 'supabase/functions/.env'),
-    [
-      'PDP_BILLING_URL=http://supabase_kong_assinaturas:8000',
-      'PDP_BILLING_PUBLISHABLE_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-      '',
-    ].join('\n'),
+    [`PDP_BILLING_URL=http://supabase_kong_assinaturas:8000`,
+     `PDP_BILLING_PUBLISHABLE_KEY=${billingKey}`, ''].join('\\n'),
   );
-  writeFileSync(
+  const billingChanged = writeIfChanged(
     join(projects.billing.dir, 'supabase/functions/.env'),
-    [
-      'PDP_IDENTITY_URL=http://supabase_kong_pontodopedido:8000',
-      'PDP_IDENTITY_PUBLISHABLE_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-      '',
-    ].join('\n'),
+    [`PDP_IDENTITY_URL=http://supabase_kong_pontodopedido:8000`,
+     `PDP_IDENTITY_PUBLISHABLE_KEY=${appKey}`, ''].join('\\n'),
   );
-  sb(projects.app, ['start', '-x', exclude]);
-  sb(projects.billing, ['start', '-x', `${exclude},realtime,storage-api`]);
+
+  if (appChanged || billingChanged) {
+    // O runtime lê .env ao iniciar. Um segundo start isolado não o reinicia.
+    // Stop/start preserva os volumes locais; nunca usar db reset aqui.
+    for (const p of Object.values(projects)) sb(p, ['stop']);
+    sb(projects.app, ['start', '-x', exclude]);
+    sb(projects.billing, ['start', '-x', `${exclude},realtime,storage-api`]);
+  }
   connect('supabase_network_assinaturas', 'supabase_kong_pontodopedido');
   connect('supabase_network_pontodopedido', 'supabase_kong_assinaturas');
 }
@@ -70,8 +89,8 @@ const billing = status(projects.billing);
 console.log(
   JSON.stringify(
     {
-      app: { api: app.API_URL, db: app.DB_URL, publishable: app.PUBLISHABLE_KEY },
-      billing: { api: billing.API_URL, db: billing.DB_URL, publishable: billing.PUBLISHABLE_KEY },
+      app: { api: app.API_URL, publishable_prefix: app.PUBLISHABLE_KEY?.slice(0, 12) },
+      billing: { api: billing.API_URL, publishable_prefix: billing.PUBLISHABLE_KEY?.slice(0, 12) },
     },
     null,
     2,
