@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="cardapio" width="360" height="680" viewBox="0 0 360 680" fill="none">
+ <rect x="13" y="9" width="334" height="662" rx="48" fill="#0E2366" stroke="#F7F4EC" stroke-width="2"/>
+ <rect x="24" y="20" width="312" height="640" rx="38" fill="#F7F4EC"/>
+ <path d="M131 32H229" stroke="#0E2366" stroke-width="9" stroke-linecap="round"/>
+ <path d="M24 66H336V190H24Z" fill="#1B3FA0"/>
+ <g stroke="#F7F4EC" stroke-width="1.5"><path d="M37 79H323V178H37ZM50 92H310V165H50"/><path d="M53 98Q83 127 53 158Q24 127 53 98ZM307 98Q337 127 307 158Q278 127 307 98"/></g>
+ <g font-family="inherit" fill="#F7F4EC" text-anchor="middle"><text x="180" y="126" font-size="25" font-weight="700">Casa do Azulejo</text><text x="180" y="150" font-size="12">Cozinha de casa, mesa cheia.</text></g>
+ <g font-family="inherit" fill="#0E2366"><text x="44" y="221" font-size="12">Mesa 12</text><text x="44" y="258" font-size="26" font-weight="700">Da nossa cozinha</text><text x="44" y="284" font-size="13">Feito para dividir a mesa.</text></g>
+ <rect x="44" y="308" width="272" height="154" fill="#1B3FA0"/>
+ <g stroke="#F7F4EC" stroke-width="2"><ellipse cx="180" cy="385" rx="91" ry="53"/><ellipse cx="180" cy="385" rx="75" ry="39"/><path d="M125 387Q146 355 171 374Q201 349 231 380Q211 411 180 400Q149 413 125 387ZM150 386L163 379M184 385L197 374M205 395L216 387M136 397L148 394"/></g>
+ <g font-family="inherit" fill="#0E2366"><text x="44" y="495" font-size="19" font-weight="700">Arroz da casa</text><text x="44" y="519" font-size="13">Legumes, ervas e conversa boa.</text><text x="44" y="568" font-size="19" font-weight="700">Para acompanhar</text><text x="44" y="592" font-size="13">Suco de fruta da estação</text><text x="44" y="626" font-size="11">Casa fictícia · cardápio ilustrativo</text></g>
+ <path d="M44 539H316M134 647H226" stroke="#0E2366" stroke-width="2"/>
+</svg>

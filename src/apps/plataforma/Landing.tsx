@@ -1,3 +1,6 @@
+import { createElement } from 'react';
+import Script from 'next/script';
+import { azulejo } from '@/apps/plataforma/fonts';
 import Link from 'next/link';
 import type { VisualModel } from '@/core/apps';
 import { planPriceLabel, type Plan } from '@/core/billing';
@@ -224,91 +227,225 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
     );
   }
 
-  // ---------- m1 · Padrão: comandas de uma sexta à noite ----------
-  return (
-    <div className="pl-landing" data-template="m1">
-      <section className="pl-section pl-m1-hero" aria-labelledby="hero-title">
+  // ---------- m1 · Azulejaria: cada pedido encontra seu lugar ----------
+  // O elemento leve só observa a entrada das ilustrações. O scroll é nativo, em CSS.
+  // connected/disconnectedCallback mantêm o comportamento nas navegações do App Router.
+  return createElement(
+    'pdp-azulejos',
+    { className: `pl-landing ${azulejo.variable}`, 'data-template': 'm1' },
+    <>
+      <section className="pl-m1-hero" aria-labelledby="hero-title">
         <div className="pl-m1-hero-copy">
-          <h1 id="hero-title">Sexta, 20h. Salão cheio. Nenhum pedido perdido.</h1>
-          <p>Cada comanda segue da mesa para a cozinha e volta como conta fechada. Você acompanha tudo do celular.</p>
+          <h1 id="hero-title">
+            <span>Pedido na mesa.</span>
+            <span>Cozinha já sabe.</span>
+            <span>Conta na mão.</span>
+          </h1>
+          <p>
+            O Ponto do Pedido liga garçom, cozinha e caixa no mesmo pedido. Você olha o salão do celular e para de correr atrás de
+            comanda.
+          </p>
           <Cta />
         </div>
-        <div className="pl-m1-sheets" aria-hidden="true">
-          <div className="pl-m1-sheet pl-m1-sheet--caixa">
-            <h3>Via do caixa</h3>
-            <p>Total da mesa 12</p>
-            <p>Dividir em 2</p>
-          </div>
-          <div className="pl-m1-sheet pl-m1-sheet--cozinha">
-            <h3>Via da cozinha</h3>
-            <ul>
-              <li>1× Risoto de cogumelos</li>
-              <li>2× Caipirinha</li>
-            </ul>
-          </div>
-          <div className="pl-m1-sheet pl-m1-sheet--mesa">
+        <div
+          className="pl-m1-orders"
+          role="img"
+          aria-label="Um mesmo pedido da mesa 12 acompanhado no salão, na cozinha e no caixa. Exemplo ilustrativo."
+        >
+          <div className="pl-m1-order pl-m1-order--bill" aria-hidden="true">
             <header>
+              <span>Conta da mesa</span>
+              <strong>12</strong>
+            </header>
+            <div className="pl-m1-split">
+              <span>Pessoa 1</span>
+              <span>Pessoa 2</span>
+            </div>
+            <p>Dividida em duas. Conferida na mesa.</p>
+          </div>
+          <div className="pl-m1-order pl-m1-order--kitchen" aria-hidden="true">
+            <header>
+              <span>Pedido na cozinha</span>
+              <strong>12</strong>
+            </header>
+            <p>Arroz da casa</p>
+            <span className="pl-m1-ready">
+              Pronto <span>↗</span>
+            </span>
+          </div>
+          <div className="pl-m1-order pl-m1-order--table" aria-hidden="true">
+            <header>
+              <span>Pedido do salão</span>
               <strong>Mesa 12</strong>
-              <time>19:42</time>
             </header>
             <ul>
               <li>
-                1× Risoto de cogumelos <b>Na cozinha</b>
+                <span>Arroz da casa</span>
+                <span>Na cozinha</span>
               </li>
               <li>
-                2× Caipirinha <b>Servido</b>
-              </li>
-              <li>
-                1× Sobremesa do dia <b>Aguardando</b>
+                <span>Suco da estação</span>
+                <span>Na mesa</span>
               </li>
             </ul>
+            <footer>
+              Um pedido. A casa inteira sabe. <span>↗</span>
+            </footer>
+          </div>
+        </div>
+        <p className="pl-m1-scroll" aria-hidden="true">
+          Acompanhe uma sexta <span>↓</span>
+        </p>
+      </section>
+
+      <section className="pl-m1-night" aria-labelledby="night-title">
+        <div className="pl-m1-sticky">
+          <header className="pl-m1-night-heading">
+            <h2 id="night-title">
+              A noite inteira,
+              <br />
+              sem comanda perdida.
+            </h2>
+            <span aria-hidden="true">Da primeira mesa ao fechamento ↘</span>
+          </header>
+          <div className="pl-m1-window">
+            <ol className="pl-m1-track">
+              {[
+                {
+                  time: '19:42',
+                  text: 'Mesa 12 pede e a cozinha recebe no mesmo segundo.',
+                  art: 'mesa',
+                  label: 'Mesa posta com uma travessa, pronta para receber o pedido.',
+                },
+                {
+                  time: '20:05',
+                  text: 'O prato sai. O garçom já sabe, sem ir ao balcão.',
+                  art: 'cozinha',
+                  label: 'Trilho de cozinha com três pedidos e pratos no balcão.',
+                },
+                {
+                  time: '21:30',
+                  text: 'A conta sai na mesa, dividida em duas.',
+                  art: 'conta',
+                  label: 'Conta dividida em duas colunas, uma para cada pessoa.',
+                },
+                {
+                  time: '22:10',
+                  text: 'Você fecha a sexta e vê o que vendeu, o que acabou e o que espera você.',
+                  art: 'sexta',
+                  label: 'Calendário de sexta-feira ao lado do restaurante vazio, após o fechamento.',
+                },
+              ].map((panel, index) => (
+                <li className="pl-m1-panel" key={panel.time} data-m1-draw="">
+                  <svg className="pl-m1-drawing" viewBox="0 0 560 400" role="img" aria-label={panel.label}>
+                    <use href={`/plataforma/noite.svg#${panel.art}`} />
+                  </svg>
+                  <div className="pl-m1-panel-copy">
+                    <p className="pl-m1-time">
+                      <time>{panel.time}</time>
+                      <span aria-hidden="true">—</span>
+                    </p>
+                    <h3>{panel.text}</h3>
+                    {index === 0 && <p className="pl-m1-example">Cena e horários ilustrativos.</p>}
+                    {index === 1 && (
+                      <p className="pl-m1-kitchen-status">
+                        <span>Pronto</span> A cozinha avisa. O salão segue.
+                      </p>
+                    )}
+                  </div>
+                  <div className="pl-m1-progress" aria-hidden="true">
+                    {['19:42', '20:05', '21:30', '22:10'].map((time, step) => (
+                      <span key={time} data-current={step === index}>
+                        {time}
+                      </span>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
-      <section className="pl-section pl-m1-night" aria-labelledby="night-title">
-        <h2 id="night-title">A noite, do ponto de vista da casa.</h2>
-        <ol className="pl-m1-rows">
-          <li>
-            <time>19:42</time>
-            <p>O garçom anota na mesa. A cozinha recebe no mesmo instante.</p>
-          </li>
-          <li>
-            <time>20:05</time>
-            <p>O prato sai. O garçom já sabe, sem perguntar no balcão.</p>
-          </li>
-          <li>
-            <time>21:30</time>
-            <p>A conta sai na mesa, com a divisão feita.</p>
-          </li>
-          <li>
-            <time>22:10</time>
-            <p>Você fecha o dia e vê o que vendeu, o que acabou e o que espera a sua decisão.</p>
-          </li>
-        </ol>
-      </section>
-
-      <section className="pl-section pl-m1-trust" aria-labelledby="trust-title">
-        <div className="pl-m1-dark">
-          <h2 id="trust-title">Quem não pode decidir, pede. Quem pode, decide.</h2>
-          <p>
-            Cada função vê só o que usa. Pedidos de exceção, como desconto acima do limite ou cancelamento depois do preparo,
-            param em quem pode liberar. Tudo fica registrado.
-          </p>
+      <section className="pl-m1-trust" aria-labelledby="trust-title" data-m1-draw="">
+        <div className="pl-m1-trust-copy">
+          <h2 id="trust-title">
+            Quem manda,
+            <br />
+            decide.
+            <br />
+            Quem não pode,
+            <br />
+            pede.
+          </h2>
+          <p>Desconto acima do limite e cancelamento depois do preparo param em quem pode liberar. Fica registrado.</p>
+        </div>
+        <div className="pl-m1-flow" role="img" aria-label="Fluxo: solicitação, quem pode decidir, registrado.">
+          <svg className="pl-m1-flow-line" viewBox="0 0 360 600" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M60 95V505" />
+            <path className="pl-m1-flow-arrow pl-m1-flow-arrow--one" pathLength="100" d="M60 160V230M50 218L60 230L70 218" />
+            <path className="pl-m1-flow-arrow pl-m1-flow-arrow--two" pathLength="100" d="M60 360V430M50 418L60 430L70 418" />
+          </svg>
+          <div className="pl-m1-flow-step" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <use href="/plataforma/fluxo.svg#solicitacao" />
+            </svg>
+            <span>Solicitação</span>
+          </div>
+          <div className="pl-m1-flow-step" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <use href="/plataforma/fluxo.svg#decisao" />
+            </svg>
+            <span>Quem pode decidir</span>
+          </div>
+          <div className="pl-m1-flow-step" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <use href="/plataforma/fluxo.svg#registro" />
+            </svg>
+            <span>Registrado</span>
+          </div>
         </div>
       </section>
 
-      <section className="pl-section pl-m1-guest" aria-labelledby="guest-title">
-        <h2 id="guest-title">O cliente lê o cardápio no celular, com a cara da sua casa.</h2>
-        <p>QR na mesa ou link no delivery. Suas fotos, seus preços, sua ordem.</p>
+      <section className="pl-m1-guest" aria-labelledby="guest-title">
+        <div className="pl-m1-guest-copy">
+          <h2 id="guest-title">
+            O cardápio vai
+            <br />
+            para a mão
+            <br />
+            de quem senta.
+          </h2>
+          <p>
+            QR na mesa ou link no delivery.
+            <br />
+            Suas fotos, seus preços, sua ordem.
+          </p>
+        </div>
+        <svg
+          className="pl-m1-phone"
+          viewBox="0 0 360 680"
+          role="img"
+          aria-label="Celular com o cardápio ilustrativo da Casa do Azulejo, restaurante fictício, sem preços."
+        >
+          <use href="/plataforma/cardapio.svg#cardapio" />
+        </svg>
       </section>
 
-      {plansSection}
-
-      <section className="pl-section pl-m1-final" aria-labelledby="final-title">
-        <h2 id="final-title">Próxima sexta, mesma hora.</h2>
-        <Cta />
-        <ul className="pl-m1-modules" aria-label="Módulos incluídos">
+      <section className="pl-m1-final" aria-labelledby="final-title">
+        <div className="pl-m1-final-tile">
+          <span className="pl-m1-flower" aria-hidden="true">
+            ✳
+          </span>
+          <h2 id="final-title">
+            Sexta que vem
+            <br />
+            começa com
+            <br />a mesa 1.
+          </h2>
+          <Cta />
+        </div>
+        <ul className="pl-m1-modules" id="aplicativos" aria-label="Aplicativos incluídos">
           <li>Gestão</li>
           <li>Atendimento</li>
           <li>Cozinha</li>
@@ -319,7 +456,39 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           <li>Estoque</li>
         </ul>
       </section>
-    </div>
+      <Script id="pl-m1-azulejos">{`
+        if (!customElements.get('pdp-azulejos')) {
+          customElements.define('pdp-azulejos', class extends HTMLElement {
+            connectedCallback() {
+              this.motion = matchMedia('(prefers-reduced-motion: reduce)');
+              this.complete = () => {
+                this.observer?.disconnect();
+                this.querySelectorAll('[data-m1-draw]').forEach(el => el.classList.remove('pl-m1-draw-pending'));
+              };
+              if (!this.motion.matches && 'IntersectionObserver' in window) {
+                this.observer = new IntersectionObserver(entries => {
+                  entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                      entry.target.classList.remove('pl-m1-draw-pending');
+                      this.observer.unobserve(entry.target);
+                    }
+                  });
+                }, { rootMargin: '-15% -20%', threshold: 0.15 });
+                this.querySelectorAll('[data-m1-draw]').forEach(el => {
+                  el.classList.add('pl-m1-draw-pending');
+                  this.observer.observe(el);
+                });
+              }
+              this.motion.addEventListener('change', this.complete);
+            }
+            disconnectedCallback() {
+              this.observer?.disconnect();
+              this.motion?.removeEventListener('change', this.complete);
+            }
+          });
+        }
+      `}</Script>
+    </>,
   );
 }
 

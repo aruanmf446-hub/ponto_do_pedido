@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+ <symbol id="solicitacao" viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path vector-effect="non-scaling-stroke" d="M25 22H95V98H25ZM41 42H79M41 57H68M41 72H75M41 87H58M49 15H71V29H49Z"/></g></symbol>
+ <symbol id="decisao" viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle vector-effect="non-scaling-stroke" cx="60" cy="35" r="17"/><path vector-effect="non-scaling-stroke" d="M27 99V84Q28 62 60 62Q92 62 93 84V99M45 83L57 94L78 73"/></g></symbol>
+ <symbol id="registro" viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path vector-effect="non-scaling-stroke" d="M29 19H77L94 36V101H29ZM77 19V36H94M45 49H77M45 62H77M44 80L55 91L78 70"/></g></symbol>
+</svg>
