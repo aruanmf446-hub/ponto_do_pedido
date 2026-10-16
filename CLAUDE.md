@@ -6,9 +6,13 @@ Leia também `AGENTS.md` (regras do Next.js 16 instaladas pelo framework).
 
 ## Fontes da verdade
 - Repositório: `aruanmf446-hub/ponto_do_pedido`, branch oficial `main`.
-- Supabase **pontodopedido** (`backend/app`): operação, permissões e **autoridade de identidade** (Auth).
-- Supabase **assinaturas** (`backend/billing`): planos, contas, assinaturas e faturas.
-- Não existe terceiro Supabase. Não reutilizar código dos repositórios antigos.
+- Supabase **pontodopedido** (`backend/app`): operação, permissões e **autoridade de identidade do Ponto do Pedido** (Auth).
+- Supabase **assinaturas** (`backend/billing`): billing central CRM PLUS para vários produtos independentes.
+  Cada produto mantém seu próprio Auth e banco. `product_id` separa planos, contas, assinaturas,
+  contratos, faturas e licenças; projetos Auth e retornos de pagamento são cadastrados por produto.
+  Um único webhook Mercado Pago resolve o produto pela assinatura registrada. Nunca usar Auth
+  ou domínio do Ponto do Pedido como destino global de outros produtos.
+- Não criar projetos Supabase neste trabalho. Não reutilizar código dos repositórios antigos.
 
 ## Arquitetura (não quebrar)
 - `src/apps/<app>`: cada aplicativo tem componentes, layout, CSS, fontes e modelos próprios.

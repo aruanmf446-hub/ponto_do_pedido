@@ -10,6 +10,7 @@ function setup(policy: 'safe' | 'missing' | 'network' | 'json' = 'safe', previou
     const path = new URL(url).pathname;
     const body = options.body ? JSON.parse(String(options.body)) : {};
     calls.push({ path, body });
+    if (path.endsWith('/billing_product_config')) return Response.json({ code: 'PGRST202' }, { status: 404 });
     if (path === '/auth/v1/user') return Response.json({ id: 'owner-a', email: 'unit@local.invalid' });
     if (path.endsWith('/billing_checkout_policy')) {
       if (policy === 'network') throw new Error('network');

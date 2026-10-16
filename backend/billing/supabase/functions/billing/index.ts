@@ -1,17 +1,10 @@
 // Edge Function `billing` (projeto assinaturas).
 //
-// Autenticação: o chamador envia o access token emitido pelo projeto
-// `pontodopedido` (autoridade de identidade). A função valida o token
-// consultando `/auth/v1/user` daquele projeto — nunca confia em ids enviados
-// pelo navegador. Somente então executa a operação com a chave secreta deste
-// projeto. A cobrança só ocorre quando o titular habilita o provedor de
-// pagamento (platform_settings.payment_provider). Sem dependências externas.
+// Billing central CRM PLUS: cada produto autoriza seu próprio projeto Auth.
+// A identidade vem exclusivamente de /auth/v1/user do produto cadastrado.
 import { buildPreapprovalBody, MP_API } from '../_shared/mercadopago.ts';
 
-// Configuração pública (não secreta) do projeto de identidade. Pode ser
-// sobrescrita por variáveis de ambiente no desenvolvimento local.
-const IDENTITY_URL = Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmhtzosfbosgolevnybd.supabase.co';
-const IDENTITY_PUBLISHABLE_KEY = Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY') ?? 'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d';
+const LEGACY_PRODUCT = 'ponto_do_pedido';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 
 const ALLOWED_ORIGIN = Deno.env.get('PDP_ALLOWED_ORIGIN') ?? '*';
@@ -66,13 +59,67 @@ type PaymentContext = {
   checkout_url: string | null;
 };
 
+type Product = {
+  id: string;
+  name: string;
+  auth_url: string;
+  auth_publishable_key: string;
+  allowed_return_urls: string[];
+  payment_return_url: string | null;
+  slug_check_rpc: 'slug_available' | null;
+  legacy?: boolean;
+};
+
+function safeReturnUrl(product: Product): string | null {
+  const value = product.payment_return_url;
+  if (!value || !product.allowed_return_urls.includes(value)) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password && !url.hash ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveProduct(id: string): Promise<Product | null> {
+  const result = await rpc<Product>('billing_product_config', { p_product: id });
+  if (!result.error) {
+    const product = result.data;
+    if (!product || product.id !== id || !/^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(product.auth_url)) return null;
+    // Somente o ambiente local pode sobrescrever o Auth deste produto conhecido.
+    if (id === LEGACY_PRODUCT && Deno.env.get('PDP_IDENTITY_URL')) {
+      product.auth_url = Deno.env.get('PDP_IDENTITY_URL')!;
+      product.auth_publishable_key = Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY')!;
+    }
+    return product;
+  }
+  // Compatibilidade estrita com o banco legado. Falha de rede/JSON nunca vira fallback.
+  if (result.error.code !== 'PGRST202' || id !== LEGACY_PRODUCT) return null;
+  return {
+    id,
+    name: 'Ponto do Pedido',
+    legacy: true,
+    auth_url: Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmhtzosfbosgolevnybd.supabase.co',
+    auth_publishable_key: Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY') ?? 'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d',
+    allowed_return_urls: ['https://pontodopedido.vercel.app/portal'],
+    payment_return_url: 'https://pontodopedido.vercel.app/portal',
+    slug_check_rpc: 'slug_available',
+  };
+}
+
+async function productRpc<T>(product: Product, action: string, args: unknown) {
+  return product.legacy
+    ? rpc<T>(`billing_${action}`, args)
+    : rpc<T>('billing_product_call', { p_product: product.id, p_action: action, p_args: args });
+}
+
 type Identity = { id: string; email: string; name: string };
 
-async function identify(req: Request): Promise<Identity | null> {
+async function identify(req: Request, product: Product): Promise<Identity | null> {
   const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return null;
-  const res = await fetch(`${IDENTITY_URL}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${token}`, apikey: IDENTITY_PUBLISHABLE_KEY },
+  const res = await fetch(`${product.auth_url}/auth/v1/user`, {
+    headers: { Authorization: `Bearer ${token}`, apikey: product.auth_publishable_key },
   });
   if (!res.ok) return null;
   const user = (await res.json()) as { id?: string; email?: string; user_metadata?: { full_name?: string } };
@@ -80,10 +127,11 @@ async function identify(req: Request): Promise<Identity | null> {
   return { id: user.id, email: user.email, name: user.user_metadata?.full_name ?? '' };
 }
 
-async function slugAvailable(slug: string): Promise<boolean> {
-  const res = await fetch(`${IDENTITY_URL}/rest/v1/rpc/slug_available`, {
+async function slugAvailable(slug: string, product: Product): Promise<boolean> {
+  if (!product.slug_check_rpc) return /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug);
+  const res = await fetch(`${product.auth_url}/rest/v1/rpc/${product.slug_check_rpc}`, {
     method: 'POST',
-    headers: { apikey: IDENTITY_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
+    headers: { apikey: product.auth_publishable_key, 'Content-Type': 'application/json' },
     body: JSON.stringify({ p_slug: slug }),
   });
   if (!res.ok) throw new Error('Não foi possível validar o endereço do restaurante.');
@@ -106,7 +154,25 @@ Deno.serve(async (req) => {
   }
   const action = String(body.action ?? '');
 
-  const identity = await identify(req);
+  if (
+    !req.headers
+      .get('authorization')
+      ?.replace(/^Bearer\s+/i, '')
+      .trim()
+  ) {
+    return fail('AUTH_REQUIRED', 'Sessão expirada. Entre novamente.', 401);
+  }
+  const productId = body.product_id === undefined ? LEGACY_PRODUCT : String(body.product_id);
+  if (!/^[a-z0-9_]{2,50}$/.test(productId)) return fail('INVALID_PRODUCT', 'Produto não autorizado.');
+  let product: Product | null;
+  let identity: Identity | null;
+  try {
+    product = await resolveProduct(productId);
+    if (!product) return fail('INVALID_PRODUCT', 'Produto não autorizado.');
+    identity = await identify(req, product);
+  } catch {
+    return fail('BILLING_UNAVAILABLE', 'Não foi possível validar a identidade do produto.', 502);
+  }
   if (!identity) return fail('AUTH_REQUIRED', 'Sessão expirada. Entre novamente.', 401);
 
   await rpc('billing_settle_expired', {});
@@ -114,7 +180,7 @@ Deno.serve(async (req) => {
   switch (action) {
     case 'overview':
     case 'entitlements': {
-      const { data, error } = await rpc('billing_overview', { p_identity: identity.id });
+      const { data, error } = await productRpc(product, 'overview', { p_identity: identity.id });
       return error ? failure(error) : json(data);
     }
     case 'subscribe': {
@@ -132,24 +198,24 @@ Deno.serve(async (req) => {
       } catch {
         return fail('BILLING_UNAVAILABLE', 'Não foi possível verificar a política de pagamento.', 502);
       }
-      const slug = String(body.restaurant_slug ?? '')
+      const slug = String(body.resource_slug ?? body.restaurant_slug ?? '')
         .trim()
         .toLowerCase();
       if (body.accept_terms !== true) return fail('TERMS_REQUIRED', 'É necessário aceitar os termos.');
       const requestKey = `${identity.id}:${String(body.idempotency_key ?? crypto.randomUUID())}`;
-      const previous = await rpc<{ subscription_id: string; status: string }>('billing_subscription_result', {
+      const previous = await productRpc<{ subscription_id: string; status: string }>(product, 'subscription_result', {
         p_identity: identity.id,
         p_idempotency_key: requestKey,
       });
       if (previous.error) return failure(previous.error);
       if (previous.data) return json(previous.data);
-      if (!(await slugAvailable(slug))) return fail('SLUG_TAKEN', 'Este endereço não está disponível.');
-      const { data, error } = await rpc('billing_subscribe', {
+      if (!(await slugAvailable(slug, product))) return fail('SLUG_TAKEN', 'Este endereço não está disponível.');
+      const { data, error } = await productRpc(product, 'subscribe', {
         p_identity: identity.id,
         p_email: identity.email,
         p_name: String(body.name ?? identity.name ?? ''),
         p_plan: String(body.plan_code ?? ''),
-        p_restaurant_name: String(body.restaurant_name ?? ''),
+        p_restaurant_name: String(body.resource_name ?? body.restaurant_name ?? ''),
         p_slug: slug,
         p_user_agent: req.headers.get('user-agent') ?? '',
         p_idempotency_key: requestKey,
@@ -157,15 +223,17 @@ Deno.serve(async (req) => {
       return error ? failure(error) : json(data);
     }
     case 'start_payment': {
-      const { data: ctx, error: ctxError } = await rpc<PaymentContext>('billing_payment_context', {
+      const { data: ctx, error: ctxError } = await productRpc<PaymentContext>(product, 'payment_context', {
         p_identity: identity.id,
         p_subscription: body.subscription_id,
       });
       if (ctxError || !ctx) return failure(ctxError ?? {});
+      const backUrl = safeReturnUrl(product);
+      if (!backUrl)
+        return fail('PAYMENT_RETURN_NOT_CONFIGURED', 'O retorno de pagamento deste produto não está configurado.', 503);
       if (ctx.checkout_url) return json({ checkout_url: ctx.checkout_url });
       const accessToken = Deno.env.get('MP_ACCESS_TOKEN');
       if (!accessToken) return fail('PAYMENT_NOT_CONFIGURED', 'O pagamento online ainda não está configurado.', 503);
-      const backUrl = Deno.env.get('MP_BACK_URL') ?? 'https://pontodopedido.com/portal';
       const res = await fetch(`${MP_API}/preapproval`, {
         method: 'POST',
         headers: {
@@ -176,7 +244,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify(
           buildPreapprovalBody({
             subscriptionId: ctx.subscription_id,
-            reason: `Ponto do Pedido · plano ${ctx.plan_name} · ${ctx.restaurant_name}`,
+            reason: `${product.name} · plano ${ctx.plan_name} · ${ctx.restaurant_name}`,
             payerEmail: ctx.payer_email,
             amountCents: ctx.amount_cents,
             period: ctx.billing_period,
@@ -188,7 +256,7 @@ Deno.serve(async (req) => {
       if (!res.ok || !created?.id || !created.init_point) {
         return fail('PAYMENT_PROVIDER_ERROR', 'Não foi possível iniciar o pagamento agora. Tente novamente em instantes.', 502);
       }
-      const { error: startError } = await rpc('billing_payment_started', {
+      const { error: startError } = await productRpc(product, 'payment_started', {
         p_subscription: ctx.subscription_id,
         p_provider_subscription_id: created.id,
         p_checkout_url: created.init_point,
@@ -204,7 +272,7 @@ Deno.serve(async (req) => {
     }
     case 'cancel':
     case 'undo_cancel': {
-      const { data, error } = await rpc('billing_cancel', {
+      const { data, error } = await productRpc(product, 'cancel', {
         p_identity: identity.id,
         p_subscription: body.subscription_id,
         p_undo: action === 'undo_cancel',
