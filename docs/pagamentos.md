@@ -13,6 +13,21 @@ Mercado Pago ── webhook ──► Edge Function mercadopago-webhook
 Portal / login ── license-sync ──► app libera o restaurante conforme a licença
 ```
 
+## Projetos corretos e pré-requisitos
+
+- **Auth e licenças (app):** `qmhtzosfbosgolevnybd` — `https://qmhtzosfbosgolevnybd.supabase.co`.
+- **Mercado Pago e assinaturas (billing):** `bjtlookhgkdltdohzxnq` — `https://bjtlookhgkdltdohzxnq.supabase.co`.
+- A função `billing` valida a sessão no Auth do **app**, jamais no Auth do billing.
+  Seu fallback de `PDP_IDENTITY_URL` precisa apontar para o ref correto.
+- **Estado remoto conferido em 16/10/2026:** a migração `20261016100000_mercadopago`
+  não havia sido aplicada, `mercadopago-webhook` não estava implantada,
+  `payment_provider` era nulo, `activation_mode` era `immediate` e os planos
+  START/PLUS/DIAMOND estavam sem preços. Configurar segredos não instala funções
+  nem aplica migrations.
+- A aprovação de pagamento precisa corresponder à assinatura registrada, ter
+  moeda **BRL** e valor igual ao preço cadastrado do plano. Eventos incompatíveis
+  devem ser auditados e ignorados, sem liberar licença.
+
 ## O que o sistema faz
 - Cria uma assinatura recorrente (mensal ou anual, conforme o plano) em estado pendente; o cliente autoriza no checkout.
 - A assinatura só vira **ativa** quando uma cobrança é **aprovada**. Autorização sozinha não ativa.
