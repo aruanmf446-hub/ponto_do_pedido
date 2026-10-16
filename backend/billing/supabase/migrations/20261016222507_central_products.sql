@@ -20,18 +20,28 @@ values ('ponto_do_pedido','Ponto do Pedido','https://qmhtzosfbosgolevnybd.supaba
   'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d',
   array['https://pontodopedido.vercel.app/portal'],'https://pontodopedido.vercel.app/portal','slug_available');
 
+-- Preserva a versão de termos já configurada no billing legado.
+update public.products set terms_version = coalesce((select value #>> '{}' from public.platform_settings where key='terms_version'), terms_version) where id='ponto_do_pedido';
+
 -- Contexto exclusivo de uma transação/RPC, estabelecido somente pelo gateway de serviço.
 -- Chamadas legadas continuam limitadas ao Ponto do Pedido.
 create function public.billing_current_product() returns text language sql stable set search_path = '' as $$
   select coalesce(nullif(current_setting('billing.product_id', true), ''), 'ponto_do_pedido')
 $$;
-alter table public.plans add column product_id text not null default public.billing_current_product() references public.products(id);
-alter table public.accounts add column product_id text not null default public.billing_current_product() references public.products(id);
-alter table public.subscriptions add column product_id text not null default public.billing_current_product() references public.products(id);
-alter table public.contracts add column product_id text not null default public.billing_current_product() references public.products(id);
-alter table public.invoices add column product_id text not null default public.billing_current_product() references public.products(id);
-alter table public.subscription_events add column product_id text not null default public.billing_current_product() references public.products(id);
-alter table public.idempotency add column product_id text not null default public.billing_current_product() references public.products(id);
+alter table public.plans add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.accounts add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.subscriptions add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.contracts add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.invoices add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.subscription_events add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.idempotency add column product_id text not null default 'ponto_do_pedido' references public.products(id);
+alter table public.plans alter column product_id set default public.billing_current_product();
+alter table public.accounts alter column product_id set default public.billing_current_product();
+alter table public.subscriptions alter column product_id set default public.billing_current_product();
+alter table public.contracts alter column product_id set default public.billing_current_product();
+alter table public.invoices alter column product_id set default public.billing_current_product();
+alter table public.subscription_events alter column product_id set default public.billing_current_product();
+alter table public.idempotency alter column product_id set default public.billing_current_product();
 alter table public.payment_events add column product_id text references public.products(id);
 -- Eventos históricos sem associação inequívoca permanecem sem produto.
 update public.payment_events e set product_id = s.product_id from public.subscriptions s
@@ -42,6 +52,7 @@ alter table public.subscriptions drop constraint subscriptions_plan_code_fkey;
 alter table public.plans drop constraint plans_pkey;
 alter table public.plans add primary key (product_id, code);
 alter table public.plans drop constraint plans_modules_check;
+alter table public.plans add constraint plans_product_modules_check check (product_id <> 'ponto_do_pedido' or modules <@ array['gestao','caixa','atendimento','cozinha','cardapio','delivery','financeiro','estoque']);
 alter table public.accounts drop constraint accounts_identity_user_id_key;
 alter table public.accounts add unique (product_id, identity_user_id);
 alter table public.accounts add unique (product_id, id);
@@ -367,8 +378,31 @@ begin
     else raise exception using message = 'Ação desconhecida.', detail = 'INVALID';
   end case;
 end $$;
-revoke execute on all functions in schema public from public, anon, authenticated;
-grant execute on all functions in schema public to service_role;
+-- Não alterar privilégios de funções de outros produtos/extensões.
+revoke execute on function public.billing_current_product(),
+  public.billing_product_config(text),
+  public.billing_period_interval(text),
+  public.billing_upsert_account(uuid,text,text),
+  public.billing_subscribe(uuid,text,text,text,text,text,text,text),
+  public.billing_lock_subscription(uuid,uuid),
+  public.billing_overview(uuid),
+  public.billing_subscription_result(uuid,text),
+  public.billing_payment_context(uuid,uuid),
+  public.billing_payment_started(uuid,text,text),
+  public.billing_apply_mercadopago(text,text,jsonb),
+  public.billing_product_call(text,text,jsonb) from public, anon, authenticated;
+grant execute on function public.billing_current_product(),
+  public.billing_product_config(text),
+  public.billing_period_interval(text),
+  public.billing_upsert_account(uuid,text,text),
+  public.billing_subscribe(uuid,text,text,text,text,text,text,text),
+  public.billing_lock_subscription(uuid,uuid),
+  public.billing_overview(uuid),
+  public.billing_subscription_result(uuid,text),
+  public.billing_payment_context(uuid,uuid),
+  public.billing_payment_started(uuid,text,text),
+  public.billing_apply_mercadopago(text,text,jsonb),
+  public.billing_product_call(text,text,jsonb) to service_role;
 
 -- Catálogo público explicitamente associado ao produto, sem publicar configuração Auth.
 create function public.billing_public_plans(p_product text) returns setof public.plans

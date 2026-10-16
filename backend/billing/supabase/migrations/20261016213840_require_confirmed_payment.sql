@@ -1,5 +1,6 @@
 -- PREPARADA: aplicação remota depende de autorização específica.
 -- Não altera settings, preços, pagamentos nem assinaturas existentes.
+-- Assinaturas legadas ativas NÃO são reclassificadas: analisar dados antes de aplicar.
 
 create or replace function public.billing_subscribe(
   p_identity uuid, p_email text, p_name text, p_plan text, p_restaurant_name text, p_slug text,

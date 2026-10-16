@@ -178,6 +178,23 @@ Deno.serve(async (req) => {
   await rpc('billing_settle_expired', {});
 
   switch (action) {
+    case 'checkout_status': {
+      try {
+        const policy = await rpc<{ requires_payment: boolean }>('billing_checkout_policy', {});
+        const provider = await rpc<string>('billing_payment_provider', {});
+        const available =
+          !product.legacy &&
+          !policy.error &&
+          policy.data?.requires_payment === true &&
+          !provider.error &&
+          provider.data === 'mercadopago' &&
+          Boolean(Deno.env.get('MP_ACCESS_TOKEN')) &&
+          Boolean(safeReturnUrl(product));
+        return json({ available });
+      } catch {
+        return json({ available: false });
+      }
+    }
     case 'overview':
     case 'entitlements': {
       const { data, error } = await productRpc(product, 'overview', { p_identity: identity.id });

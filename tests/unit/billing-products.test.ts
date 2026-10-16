@@ -4,7 +4,9 @@ import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 // Produtos e tokens sintéticos existem apenas neste teste unitário.
-function setup(options: { registry?: 'network' | 'missing' | 'json'; returnUrl?: string; allowed?: string[] } = {}) {
+function setup(
+  options: { registry?: 'network' | 'missing' | 'json'; returnUrl?: string; paymentEnabled?: boolean; allowed?: string[] } = {},
+) {
   let handler!: (r: Request) => Promise<Response>;
   const calls: { url: string; body: Record<string, unknown> }[] = [];
   const products = {
@@ -50,6 +52,8 @@ function setup(options: { registry?: 'network' | 'missing' | 'json'; returnUrl?:
           ? Response.json({ id: 'same-uuid', email: 'unit@local.invalid' })
           : Response.json({}, { status: 401 });
       }
+      if (url.endsWith('/billing_checkout_policy')) return Response.json({ requires_payment: options.paymentEnabled !== false });
+      if (url.endsWith('/billing_payment_provider')) return Response.json('mercadopago');
       if (url.endsWith('/billing_product_call')) {
         if (body.p_action === 'payment_context')
           return Response.json({
@@ -140,4 +144,23 @@ describe('billing central por produto', () => {
     expect(res.status).toBe(503);
     expect(s.calls.some((c) => c.url === 'https://payment.unit/preapproval')).toBe(false);
   });
+});
+
+it('prontidão exige migração multiproduto, política segura e configuração de pagamento', async () => {
+  for (const options of [
+    {},
+    { registry: 'missing' as const },
+    { paymentEnabled: false },
+    { returnUrl: 'https://attacker.unit' },
+  ]) {
+    const s = setup(options);
+    const legacy = options.registry === 'missing';
+    const res = await s.call(
+      legacy ? 'ponto_do_pedido' : 'oficina_unit',
+      legacy ? 'pdp-token' : 'oficina-token',
+      'checkout_status',
+    );
+    expect(await res.json()).toEqual({ available: Object.keys(options).length === 0 });
+    expect(s.calls.some((c) => c.url.includes('payment.unit/preapproval') || c.body.p_action === 'subscribe')).toBe(false);
+  }
 });

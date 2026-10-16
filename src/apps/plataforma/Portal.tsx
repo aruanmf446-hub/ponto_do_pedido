@@ -13,7 +13,7 @@ import { startPayment, subscriptionAction } from '@/apps/plataforma/actions';
 
 const STATUS: Record<Subscription['status'], { label: string; tone: string }> = {
   active: { label: 'Ativa', tone: 'ok' },
-  pending_payment: { label: 'Aguardando ativação', tone: 'warn' },
+  pending_payment: { label: 'Aguardando pagamento', tone: 'warn' },
   past_due: { label: 'Pagamento pendente', tone: 'warn' },
   suspended: { label: 'Suspensa', tone: 'danger' },
   cancelled: { label: 'Cancelada', tone: 'danger' },
@@ -21,7 +21,6 @@ const STATUS: Record<Subscription['status'], { label: string; tone: string }> = 
 
 export function SubscriptionCard({
   sub,
-  plans,
   onboardingDone,
   paymentProvider,
 }: {
@@ -33,8 +32,7 @@ export function SubscriptionCard({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<'plan' | 'cancel' | null>(null);
-  const [plan, setPlan] = useState(sub.plan_code);
+  const [dialog, setDialog] = useState<'cancel' | null>(null);
   const status = STATUS[sub.status];
   const operational = sub.status === 'active' || sub.status === 'past_due';
 
@@ -103,6 +101,11 @@ export function SubscriptionCard({
         </p>
         <p className="pl-url">{tenantDisplayUrl(sub.restaurant_slug)}</p>
       </div>
+      {sub.status === 'pending_payment' ? (
+        <p className="pl-muted">
+          Acesso aguardando confirmação do pagamento.{!online ? ' Pagamento online indisponível no momento.' : ''}
+        </p>
+      ) : null}
       <div className="pl-row">
         {operational ? (
           <a className="pl-btn" href={tenantUrl(sub.restaurant_slug, '/gestao')}>
@@ -119,15 +122,10 @@ export function SubscriptionCard({
             Pagar agora
           </button>
         ) : null}
-        {!online ? (
-          <button type="button" className="pl-btn pl-btn--ghost" disabled={pending} onClick={() => run('renew')}>
-            Renovar
-          </button>
-        ) : null}
         {operational ? (
-          <button type="button" className="pl-btn pl-btn--ghost" disabled={pending} onClick={() => setDialog('plan')}>
-            Alterar plano
-          </button>
+          <p className="pl-muted">
+            Renovação e alteração de plano dependem de pagamento confirmado e estão indisponíveis neste momento.
+          </p>
         ) : null}
         {operational && !sub.cancel_at_period_end ? (
           <button type="button" className="pl-btn pl-btn--danger" disabled={pending} onClick={() => setDialog('cancel')}>
@@ -175,31 +173,6 @@ export function SubscriptionCard({
         </details>
       ) : null}
 
-      <Dialog open={dialog === 'plan'} onClose={() => setDialog(null)} title="Alterar plano">
-        <div className="pl-form" style={{ marginTop: 0 }}>
-          <label className="pl-field">
-            Novo plano
-            <select value={plan} onChange={(e) => setPlan(e.target.value)}>
-              {plans.map((p) => (
-                <option key={p.code} value={p.code}>
-                  {p.name} — {planPriceLabel(p)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p className="pl-muted">Os aplicativos do novo plano ficam disponíveis imediatamente após a confirmação.</p>
-          <div className="pl-dialog-actions">
-            <button
-              type="button"
-              className="pl-btn"
-              disabled={pending || plan === sub.plan_code}
-              onClick={() => run('change_plan', plan)}
-            >
-              Confirmar alteração
-            </button>
-          </div>
-        </div>
-      </Dialog>
       <Dialog open={dialog === 'cancel'} onClose={() => setDialog(null)} title="Cancelar assinatura">
         <p>
           O cancelamento é efetivado ao fim do período vigente ({formatDate(sub.current_period_end)}). Até lá, o restaurante

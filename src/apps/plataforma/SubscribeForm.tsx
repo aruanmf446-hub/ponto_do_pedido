@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import type { Plan } from '@/core/plans';
-import { config } from '@/core/config';
+import { tenantDisplayUrl } from '@/core/tenant/urls';
 import { checkSlug, subscribe } from '@/apps/plataforma/actions';
 
 function toSlug(name: string): string {
@@ -16,12 +16,20 @@ function toSlug(name: string): string {
     .slice(0, 40);
 }
 
-export function SubscribeForm({ plans, initialPlan, rootDomain }: { plans: Plan[]; initialPlan: string; rootDomain: string }) {
+export function SubscribeForm({
+  plans,
+  initialPlan,
+  checkoutAvailable,
+}: {
+  plans: Plan[];
+  initialPlan: string;
+  checkoutAvailable: boolean;
+}) {
   const [error, action, pending] = useActionState(subscribe, null);
   const [restaurant, setRestaurant] = useState('');
   const [slug, setSlug] = useState('');
   const [touched, setTouched] = useState(false);
-  const [available, setAvailable] = useState<boolean | null>(null);
+  const [available, setAvailable] = useState<{ slug: string; value: boolean } | null>(null);
   const key = useMemo(() => crypto.randomUUID(), []);
   const effectiveSlug = touched ? slug : toSlug(restaurant);
 
@@ -30,7 +38,7 @@ export function SubscribeForm({ plans, initialPlan, rootDomain }: { plans: Plan[
     let active = true;
     const t = setTimeout(async () => {
       const ok = await checkSlug(effectiveSlug);
-      if (active) setAvailable(ok);
+      if (active) setAvailable({ slug: effectiveSlug, value: ok });
     }, 350);
     return () => {
       active = false;
@@ -38,7 +46,7 @@ export function SubscribeForm({ plans, initialPlan, rootDomain }: { plans: Plan[
     };
   }, [effectiveSlug]);
 
-  const status = effectiveSlug.length < 3 ? null : available;
+  const status = effectiveSlug.length < 3 || available?.slug !== effectiveSlug ? null : available.value;
 
   return (
     <form action={action} className="pl-form" noValidate>
@@ -71,10 +79,12 @@ export function SubscribeForm({ plans, initialPlan, rootDomain }: { plans: Plan[
           aria-describedby="slug-help"
         />
         <small id="slug-help">
-          {config.pathTenants
-            ? `${rootDomain}/r/${effectiveSlug || 'seurestaurante'}`
-            : `${effectiveSlug || 'seurestaurante'}.${rootDomain}`} —{' '}
-          {status === true ? 'disponível' : status === false ? 'indisponível' : 'letras minúsculas, números e hífen'}
+          {tenantDisplayUrl(effectiveSlug || 'seurestaurante')} —{' '}
+          {status === true
+            ? 'identificador disponível'
+            : status === false
+              ? 'identificador indisponível'
+              : 'letras minúsculas, números e hífen'}
         </small>
       </label>
       <label className="pl-check">
@@ -88,8 +98,13 @@ export function SubscribeForm({ plans, initialPlan, rootDomain }: { plans: Plan[
           {error.message}
         </p>
       ) : null}
-      <button type="submit" className="pl-btn" disabled={pending || status === false}>
-        {pending ? 'Ativando…' : 'Contratar e ativar'}
+      <p className="pl-muted" role="status">
+        {checkoutAvailable
+          ? 'O restaurante e os aplicativos serão liberados somente após a confirmação do pagamento.'
+          : 'Novas contratações estão temporariamente indisponíveis. Nenhum pagamento será solicitado agora.'}
+      </p>
+      <button type="submit" className="pl-btn" disabled={!checkoutAvailable || pending || status === false}>
+        {pending ? 'Registrando…' : checkoutAvailable ? 'Continuar para pagamento' : 'Contratação indisponível'}
       </button>
     </form>
   );

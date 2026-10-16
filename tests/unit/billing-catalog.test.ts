@@ -7,6 +7,7 @@ function setup() {
   const fetch = vi.fn();
   const exports = {} as {
     fetchPlans: () => Promise<unknown>;
+    checkoutAvailable: () => Promise<boolean>;
     billingCall: (action: string, payload: Record<string, unknown>) => Promise<unknown>;
   };
   const compiled = ts.transpileModule(readFileSync('src/core/billing.ts', 'utf8'), {
@@ -18,7 +19,8 @@ function setup() {
     require: (name: string) => {
       if (name === '@/core/config') return { config: { billing: { url: 'https://billing.unit', publishableKey: 'unit-only' } } };
       if (name === '@/core/supabase/server') return { getAccessToken: async () => 'unit-session' };
-      if (name === '@/core/errors') return { ok: (v: unknown) => v, failure: (code: string) => ({ code }) };
+      if (name === '@/core/errors')
+        return { ok: (v: unknown) => ({ ok: true, data: v }), failure: (code: string) => ({ ok: false, code }) };
       return {};
     },
   });
@@ -52,4 +54,12 @@ describe('cliente comercial do Ponto do Pedido', () => {
     await s.exports.billingCall('overview', { product_id: 'oficina_unit', action: 'subscribe' });
     expect(JSON.parse(s.fetch.mock.calls[0]![1].body)).toEqual({ product_id: 'ponto_do_pedido', action: 'overview' });
   });
+});
+
+it('prontidão comercial falha fechada sem pagamento e em indisponibilidade', async () => {
+  for (const body of [{ available: true }, { available: false }, {}, { error: { code: 'BILLING_UNAVAILABLE' } }]) {
+    const s = setup();
+    s.fetch.mockResolvedValue(Response.json(body));
+    expect(await s.exports.checkoutAvailable()).toBe('available' in body && body.available === true);
+  }
 });

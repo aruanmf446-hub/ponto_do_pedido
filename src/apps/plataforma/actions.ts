@@ -82,7 +82,7 @@ const subscribeSchema = z.object({
   key: z.string().min(8),
 });
 
-/** Contratação: assinatura → ativação → URL personalizada → Portal (primeiro acesso). */
+/** Contratação: assinatura pendente → checkout → pagamento confirmado → licença pelo Portal. */
 export async function subscribe(_prev: ActionFail | null, form: FormData): Promise<ActionFail | null> {
   const parsed = subscribeSchema.safeParse({
     plan: form.get('plan'),

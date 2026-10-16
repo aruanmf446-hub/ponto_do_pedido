@@ -86,3 +86,9 @@ export async function syncLicenses(): Promise<ActionResult<{ results: { slug: st
   if (!Array.isArray(body?.results)) return failure('SYNC_ERROR', 'Resposta inválida ao sincronizar a licença.');
   return ok(body);
 }
+
+/** Somente informa prontidão: não cria assinatura, checkout ou cobrança. */
+export async function checkoutAvailable(): Promise<boolean> {
+  const result = await billingCall<{ available: boolean }>('checkout_status');
+  return result.ok === true && result.data?.available === true;
+}
