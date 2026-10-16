@@ -10,7 +10,7 @@ import { buildPreapprovalBody, MP_API } from '../_shared/mercadopago.ts';
 
 // Configuração pública (não secreta) do projeto de identidade. Pode ser
 // sobrescrita por variáveis de ambiente no desenvolvimento local.
-const IDENTITY_URL = Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmntzosfbosgolevnybd.supabase.co';
+const IDENTITY_URL = Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmhtzosfbosgolevnybd.supabase.co';
 const IDENTITY_PUBLISHABLE_KEY =
   Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY') ?? 'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
