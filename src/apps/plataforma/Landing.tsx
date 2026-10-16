@@ -298,7 +298,7 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
         </p>
       </section>
 
-      <section className="pl-m1-night" aria-labelledby="night-title">
+      <section className="pl-m1-night" id="aplicativos" aria-labelledby="night-title">
         <div className="pl-m1-sticky">
           <header className="pl-m1-night-heading">
             <h2 id="night-title">
@@ -446,16 +446,6 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           </h2>
           <Cta />
         </div>
-        <ul className="pl-m1-modules" id="aplicativos" aria-label="Aplicativos incluídos">
-          <li>Gestão</li>
-          <li>Atendimento</li>
-          <li>Cozinha</li>
-          <li>Caixa</li>
-          <li>Cardápio Digital</li>
-          <li>Delivery</li>
-          <li>Financeiro</li>
-          <li>Estoque</li>
-        </ul>
       </section>
       <Script id="pl-m1-azulejos">{`
         if (!customElements.get('pdp-azulejos')) {
