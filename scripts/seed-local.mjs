@@ -4,6 +4,7 @@
 // cadastros via RPC → equipe via Edge Function `team`.
 // Uso: node scripts/seed-local.mjs [slug] [--e2e]
 // --e2e: dispensa a troca de senha do primeiro acesso (apenas no banco LOCAL de testes).
+import { confirmLocalPayment } from './confirm-local-payment.mjs';
 import { createClient } from '@supabase/supabase-js';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -11,6 +12,13 @@ import { fileURLToPath } from 'node:url';
 
 const APP = process.env.SEED_APP_URL ?? 'http://127.0.0.1:54321';
 const BILLING = process.env.SEED_BILLING_URL ?? 'http://127.0.0.1:55321';
+// Recusa destinos remotos antes do primeiro cadastro ou chamada comercial.
+for (const [value, port] of [[APP, '54321'], [BILLING, '55321']]) {
+  const url = new URL(value);
+  if (!['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) || url.port !== port) {
+    throw new Error('Seed permitido somente nas duas stacks Supabase locais.');
+  }
+}
 // Cada instância Supabase gera sua própria chave publicável.
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 function localPublishableKey(project) {
@@ -45,7 +53,7 @@ if (error) throw error;
 const token = signUp.session?.access_token;
 if (!token) throw new Error('Cadastro sem sessão: confira a política de confirmação de e-mail no Auth local do aplicativo.');
 
-await call(`${BILLING}/functions/v1/billing`, token, {
+const subscribed = await call(`${BILLING}/functions/v1/billing`, token, {
   action: 'subscribe',
   plan_code: 'diamond',
   restaurant_name: 'Bistrô Aurora',
@@ -53,6 +61,8 @@ await call(`${BILLING}/functions/v1/billing`, token, {
   accept_terms: true,
   idempotency_key: slug,
 }, BILLING_KEY);
+if (subscribed.status !== 'pending_payment') throw new Error('Contratação local deveria aguardar pagamento.');
+await confirmLocalPayment(subscribed.subscription_id, APP, BILLING);
 const sync = await call(`${APP}/functions/v1/license-sync`, token, {}, APP_KEY);
 const tenant = sync.results.find((r) => r.slug === slug)?.tenant_id;
 if (!tenant) throw new Error(`Licença não sincronizada: ${JSON.stringify(sync)}`);

@@ -52,23 +52,37 @@ describe('assinaturas', () => {
   it('contratação é idempotente e o endereço é único', async () => {
     const id = randomUUID();
     const a = await subscribe(id);
-    expect(a.status).toBe('active');
+    expect(a.status).toBe('pending_payment');
     const again = await val<{ subscription_id: string }>(
       `select public.billing_subscribe($1, 'dono@teste.local', 'Dono', 'start', 'Restaurante', $2, 'vitest', $3)`,
       [id, a.slug, a.key],
     );
     expect(again.subscription_id).toBe(a.subscription_id);
+    expect(await val<number>('select count(*)::int from public.invoices where subscription_id = $1', [a.subscription_id])).toBe(
+      1,
+    );
+    expect(await val<number>('select count(*)::int from public.contracts where subscription_id = $1', [a.subscription_id])).toBe(
+      1,
+    );
     expect(await code(() => subscribe(randomUUID(), 'start', a.slug))).toBe('SLUG_TAKEN');
     expect(await code(() => subscribe(id, 'inexistente'))).toBe('INVALID_PLAN');
   });
 
-  it('renovação, troca de plano e cancelamento ao fim do período', async () => {
+  it('renovação e troca exigem pagamento; cancelamento respeita o período', async () => {
     const id = randomUUID();
     const { subscription_id: sub } = await subscribe(id);
-    await q('service_role', 'select public.billing_renew($1, $2)', [id, sub]);
-    expect(await val<number>('select count(*)::int from public.invoices where subscription_id = $1', [sub])).toBe(2);
-    await q('service_role', `select public.billing_change_plan($1, $2, 'diamond')`, [id, sub]);
-    expect(await val<string>('select plan_code from public.subscriptions where id = $1', [sub])).toBe('diamond');
+    expect(await code(() => q('service_role', 'select public.billing_renew($1, $2)', [id, sub]))).toBe('PAYMENT_REQUIRED');
+    expect(await code(() => q('service_role', `select public.billing_change_plan($1, $2, 'diamond')`, [id, sub]))).toBe(
+      'PAYMENT_REQUIRED',
+    );
+    expect(await val<number>('select count(*)::int from public.invoices where subscription_id = $1', [sub])).toBe(1);
+    // Fixture LOCAL para testar o ciclo de cancelamento sem simular pagamento remoto.
+    await q(
+      'service_role',
+      `update public.subscriptions set status = 'active', current_period_start = now(),
+      current_period_end = now() + interval '30 days' where id = $1`,
+      [sub],
+    );
     await q('service_role', 'select public.billing_cancel($1, $2, false)', [id, sub]);
     expect(await val<boolean>('select cancel_at_period_end from public.subscriptions where id = $1', [sub])).toBe(true);
     await q('service_role', 'select public.billing_cancel($1, $2, true)', [id, sub]);
@@ -89,6 +103,18 @@ describe('assinaturas', () => {
     expect(await code(() => q('service_role', 'select public.billing_cancel($1, $2, false)', [intruder, sub]))).toBe('NOT_FOUND');
     const overview = await val<{ subscriptions: unknown[] }>('select public.billing_overview($1)', [intruder]);
     expect(overview.subscriptions).toEqual([]);
+  });
+
+  it('requisições concorrentes da mesma contratação geram uma assinatura e uma fatura', async () => {
+    const id = randomUUID(),
+      address = slug(),
+      key = randomUUID();
+    const results = await Promise.all([subscribe(id, 'start', address, key), subscribe(id, 'start', address, key)]);
+    expect(results[0]!.subscription_id).toBe(results[1]!.subscription_id);
+    expect(
+      await val<number>('select count(*)::int from public.invoices where subscription_id = $1', [results[0]!.subscription_id]),
+    ).toBe(1);
+    expect(results.every((r) => r.status === 'pending_payment')).toBe(true);
   });
 
   it('navegador só lê o catálogo de planos, sem preços inventados', async () => {

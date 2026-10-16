@@ -11,8 +11,7 @@ import { buildPreapprovalBody, MP_API } from '../_shared/mercadopago.ts';
 // Configuração pública (não secreta) do projeto de identidade. Pode ser
 // sobrescrita por variáveis de ambiente no desenvolvimento local.
 const IDENTITY_URL = Deno.env.get('PDP_IDENTITY_URL') ?? 'https://qmhtzosfbosgolevnybd.supabase.co';
-const IDENTITY_PUBLISHABLE_KEY =
-  Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY') ?? 'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d';
+const IDENTITY_PUBLISHABLE_KEY = Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY') ?? 'sb_publishable_sapC0VZk-WmhVx__PB65HQ_N7s0dX_d';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 
 const ALLOWED_ORIGIN = Deno.env.get('PDP_ALLOWED_ORIGIN') ?? '*';
@@ -119,8 +118,31 @@ Deno.serve(async (req) => {
       return error ? failure(error) : json(data);
     }
     case 'subscribe': {
-      const slug = String(body.restaurant_slug ?? '').trim().toLowerCase();
+      // Fail closed enquanto o banco remoto não comprovar a política segura.
+      // Não mudar activation_mode/payment_provider para contornar essa proteção.
+      try {
+        const policy = await rpc<{ requires_payment: boolean }>('billing_checkout_policy', {});
+        if (policy.error || policy.data?.requires_payment !== true) {
+          return fail(
+            'PAYMENT_CONFIRMATION_REQUIRED',
+            'A contratação está temporariamente indisponível até a confirmação da política de pagamento.',
+            503,
+          );
+        }
+      } catch {
+        return fail('BILLING_UNAVAILABLE', 'Não foi possível verificar a política de pagamento.', 502);
+      }
+      const slug = String(body.restaurant_slug ?? '')
+        .trim()
+        .toLowerCase();
       if (body.accept_terms !== true) return fail('TERMS_REQUIRED', 'É necessário aceitar os termos.');
+      const requestKey = `${identity.id}:${String(body.idempotency_key ?? crypto.randomUUID())}`;
+      const previous = await rpc<{ subscription_id: string; status: string }>('billing_subscription_result', {
+        p_identity: identity.id,
+        p_idempotency_key: requestKey,
+      });
+      if (previous.error) return failure(previous.error);
+      if (previous.data) return json(previous.data);
       if (!(await slugAvailable(slug))) return fail('SLUG_TAKEN', 'Este endereço não está disponível.');
       const { data, error } = await rpc('billing_subscribe', {
         p_identity: identity.id,
@@ -130,7 +152,7 @@ Deno.serve(async (req) => {
         p_restaurant_name: String(body.restaurant_name ?? ''),
         p_slug: slug,
         p_user_agent: req.headers.get('user-agent') ?? '',
-        p_idempotency_key: `${identity.id}:${String(body.idempotency_key ?? crypto.randomUUID())}`,
+        p_idempotency_key: requestKey,
       });
       return error ? failure(error) : json(data);
     }
@@ -146,7 +168,11 @@ Deno.serve(async (req) => {
       const backUrl = Deno.env.get('MP_BACK_URL') ?? 'https://pontodopedido.com/portal';
       const res = await fetch(`${MP_API}/preapproval`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': ctx.subscription_id },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': ctx.subscription_id,
+        },
         body: JSON.stringify(
           buildPreapprovalBody({
             subscriptionId: ctx.subscription_id,
@@ -171,16 +197,10 @@ Deno.serve(async (req) => {
       return json({ checkout_url: created.init_point });
     }
     case 'renew': {
-      const { data, error } = await rpc('billing_renew', { p_identity: identity.id, p_subscription: body.subscription_id });
-      return error ? failure(error) : json(data);
+      return fail('PAYMENT_REQUIRED', 'A renovação exige confirmação de pagamento.', 409);
     }
     case 'change_plan': {
-      const { data, error } = await rpc('billing_change_plan', {
-        p_identity: identity.id,
-        p_subscription: body.subscription_id,
-        p_plan: body.plan_code,
-      });
-      return error ? failure(error) : json(data);
+      return fail('PAYMENT_REQUIRED', 'A alteração do plano exige confirmação de pagamento.', 409);
     }
     case 'cancel':
     case 'undo_cancel': {

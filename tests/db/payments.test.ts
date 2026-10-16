@@ -245,6 +245,42 @@ describe('pagamento online (Mercado Pago)', () => {
     });
   });
 
+  it('sem provedor e com immediate, os três planos ficam pendentes e idempotentes', async () => {
+    await withTx(async (run) => {
+      expect((await run('select public.billing_checkout_policy() as p'))[0]!.p.requires_payment).toBe(true);
+      for (const [plan, cents] of [
+        ['start', 4999],
+        ['plus', 8000],
+        ['diamond', 15000],
+      ]) {
+        const identity = randomUUID(),
+          key = randomUUID(),
+          address = slug();
+        const args = [identity, plan, address, key];
+        const sql = `select public.billing_subscribe($1,'teste@local.invalid','Teste',$2,'Restaurante',$3,'vitest',$4) as r`;
+        const first = (await run(sql, args))[0]!.r;
+        const again = (await run(sql, args))[0]!.r;
+        expect(first.status).toBe('pending_payment');
+        expect(again).toEqual(first);
+        expect(
+          (
+            await run('select current_period_start, current_period_end from public.subscriptions where id=$1', [
+              first.subscription_id,
+            ])
+          )[0],
+        ).toEqual({ current_period_start: null, current_period_end: null });
+        const invoices = await run(
+          'select status::text as status, amount_cents::int as amount from public.invoices where subscription_id=$1',
+          [first.subscription_id],
+        );
+        expect(invoices).toEqual([{ status: 'open', amount: cents }]);
+        expect(
+          (await run('select count(*)::int as n from public.contracts where subscription_id=$1', [first.subscription_id]))[0]!.n,
+        ).toBe(1);
+      }
+    });
+  });
+
   it('ligar o provedor basta para exigir pagamento: não ativa na contratação', async () => {
     await withTx(async (run) => {
       // activation_mode continua 'immediate' de propósito.
