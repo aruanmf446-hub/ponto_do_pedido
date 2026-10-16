@@ -1,5 +1,9 @@
 # Auditoria da integração — 16/10/2026 (UTC)
 
+> Continuação com autenticação real e proteção comercial:
+> [integração — continuação de 16/10/2026](./integracao-continuacao-20261016.md).
+> O relatório abaixo preserva as evidências do primeiro trabalho.
+
 **Conclusão: NÃO TESTADO o fluxo autenticado completo.** Não há identidade de
 teste autorizada disponível: o Auth remoto possui zero usuários. Não foi criada
 identidade fictícia, assinatura, restaurante ou cobrança em produção. Não há
