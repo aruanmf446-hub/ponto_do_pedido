@@ -8,6 +8,7 @@ import { failure, ok, type ActionFail, type ActionResult } from '@/core/errors';
 import { rpc } from '@/core/rpc';
 import { createServerSupabase } from '@/core/supabase/server';
 import { isValidSlug } from '@/core/tenant/host';
+import { safeAuthNext } from '@/core/auth/redirect';
 
 async function origin(): Promise<string> {
   const h = await headers();
@@ -15,8 +16,7 @@ async function origin(): Promise<string> {
 }
 
 function safePath(value: unknown, fallback: string): string {
-  const path = String(value ?? '');
-  return path.startsWith('/') && !path.startsWith('//') ? path : fallback;
+  return safeAuthNext(value, fallback);
 }
 
 const signupSchema = z.object({
