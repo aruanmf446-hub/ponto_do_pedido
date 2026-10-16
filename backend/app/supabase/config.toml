@@ -244,6 +244,11 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Template local; publicar no Dashboard do projeto hospedado é uma etapa separada.
+[auth.email.template.confirmation]
+subject = "Confirme seu e-mail — Ponto do Pedido"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
