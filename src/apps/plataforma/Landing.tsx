@@ -246,6 +246,7 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
             O <strong className="pl-m1-brand">Ponto do Pedido</strong> conecta a operação do seu negócio em uma interface limpa e personalizável.
             Não perca o controle do seu restaurante. Tenha tudo na palma da mão.
           </p>
+          <AppPlansCarousel plans={plans} />
           <Cta />
         </div>
         <div
@@ -298,8 +299,6 @@ export function Landing({ plans, template = 'm1' }: { plans: Plan[]; template?: 
           Acompanhe uma sexta <span>↓</span>
         </p>
       </section>
-
-      <AppPlansCarousel plans={plans} />
 
       <section className="pl-m1-night" id="aplicativos" aria-labelledby="night-title">
         <div className="pl-m1-sticky">
