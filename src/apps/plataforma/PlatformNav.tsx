@@ -23,7 +23,9 @@ export function PlatformNav({ signedIn, portal = false }: { signedIn: boolean; p
         </>
       )}
       {loggedIn ? (
-        <Link href="/portal" className="pl-nav-strong">Minha conta</Link>
+        <Link href={pathname === '/portal' ? '/contratar' : '/portal'} className="pl-nav-strong">
+          {pathname === '/portal' ? 'Cadastrar restaurante' : 'Minha conta'}
+        </Link>
       ) : (
         <>
           <Link href="/entrar">Entrar</Link>
