@@ -103,7 +103,7 @@ for (const width of [390, 1440]) {
       await page.locator('input[name=email]').fill(newEmail);
       await page.locator('input[name=password]').fill(password);
       await page.locator('button[type=submit]').click();
-      await expect(page.getByRole('status')).toBeVisible();
+      await expect(page.locator('form [role=status]')).toContainText('A alteração só estará concluída');
       const current = await admin.auth.admin.getUserById(id);
       expect(current.data.user?.email).toBe(email);
       await openEmail(await emailLink(email, 'email_change'));
