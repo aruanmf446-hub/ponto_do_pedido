@@ -152,7 +152,8 @@ it('prontidão exige migração multiproduto, política segura e configuração 
   for (const options of [
     {},
     { registry: 'missing' as const },
-    { paymentEnabled: false },\n    { providerReachable: false },
+    { paymentEnabled: false },
+    { providerReachable: false },
     { returnUrl: 'https://attacker.unit' },
   ]) {
     const s = setup(options);
