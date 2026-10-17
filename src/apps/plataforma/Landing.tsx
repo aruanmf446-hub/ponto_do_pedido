@@ -27,8 +27,8 @@ const DISHES = [
 function Cta() {
   return (
     <div className="pl-cta">
-      <Link href="/planos" className="pl-btn">
-        Conhecer os planos
+      <Link href="/contratar" className="pl-btn">
+        Testar grátis por 7 dias
       </Link>
       <Link href="/entrar" className="pl-btn pl-btn--ghost">
         Já sou assinante
@@ -459,14 +459,14 @@ export function PlanCards({ plans }: { plans: Plan[] }) {
               ))}
             </ul>
             <Link href={`/contratar?plano=${plan.code}`} className={`pl-btn ${i === plans.length - 1 ? '' : 'pl-btn--ghost'}`}>
-              Assinar {plan.name}
+              Testar {plan.name} por 7 dias
             </Link>
           </article>
         ))}
       </div>
       <p className="pl-note">
-        Valores e condições comerciais são definidos pela equipe comercial do Ponto do Pedido. Nenhuma cobrança é realizada
-        automaticamente nesta plataforma enquanto o meio de pagamento não estiver configurado.
+        Teste grátis de 7 dias, sem cartão e sem cobrança automática, uma vez por titular. Depois, escolha o plano e pague para continuar.
+        Valores e condições dos planos são os exibidos no catálogo oficial.
       </p>
     </>
   );
