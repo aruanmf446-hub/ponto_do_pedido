@@ -211,6 +211,31 @@ Deno.serve(async (req) => {
       const { data, error } = await productRpc(product, 'overview', { p_identity: identity.id });
       return error ? failure(error) : json(data);
     }
+    case 'start_trial': {
+      // Avaliação é distinta do checkout: não cria cobrança nem depende de MP.
+      if (product.id !== 'ponto_do_pedido') return fail('TRIAL_UNAVAILABLE', 'Teste grátis não disponível para este produto.');
+      const slug = String(body.resource_slug ?? body.restaurant_slug ?? '').trim().toLowerCase();
+      if (body.accept_terms !== true) return fail('TERMS_REQUIRED', 'É necessário aceitar os termos.');
+      const requestKey = `${identity.id}:${String(body.idempotency_key ?? crypto.randomUUID())}`;
+      const previous = await productRpc<{ subscription_id: string; status: string }>(product, 'subscription_result', {
+        p_identity: identity.id,
+        p_idempotency_key: requestKey,
+      });
+      if (previous.error) return failure(previous.error);
+      if (previous.data) return json(previous.data);
+      if (!(await slugAvailable(slug, product))) return fail('SLUG_TAKEN', 'Este endereço não está disponível.');
+      const { data, error } = await productRpc(product, 'start_trial', {
+        p_identity: identity.id,
+        p_email: identity.email,
+        p_name: String(body.name ?? identity.name ?? ''),
+        p_plan: String(body.plan_code ?? ''),
+        p_restaurant_name: String(body.resource_name ?? body.restaurant_name ?? ''),
+        p_slug: slug,
+        p_user_agent: req.headers.get('user-agent') ?? '',
+        p_idempotency_key: requestKey,
+      });
+      return error ? failure(error) : json(data);
+    }
     case 'subscribe': {
       // Fail closed enquanto o banco remoto não comprovar a política segura.
       // Não mudar activation_mode/payment_provider para contornar essa proteção.
