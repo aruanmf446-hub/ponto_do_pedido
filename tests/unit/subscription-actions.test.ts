@@ -6,7 +6,7 @@ vi.mock('next/navigation', () => ({
     throw new Error('redirect');
   }),
 }));
-vi.mock('@/core/billing', () => ({ billingCall: vi.fn(), syncLicenses: vi.fn() }));
+vi.mock('@/core/billing', () => ({ billingCall: vi.fn(), syncLicenses: vi.fn(), checkoutAvailable: vi.fn() }));
 vi.mock('@/core/rpc', () => ({ rpc: vi.fn() }));
 vi.mock('@/core/supabase/server', () => ({ createServerSupabase: vi.fn() }));
 
@@ -30,6 +30,42 @@ describe('ações comerciais não ocultam falhas da licença', () => {
       key: '12345678',
     }))
       form.set(key, value);
+    expect(await subscribe(null, form)).toMatchObject({ ok: false, code: 'SYNC_ERROR' });
+  });
+
+  it('inicia sete dias sem checkout e só abre o restaurante depois da licença', async () => {
+    vi.mocked(billingCall).mockResolvedValue({ ok: true, data: { status: 'trialing', subscription_id: 'trial-sub' } });
+    vi.mocked(syncLicenses).mockResolvedValue({
+      ok: true,
+      data: { results: [{ slug: 'restaurante-teste', tenant_id: 'tenant-1' }] },
+    });
+    const form = new FormData();
+    for (const [key, value] of Object.entries({
+      mode: 'trial',
+      plan: 'start',
+      restaurant: 'Restaurante Teste',
+      slug: 'restaurante-teste',
+      terms: 'on',
+      key: 'trial-key-12345678',
+    })) form.set(key, value);
+    await expect(subscribe(null, form)).rejects.toThrow('redirect');
+    expect(billingCall).toHaveBeenCalledWith('start_trial', expect.objectContaining({
+      plan_code: 'start',
+      restaurant_slug: 'restaurante-teste',
+      accept_terms: true,
+    }));
+    expect(billingCall).toHaveBeenCalledTimes(1);
+    expect(syncLicenses).toHaveBeenCalledTimes(1);
+  });
+
+  it('não libera teste sem licença confirmada pelo banco operacional', async () => {
+    vi.mocked(billingCall).mockResolvedValue({ ok: true, data: { status: 'trialing', subscription_id: 'trial-sub' } });
+    vi.mocked(syncLicenses).mockResolvedValue({ ok: true, data: { results: [] } });
+    const form = new FormData();
+    for (const [key, value] of Object.entries({
+      mode: 'trial', plan: 'plus', restaurant: 'Teste',
+      slug: 'restaurante-teste', terms: 'on', key: 'trial-key-12345678',
+    })) form.set(key, value);
     expect(await subscribe(null, form)).toMatchObject({ ok: false, code: 'SYNC_ERROR' });
   });
 
