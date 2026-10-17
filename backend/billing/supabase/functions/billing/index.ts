@@ -86,11 +86,7 @@ async function resolveProduct(id: string): Promise<Product | null> {
   if (!result.error) {
     const product = result.data;
     if (!product || product.id !== id || !/^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(product.auth_url)) return null;
-    // Somente o ambiente local pode sobrescrever o Auth deste produto conhecido.
-    if (id === LEGACY_PRODUCT && Deno.env.get('PDP_IDENTITY_URL')) {
-      product.auth_url = Deno.env.get('PDP_IDENTITY_URL')!;
-      product.auth_publishable_key = Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY')!;
-    }
+    // Em produção, o Auth vem somente do registro do produto (nunca de override legado).
     return product;
   }
   // Compatibilidade estrita com o banco legado. Falha de rede/JSON nunca vira fallback.
@@ -105,6 +101,35 @@ async function resolveProduct(id: string): Promise<Product | null> {
     payment_return_url: 'https://pontodopedido.vercel.app/portal',
     slug_check_rpc: 'slug_available',
   };
+}
+
+/**
+ * Verifica capacidade real de iniciar o checkout, sem criar pagamento.
+ * Secrets permanecem exclusivamente na Edge Function; respostas só informam sim/não.
+ * Falhas de rede, credencial inválida e migração ausente fecham o checkout.
+ */
+async function checkoutReady(product: Product): Promise<boolean> {
+  if (product.legacy || !safeReturnUrl(product)) return false;
+  const token = Deno.env.get('MP_ACCESS_TOKEN');
+  const webhookSecret = Deno.env.get('MP_WEBHOOK_SECRET');
+  if (!token || !webhookSecret) return false;
+
+  try {
+    const [policy, provider] = await Promise.all([
+      rpc<{ requires_payment: boolean }>('billing_checkout_policy', {}),
+      rpc<string>('billing_payment_provider', {}),
+    ]);
+    if (policy.error || policy.data?.requires_payment !== true || provider.error || provider.data !== 'mercadopago') {
+      return false;
+    }
+    // Endpoint somente-leitura: confirma que o token é aceito sem emitir cobrança.
+    const probe = await fetch(`${MP_API}/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return probe.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function productRpc<T>(product: Product, action: string, args: unknown) {
@@ -179,21 +204,7 @@ Deno.serve(async (req) => {
 
   switch (action) {
     case 'checkout_status': {
-      try {
-        const policy = await rpc<{ requires_payment: boolean }>('billing_checkout_policy', {});
-        const provider = await rpc<string>('billing_payment_provider', {});
-        const available =
-          !product.legacy &&
-          !policy.error &&
-          policy.data?.requires_payment === true &&
-          !provider.error &&
-          provider.data === 'mercadopago' &&
-          Boolean(Deno.env.get('MP_ACCESS_TOKEN')) &&
-          Boolean(safeReturnUrl(product));
-        return json({ available });
-      } catch {
-        return json({ available: false });
-      }
+      return json({ available: await checkoutReady(product) });
     }
     case 'overview':
     case 'entitlements': {
@@ -214,6 +225,9 @@ Deno.serve(async (req) => {
         }
       } catch {
         return fail('BILLING_UNAVAILABLE', 'Não foi possível verificar a política de pagamento.', 502);
+      }
+      if (!product.legacy && !(await checkoutReady(product))) {
+        return fail('PAYMENT_UNAVAILABLE', 'O pagamento online não está disponível agora. Tente novamente mais tarde.', 503);
       }
       const slug = String(body.resource_slug ?? body.restaurant_slug ?? '')
         .trim()
