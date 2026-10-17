@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { signOutPlatform } from '@/apps/plataforma/actions';
 import { SubscriptionCard } from '@/apps/plataforma/Portal';
-import { billingCall, checkoutAvailable, fetchPlans, syncLicenses, type BillingOverview } from '@/core/billing';
+import { billingCall, syncLicenses, type BillingOverview } from '@/core/billing';
 import { rpcRead } from '@/core/rpc';
 import { getCurrentUser } from '@/core/supabase/server';
 import { tenantDisplayUrl, tenantUrl } from '@/core/tenant/urls';
@@ -23,16 +23,17 @@ export default async function PortalPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/entrar?next=/portal');
 
-  const overview = await billingCall<BillingOverview>('overview');
-  const subscriptions = overview.ok ? overview.data.subscriptions : [];
-  // Mantém licenças do projeto operacional alinhadas com a origem comercial
-  const sync = subscriptions.length > 0 ? await syncLicenses() : null;
-  const syncError = sync && (!sync.ok ? sync.message : sync.data.results.find((result) => result.error)?.error);
-  const [plans, tenants, canContract] = await Promise.all([
-    fetchPlans(),
+  // Primeiro acesso não pode esperar Mercado Pago, catálogo nem sincronização
+  // de uma licença que ainda não existe.
+  const [overview, initialTenants] = await Promise.all([
+    billingCall<BillingOverview>('overview'),
     rpcRead<MyTenant[]>('my_tenants', {}),
-    subscriptions.length === 0 && overview.ok ? checkoutAvailable() : Promise.resolve(false),
   ]);
+  const subscriptions = overview.ok ? overview.data.subscriptions : [];
+  const mustSync = subscriptions.some((sub) => sub.status !== 'pending_payment');
+  const sync = mustSync ? await syncLicenses() : null;
+  const syncError = sync && (!sync.ok ? sync.message : sync.data.results.find((result) => result.error)?.error);
+  const tenants = sync?.ok ? await rpcRead<MyTenant[]>('my_tenants', {}) : initialTenants;
   const isHolder = subscriptions.length > 0;
 
   if (!overview.ok) {
@@ -70,18 +71,8 @@ export default async function PortalPage() {
             Você já tem acesso ao Ponto do Pedido. Para começar, escolha o plano e cadastre o seu restaurante.
             Não é preciso criar outro usuário.
           </p>
-          {!canContract && (
-            <p className="pl-account-state-notice" role="status">
-              <strong>Novas contratações temporariamente indisponíveis.</strong>
-              A ativação depende da configuração do pagamento. Sua conta continua válida.
-            </p>
-          )}
           <div className="pl-account-state-actions">
-            {canContract ? (
-              <Link href="/contratar" className="pl-btn">Cadastrar meu restaurante <span aria-hidden="true">↗</span></Link>
-            ) : (
-              <Link href="/planos" className="pl-btn">Conhecer os planos <span aria-hidden="true">↗</span></Link>
-            )}
+            <Link href="/contratar" className="pl-btn">Cadastrar meu restaurante <span aria-hidden="true">↗</span></Link>
             <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">Segurança da conta</Link>
           </div>
         </div>
@@ -90,7 +81,7 @@ export default async function PortalPage() {
           <ol className="pl-account-state-steps">
             <li><span>01</span><div><strong>Escolha o plano</strong><small>START, PLUS ou DIAMOND, conforme a operação.</small></div></li>
             <li><span>02</span><div><strong>Cadastre o restaurante</strong><small>Nome e endereço exclusivo da sua equipe.</small></div></li>
-            <li><span>03</span><div><strong>Ative e configure</strong><small>Após o pagamento confirmado, organize cardápio e acessos.</small></div></li>
+            <li><span>03</span><div><strong>Experimente e configure</strong><small>7 dias grátis, sem cartão. Depois escolha como assinar.</small></div></li>
           </ol>
           <div className="pl-account-state-signature" aria-hidden="true">
             <span className="pl-account-state-mark">P<span>•</span></span>
@@ -174,7 +165,6 @@ export default async function PortalPage() {
           <SubscriptionCard
             key={sub.id}
             sub={sub}
-            plans={plans}
             onboardingDone={onboardingBySlug.get(sub.restaurant_slug) ?? false}
             paymentProvider={overview.ok ? overview.data.payment_provider : null}
           />
