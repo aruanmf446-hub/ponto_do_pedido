@@ -10,8 +10,10 @@ vi.mock('@/core/billing', () => ({ billingCall: vi.fn(), syncLicenses: vi.fn() }
 vi.mock('@/core/rpc', () => ({ rpc: vi.fn() }));
 vi.mock('@/core/supabase/server', () => ({ createServerSupabase: vi.fn() }));
 
+import { headers } from 'next/headers';
+import { createServerSupabase } from '@/core/supabase/server';
 import { billingCall, syncLicenses } from '@/core/billing';
-import { refreshLicenses, subscribe, subscriptionAction } from '@/apps/plataforma/actions';
+import { refreshLicenses, signUpSubscriber, subscribe, subscriptionAction } from '@/apps/plataforma/actions';
 
 describe('ações comerciais não ocultam falhas da licença', () => {
   beforeEach(() => vi.resetAllMocks());
@@ -37,4 +39,19 @@ describe('ações comerciais não ocultam falhas da licença', () => {
     expect(await refreshLicenses()).toMatchObject({ ok: false, code: 'SYNC_ERROR', message: 'Falha no RPC' });
     expect(await subscriptionAction('cancel', 'sub')).toMatchObject({ ok: false, code: 'SYNC_ERROR' });
   });
+});
+
+it('cadastro novo e erro de e-mail existente devolvem a mesma orientação neutra', async () => {
+  vi.mocked(headers).mockResolvedValue(new Headers({ host: 'pontodopedido.vercel.app' }) as never);
+  const signUp = vi.fn();
+  vi.mocked(createServerSupabase).mockResolvedValue({ auth: { signUp } } as never);
+  const form = new FormData();
+  for (const [k, v] of Object.entries({ name: 'Local test', email: 'unit@local.invalid', password: 'Unit-password-1' }))
+    form.set(k, v);
+  signUp.mockResolvedValue({ data: { session: null }, error: null });
+  const a = await signUpSubscriber(null, form);
+  signUp.mockResolvedValue({ data: { session: null }, error: { code: 'user_already_exists', message: 'already registered' } });
+  const b = await signUpSubscriber(null, form);
+  expect(a).toEqual(b);
+  expect(a).toMatchObject({ ok: true, confirm: true });
 });

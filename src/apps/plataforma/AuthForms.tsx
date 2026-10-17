@@ -9,9 +9,14 @@ export function SignupForm({ next }: { next: string }) {
   if (state && state.ok) {
     return (
       <div className="pl-card" role="status">
-        <h2>Confirme seu e-mail</h2>
+        <h2>Confira os próximos passos</h2>
         <p>
-          Enviamos um link para <strong>{state.email}</strong>. Depois de confirmar, você continua a contratação.
+          Se este endereço puder ser cadastrado, confira a caixa de entrada e o spam para as instruções de confirmação. Se já
+          possui conta, entre ou recupere sua senha. Esta mensagem não confirma envio de e-mail.
+        </p>
+        <p>
+          <Link href={`/entrar?next=${encodeURIComponent(next)}`}>Entrar</Link> ·{' '}
+          <Link href="/recuperar-senha">Recuperar senha</Link>
         </p>
       </div>
     );
@@ -68,6 +73,9 @@ export function SigninForm({ next }: { next: string }) {
       <button type="submit" className="pl-btn" disabled={pending}>
         {pending ? 'Entrando…' : 'Entrar'}
       </button>
+      <p>
+        <Link href="/recuperar-senha">Esqueci minha senha</Link>
+      </p>
       <p className="pl-muted">
         Ainda não é assinante? <Link href="/planos">Conheça os planos</Link>
       </p>

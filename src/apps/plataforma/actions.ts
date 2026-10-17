@@ -42,9 +42,15 @@ export async function signUpSubscriber(_prev: SignupState, form: FormData): Prom
     },
   });
   if (error) {
+    if (
+      ['user_already_exists', 'email_exists'].includes(error.code ?? '') ||
+      /already.*(registered|exists)/i.test(error.message)
+    ) {
+      return { ok: true, confirm: true, email: parsed.data.email };
+    }
     return failure(
       'SIGNUP_FAILED',
-      /already/i.test(error.message) ? 'Este e-mail já possui conta. Entre para continuar.' : error.message,
+      'Não foi possível concluir a solicitação agora. Confira os dados e tente novamente mais tarde.',
     );
   }
   if (!data.session) return { ok: true, confirm: true, email: parsed.data.email };
