@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { login, noHorizontalOverflow } from './helpers';
 
 for (const width of [390, 1440]) {
-  test(`contratação bloqueada não promete ativação em ${width}px`, async ({ page }) => {
+  test(`cadastro oferece teste grátis independente do checkout em ${width}px`, async ({ page }) => {
     const host = new URL(process.env.PDP_E2E_BASE_URL ?? 'http://localhost:3000').hostname;
     test.skip(
       !['localhost', '127.0.0.1'].includes(host) && !host.endsWith('.localhost'),
@@ -12,9 +12,10 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await login(page, 'dono');
     await page.goto('/contratar');
-    await expect(page.getByRole('button', { name: 'Contratação indisponível' })).toBeDisabled();
-    await expect(page.getByText('Novas contratações estão temporariamente indisponíveis.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Contratar e ativar' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Começar 7 dias grátis' })).toBeEnabled();
+    await expect(page.getByText(/Seu teste de 7 dias começa no cadastro/)).toBeVisible();
+    // Esta stack local não possui credenciais de pagamento; o teste gratuito não depende delas.
+    await expect(page.getByRole('button', { name: 'Contratar agora' })).toBeDisabled();
     await page.locator('input[name=restaurant]').fill('Famiglia da Pizza E2E');
     await expect(page.locator('#slug-help')).toContainText('/r/famiglia-da-pizza-e2e');
     await noHorizontalOverflow(page);

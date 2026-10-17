@@ -38,7 +38,7 @@ it('migra dados legados sem alterar valores, estados ou permissões de outras fu
       for (const table of ['plans', 'accounts', 'subscriptions', 'contracts', 'invoices', 'platform_settings']) {
         result[table] = (
           await c!.query(
-            `select jsonb_agg(to_jsonb(t)-'product_id' order by (to_jsonb(t)-'product_id')::text) as r from public.${table} t`,
+            `select jsonb_agg(to_jsonb(t)-'product_id'-'trial_started_at'-'trial_ends_at' order by (to_jsonb(t)-'product_id'-'trial_started_at'-'trial_ends_at')::text) as r from public.${table} t`,
           )
         ).rows[0].r;
       }
@@ -47,6 +47,11 @@ it('migra dados legados sem alterar valores, estados ou permissões de outras fu
     const before = await snapshot();
     for (const file of files.slice(4)) await c.query(readFileSync(`${dir}/${file}`, 'utf8'));
     expect(await snapshot()).toEqual(before);
+    // Os novos campos são opcionais e não modificam a assinatura legada.
+    expect((await c.query(`select trial_started_at, trial_ends_at from public.subscriptions
+      where restaurant_slug='migration-fixture'`)).rows).toEqual([
+      { trial_started_at: null, trial_ends_at: null },
+    ]);
     expect((await c.query(`select distinct product_id from public.subscriptions`)).rows).toEqual([
       { product_id: 'ponto_do_pedido' },
     ]);

@@ -117,6 +117,53 @@ describe('assinaturas', () => {
     expect(results.every((r) => r.status === 'pending_payment')).toBe(true);
   });
 
+  it('teste gratuito abre exatamente 7 dias sem gerar cobrança, contrato de pagamento nem fatura', async () => {
+    const identity = randomUUID(), restaurantSlug = slug(), key = randomUUID();
+    const trial = await val<{ subscription_id: string; status: string; trial_ends_at: string }>(
+      `select public.billing_start_trial($1,'dono@teste.local','Dono','diamond','Restaurante',$2,'vitest',$3)`,
+      [identity, restaurantSlug, key],
+    );
+    expect(trial.status).toBe('trialing');
+    expect(trial.trial_ends_at).toBeTruthy();
+    const details = await q<{
+      period_days: number; starts_present: boolean; ends_present: boolean; invoices: number; contracts: number;
+    }>('service_role', `select
+      extract(epoch from (trial_ends_at - trial_started_at)) / 86400 as period_days,
+      trial_started_at is not null as starts_present,
+      trial_ends_at is not null as ends_present,
+      (select count(*)::int from public.invoices where subscription_id = s.id) as invoices,
+      (select count(*)::int from public.contracts where subscription_id = s.id) as contracts
+      from public.subscriptions s where id=$1`, [trial.subscription_id]);
+    expect(Number(details[0]!.period_days)).toBe(7);
+    expect(details[0]).toMatchObject({ starts_present: true, ends_present: true, invoices: 0, contracts: 1 });
+    const repeated = await val<{ subscription_id: string }>(
+      `select public.billing_start_trial($1,'dono@teste.local','Dono','diamond','Restaurante',$2,'vitest',$3)`,
+      [identity, restaurantSlug, key],
+    );
+    expect(repeated.subscription_id).toBe(trial.subscription_id);
+    expect(await code(() => q('service_role',
+      `select public.billing_start_trial($1,'dono@teste.local','Dono','start','Outro', $2,'vitest',$3)`,
+      [identity, slug(), randomUUID()],
+    ))).toBe('TRIAL_ALREADY_USED');
+  });
+
+  it('encerra o teste vencido e não estende licenças automaticamente', async () => {
+    const id = randomUUID();
+    const trial = await val<{ subscription_id: string }>(
+      `select public.billing_start_trial($1,'dono@teste.local','Dono','start','Restaurante',$2,'vitest',$3)`,
+      [id, slug(), randomUUID()],
+    );
+    // Apenas no Supabase LOCAL. O vencimento oficial deve bloquear a operação.
+    await q('service_role', `update public.subscriptions set
+      trial_ends_at=now()-interval '1 second',
+      current_period_end=now()-interval '1 second' where id=$1`, [trial.subscription_id]);
+    await q('service_role', 'select public.billing_settle_expired()');
+    expect(await val<string>('select status::text from public.subscriptions where id=$1', [trial.subscription_id]))
+      .toBe('suspended');
+    expect(await val<number>('select count(*)::int from public.invoices where subscription_id=$1',
+      [trial.subscription_id])).toBe(0);
+  });
+
   it('navegador só lê o catálogo de planos, sem preços inventados', async () => {
     const plans = await q<{ code: string; price_cents: number | null }>(
       'anon',

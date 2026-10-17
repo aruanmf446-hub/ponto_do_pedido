@@ -11,4 +11,11 @@
 - A verificação do checkout ocorre após renderização do formulário; falhas do Mercado Pago não impedem o teste grátis.
 - Para homologar: conta de teste nova, escolher plano, iniciar teste, validar licença e Gestão, consultar vencimento e bloqueio após expiração e simular pagamento em sandbox antes de habilitar cobrança real.
 
-**Migrações**: `20261017170000_trial_schema.sql` e `20261017170100_trial_functions.sql`.
+**Migrações**: `20261017195118_trial_schema_seven_days.sql` e `20261017195208_trial_functions_seven_days.sql`.
+
+## Auditoria de QA (17/10/2026)
+
+- Corrigidos o teste E2E de checkout obsoleto e a comparação de schema em teste de migração.
+- Acrescentados testes de 7 dias, idempotência, proibição de segundo teste e expiração no banco local.
+- Nomes das duas migrations alinhados aos números efetivamente registrados no Supabase remoto (não reaplicar em produção).
+- A contratação e o webhook Mercado Pago seguem sem transação real de homologação; não afirmar que houve pagamento ou ativação reais.
