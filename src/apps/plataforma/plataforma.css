@@ -2288,3 +2288,215 @@
 @media (prefers-reduced-motion: reduce) {
   .pl-m1-hero-slides { transition: none; }
 }
+
+
+/* Portal do assinante: área de boas-vindas editorial, sem dashboard fictício. */
+.pl-account-state {
+  --pl-account-orange: #d46045;
+  width: min(calc(100% - 40px), 1160px);
+  margin: clamp(36px, 6vw, 90px) auto clamp(48px, 7vw, 100px);
+  min-height: min(63dvh, 630px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.32fr) minmax(0, 0.86fr);
+  border-top: 3px solid var(--pl-account-orange);
+  border-bottom: 1px solid var(--pl-line);
+}
+.pl-account-state-main {
+  min-width: 0;
+  padding: clamp(30px, 5vw, 64px) clamp(12px, 4vw, 52px) clamp(32px, 5vw, 60px) 0;
+  align-self: center;
+}
+.pl-account-state .pl-eyebrow {
+  margin-bottom: 24px;
+  color: var(--pl-ink-2);
+}
+.pl-account-state-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 13px;
+  margin-bottom: 20px;
+  border: 1px solid var(--pl-line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pl-ink-2);
+}
+.pl-account-state-status > span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  background: #719170;
+  border-radius: 50%;
+}
+.pl-account-state h1 {
+  max-width: 15ch;
+  font-size: clamp(2.35rem, 4.7vw, 4.45rem);
+  font-weight: 780;
+  line-height: 1.07;
+  letter-spacing: -0.055em;
+}
+.pl-account-state h1 > span {
+  color: var(--pl-account-orange);
+}
+.pl-account-state-lead {
+  max-width: 49ch;
+  margin: 23px 0 0;
+  color: var(--pl-ink-2);
+  font-size: clamp(1rem, 1.25vw, 1.13rem);
+  line-height: 1.7;
+}
+.pl-account-state-notice {
+  max-width: 52ch;
+  margin: 25px 0 0;
+  padding: 12px 0 12px 16px;
+  border-left: 3px solid var(--pl-account-orange);
+  color: var(--pl-muted);
+  font-size: 0.9rem;
+}
+.pl-account-state-notice strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--pl-ink);
+}
+.pl-account-state-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+.pl-account-state-actions .pl-btn:not(.pl-btn--ghost) {
+  border-color: var(--pl-account-orange);
+  background: var(--pl-account-orange);
+  color: #fff !important;
+}
+.pl-account-state-actions .pl-btn {
+  white-space: normal;
+  text-align: center;
+}
+.pl-account-state-actions .pl-btn span {
+  font-size: 1.15em;
+}
+.pl-account-state-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  padding: clamp(30px, 5vw, 56px) clamp(20px, 3vw, 44px);
+  background: color-mix(in srgb, var(--pl-surface) 72%, var(--pl-bg));
+  border-left: 1px solid var(--pl-line);
+}
+.pl-account-state-index {
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  color: var(--pl-account-orange);
+}
+.pl-account-state-side > p:not(.pl-eyebrow) {
+  color: var(--pl-ink-2);
+  font-size: 1.2rem;
+  max-width: 24ch;
+}
+.pl-account-state-steps {
+  margin: auto 0;
+  padding: 0;
+  list-style: none;
+}
+.pl-account-state-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--pl-line);
+}
+.pl-account-state-steps li:first-child {
+  border-top: 1px solid var(--pl-line);
+}
+.pl-account-state-steps li > span {
+  flex: none;
+  color: var(--pl-account-orange);
+  font-family: var(--pl-editorial), Georgia, serif;
+  font-size: 1.35rem;
+}
+.pl-account-state-steps strong,
+.pl-account-restaurants strong {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.pl-account-state-steps small,
+.pl-account-restaurants small {
+  display: block;
+  margin-top: 4px;
+  color: var(--pl-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.pl-account-state-signature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--pl-muted);
+  font-size: 0.8rem;
+}
+.pl-account-state-mark {
+  font-family: var(--pl-display), sans-serif;
+  font-weight: 900;
+  color: var(--pl-account-orange);
+  font-size: 2rem;
+  line-height: 1;
+}
+.pl-account-state-mark > span {
+  color: #77876e;
+}
+.pl-account-restaurants {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.pl-account-restaurants li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 22px 0;
+  border-top: 1px solid var(--pl-line);
+}
+@media (max-width: 760px) {
+  .pl-account-state {
+    width: min(calc(100% - 32px), 560px);
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    margin: 28px auto 64px;
+  }
+  .pl-account-state-main {
+    padding: 36px 0 44px;
+  }
+  .pl-account-state h1 {
+    font-size: clamp(2.2rem, 9vw, 3.5rem);
+  }
+  .pl-account-state-side {
+    padding: 30px 24px;
+    border-left: none;
+    border-top: 1px solid var(--pl-line);
+  }
+  .pl-account-state-steps {
+    margin: 0;
+  }
+}
+@media (max-width: 390px) {
+  .pl-account-state-actions {
+    align-items: stretch;
+  }
+  .pl-account-state-actions .pl-btn,
+  .pl-account-state-actions form,
+  .pl-account-state-actions form .pl-btn {
+    width: 100%;
+  }
+}
