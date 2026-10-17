@@ -17,7 +17,7 @@ type Subscription = {
   product_id?: string;
   plan_code: string;
   modules: string[];
-  status: 'pending_payment' | 'active' | 'past_due' | 'suspended' | 'cancelled';
+  status: 'pending_payment' | 'active' | 'trialing' | 'past_due' | 'suspended' | 'cancelled';
   restaurant_name: string;
   restaurant_slug: string;
   current_period_end: string | null;
