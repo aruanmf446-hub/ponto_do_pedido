@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { DEVELOPER } from '@/core/config';
-import { SchemeToggle } from '@/core/ui/SchemeToggle';
+import { PlatformNav } from '@/apps/plataforma/PlatformNav';
 import { condensed, display, editorial, sora, text } from '@/apps/plataforma/fonts';
 import '@/apps/plataforma/plataforma.css';
 
@@ -33,27 +33,7 @@ export function PlatformChrome({ children, signedIn, portal }: { children: React
       </a>
       <header className="pl-header">
         <PlatformMark />
-        <nav className="pl-nav" aria-label="Principal">
-          {portal ? null : (
-            <>
-              <Link href="/#aplicativos">Aplicativos</Link>
-              <Link href="/planos">Planos</Link>
-            </>
-          )}
-          {signedIn ? (
-            <Link href="/portal" className="pl-nav-strong">
-              Portal do Assinante
-            </Link>
-          ) : (
-            <>
-              <Link href="/entrar">Entrar</Link>
-              <Link href="/planos" className="pl-btn pl-btn--small">
-                Nossos planos
-              </Link>
-            </>
-          )}
-          <SchemeToggle className="pl-scheme" />
-        </nav>
+        <PlatformNav signedIn={signedIn} portal={portal} />
       </header>
       <main id="conteudo" className="pl-main">
         {children}
@@ -66,7 +46,7 @@ export function PlatformChrome({ children, signedIn, portal }: { children: React
         <nav aria-label="Rodapé" className="pl-footer-links">
           <Link href="/planos">Planos</Link>
           <Link href="/termos">Termos de uso</Link>
-          <Link href="/entrar">Portal do Assinante</Link>
+          <Link href="/portal">Portal do Assinante</Link>
         </nav>
         <p className="pl-footer-legal">
           Ponto do Pedido · © {new Date().getFullYear()} · Desenvolvido por{' '}
