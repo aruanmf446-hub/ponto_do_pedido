@@ -50,8 +50,21 @@ async function call(url, token, body, key) {
 const supabase = createClient(APP, APP_KEY, { auth: { persistSession: false } });
 const { data: signUp, error } = await supabase.auth.signUp({ email: ownerEmail, password, options: { data: { full_name: 'Helena Prado' } } });
 if (error) throw error;
-const token = signUp.session?.access_token;
-if (!token) throw new Error('Cadastro sem sessão: confira a política de confirmação de e-mail no Auth local do aplicativo.');
+let token = signUp.session?.access_token;
+if (!token && signUp.user?.id) {
+  // Fixture de demonstração apenas LOCAL. Confirma este cadastro, sem alterar
+  // a política de Auth; o teste de segurança usa os e-mails reais do Mailpit.
+  const info = JSON.parse(execFileSync('npx', ['supabase', 'status', '-o', 'json'], {
+    cwd: join(root, 'backend/app'), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+  }));
+  const admin = createClient(APP, info.SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+  const confirmed = await admin.auth.admin.updateUserById(signUp.user.id, { email_confirm: true });
+  if (confirmed.error) throw new Error('Falha ao confirmar a fixture local.');
+  const signed = await supabase.auth.signInWithPassword({ email: ownerEmail, password });
+  if (signed.error) throw new Error('Falha ao entrar com a fixture local.');
+  token = signed.data.session?.access_token;
+}
+if (!token) throw new Error('Cadastro local sem sessão.');
 
 const subscribed = await call(`${BILLING}/functions/v1/billing`, token, {
   action: 'subscribe',
