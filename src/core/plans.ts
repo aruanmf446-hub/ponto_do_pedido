@@ -29,11 +29,13 @@ export type Subscription = {
   modules: string[];
   price_cents: number | null;
   billing_period: 'monthly' | 'yearly';
-  status: 'pending_payment' | 'active' | 'past_due' | 'suspended' | 'cancelled';
+  status: 'pending_payment' | 'trialing' | 'active' | 'past_due' | 'suspended' | 'cancelled';
   restaurant_name: string;
   restaurant_slug: string;
   current_period_start: string | null;
   current_period_end: string | null;
+  trial_started_at?: string | null;
+  trial_ends_at?: string | null;
   cancel_at_period_end: boolean;
   created_at: string;
   provider_status?: string | null;
