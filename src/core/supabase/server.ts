@@ -34,10 +34,10 @@ export const getCurrentUser = cache(async () => {
 });
 
 /** Token de acesso atual, para chamar Edge Functions em nome do usuário. */
-export async function getAccessToken(): Promise<string | null> {
+export const getAccessToken = cache(async (): Promise<string | null> => {
   const supabase = await createServerSupabase();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return null;
+  // Este token não é usado como prova de identidade aqui. As Edge Functions
+  // sempre o validam no Auth oficial; evita uma chamada extra getUser a cada RPC.
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? null;
-}
+});
