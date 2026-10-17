@@ -26,6 +26,7 @@ type Subscription = {
 function tenantStatus(s: Subscription): 'pending' | 'active' | 'suspended' | 'cancelled' {
   switch (s.status) {
     case 'active':
+    case 'trialing':
     case 'past_due':
       return 'active';
     case 'suspended':
