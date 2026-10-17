@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 // Produtos e tokens sintéticos existem apenas neste teste unitário.
 function setup(
-  options: { registry?: 'network' | 'missing' | 'json'; returnUrl?: string; paymentEnabled?: boolean; allowed?: string[] } = {},
+  options: { registry?: 'network' | 'missing' | 'json'; returnUrl?: string; paymentEnabled?: boolean; allowed?: string[]; providerReachable?: boolean } = {},
 ) {
   let handler!: (r: Request) => Promise<Response>;
   const calls: { url: string; body: Record<string, unknown> }[] = [];
@@ -54,6 +54,8 @@ function setup(
       }
       if (url.endsWith('/billing_checkout_policy')) return Response.json({ requires_payment: options.paymentEnabled !== false });
       if (url.endsWith('/billing_payment_provider')) return Response.json('mercadopago');
+      if (url === 'https://payment.unit/users/me')
+        return options.providerReachable === false ? Response.json({ error: 'unauthorized' }, { status: 401 }) : Response.json({ id: 123 });
       if (url.endsWith('/billing_product_call')) {
         if (body.p_action === 'payment_context')
           return Response.json({
@@ -72,7 +74,7 @@ function setup(
     Deno: {
       env: {
         get: (key: string) =>
-          ({ SUPABASE_URL: 'https://billing.unit', SUPABASE_SERVICE_ROLE_KEY: 'unit-only', MP_ACCESS_TOKEN: 'unit-only' })[key],
+          ({ SUPABASE_URL: 'https://billing.unit', SUPABASE_SERVICE_ROLE_KEY: 'unit-only', MP_ACCESS_TOKEN: 'unit-only', MP_WEBHOOK_SECRET: 'unit-webhook' })[key],
       },
       serve: (fn: typeof handler) => {
         handler = fn;
@@ -150,7 +152,7 @@ it('prontidão exige migração multiproduto, política segura e configuração 
   for (const options of [
     {},
     { registry: 'missing' as const },
-    { paymentEnabled: false },
+    { paymentEnabled: false },\n    { providerReachable: false },
     { returnUrl: 'https://attacker.unit' },
   ]) {
     const s = setup(options);
