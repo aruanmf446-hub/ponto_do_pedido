@@ -19,3 +19,6 @@
 - Acrescentados testes de 7 dias, idempotência, proibição de segundo teste e expiração no banco local.
 - Nomes das duas migrations alinhados aos números efetivamente registrados no Supabase remoto (não reaplicar em produção).
 - A contratação e o webhook Mercado Pago seguem sem transação real de homologação; não afirmar que houve pagamento ou ativação reais.
+
+- Auditoria de sincronização: contratos apenas pendentes e cancelados antes de qualquer vigência são ignorados sem serem reportados como erro. O teste ativo de outro restaurante continua sincronizando sem alerta indevido.
+- Há uma contratação pendente com checkout Mercado Pago iniciado no projeto comercial. Não cancelar nem converter automaticamente sem reconciliar o contrato no provedor; essa pendência conserva o endereço reservado.

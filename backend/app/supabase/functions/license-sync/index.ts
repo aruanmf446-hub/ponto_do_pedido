@@ -72,8 +72,10 @@ Deno.serve(async (req) => {
   const results: { slug: string; tenant_id?: string; error?: string }[] = [];
 
   for (const s of subscriptions) {
-    if (s.status === 'pending_payment') {
-      results.push({ slug: s.restaurant_slug, error: 'Aguardando ativação da assinatura.' });
+    if (s.status === 'pending_payment' || (s.status === 'cancelled' && s.current_period_end === null)) {
+      // Assinaturas que nunca concederam acesso não precisam de tenant operacional.
+      // A pendência já aparece no Portal; não é erro de sincronização de outras licenças.
+      results.push({ slug: s.restaurant_slug });
       continue;
     }
     const { data, error } = await adminRpc<string>('admin_sync_license', {

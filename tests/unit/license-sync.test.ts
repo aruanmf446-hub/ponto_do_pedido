@@ -71,6 +71,18 @@ describe('license-sync: fronteiras de confiança e falhas do billing', () => {
     s.fetch.mockResolvedValue(Response.json({ subscriptions: [{ status: 'pending_payment', restaurant_slug: 'pending' }] }));
     expect((await s.call()).status).toBe(200);
     expect(s.rpc).not.toHaveBeenCalled();
+    expect(await (await s.call()).json()).toEqual({ results: [{ slug: 'pending' }] });
+  });
+
+  it('não cria restaurante após cancelar contratação nunca paga', async () => {
+    const s = setup();
+    s.fetch.mockResolvedValue(Response.json({
+      subscriptions: [{ status: 'cancelled', restaurant_slug: 'cancelled', current_period_end: null }],
+    }));
+    const response = await s.call();
+    expect(response.status).toBe(200);
+    expect(s.rpc).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ results: [{ slug: 'cancelled' }] });
   });
 
   it.each(['active', 'suspended', 'cancelled'])('usa identidade validada e dados oficiais para %s', async (status) => {
@@ -85,7 +97,7 @@ describe('license-sync: fronteiras de confiança e falhas do billing', () => {
             status,
             restaurant_slug: 'restaurant-a',
             restaurant_name: 'A',
-            current_period_end: null,
+            current_period_end: '2026-11-01T00:00:00Z',
           },
         ],
       }),
