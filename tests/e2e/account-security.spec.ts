@@ -86,6 +86,8 @@ for (const width of [390, 1440]) {
       await page.locator('input[name=confirmation]').fill('does-not-match');
       await page.locator('button[type=submit]').click();
       await expect(page.locator('.pl-error[role=alert]')).toContainText('não coincidem');
+      // React limpa campos não controlados após a Server Action, inclusive erro de validação.
+      await page.locator('input[name=password]').fill(password);
       await page.locator('input[name=confirmation]').fill(password);
       await page.locator('button[type=submit]').click();
       await expect(page.getByRole('status')).toContainText('Senha alterada com sucesso');
