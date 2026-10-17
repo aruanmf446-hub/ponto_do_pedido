@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { billingCall, syncLicenses, type BillingOverview } from '@/core/billing';
+import { billingCall, checkoutAvailable, syncLicenses, type BillingOverview } from '@/core/billing';
 import { failure, ok, type ActionFail, type ActionResult } from '@/core/errors';
 import { rpc } from '@/core/rpc';
 import { createServerSupabase } from '@/core/supabase/server';
@@ -98,7 +98,8 @@ export async function subscribe(_prev: ActionFail | null, form: FormData): Promi
     key: form.get('key'),
   });
   if (!parsed.success) return failure('INVALID', parsed.error.issues[0]?.message ?? 'Dados inválidos.');
-  const result = await billingCall<{ subscription_id: string; status: string }>('subscribe', {
+  const trial = form.get('mode') === 'trial';
+  const result = await billingCall<{ subscription_id: string; status: string }>(trial ? 'start_trial' : 'subscribe', {
     plan_code: parsed.data.plan,
     restaurant_name: parsed.data.restaurant,
     restaurant_slug: parsed.data.slug,
@@ -106,6 +107,19 @@ export async function subscribe(_prev: ActionFail | null, form: FormData): Promi
     idempotency_key: parsed.data.key,
   });
   if (!result.ok) return result;
+  // Teste grátis: licença real com fim fixado pelo servidor, sem cobrança.
+  if (trial && result.data.status !== 'trialing') {
+    return failure('TRIAL_UNAVAILABLE', 'O teste não pôde ser ativado. Consulte o Portal do Assinante.');
+  }
+  if (trial) {
+    const sync = await syncLicenses();
+    if (!sync.ok) return sync;
+    const provisioned = sync.data.results.find((r) => r.slug === parsed.data.slug);
+    if (!provisioned?.tenant_id || provisioned.error) {
+      return failure('SYNC_ERROR', provisioned?.error ?? 'A licença não foi sincronizada. Abra o Portal para tentar novamente.');
+    }
+    redirect(`/portal/boas-vindas?r=${parsed.data.slug}`);
+  }
   // Uma contratação pendente já foi registrada no billing: não trate a falta
   // de licença ativa como falha nem refaça a assinatura na tentativa seguinte.
   if (result.data.status === 'pending_payment') {
@@ -167,4 +181,9 @@ export async function markOnboarding(tenantId: string, step: string, status: 'do
 
 export async function finishOnboarding(tenantId: string) {
   return rpc<null>('onboarding_finish', { p_tenant: tenantId });
+}
+
+/** Consulta assíncrona: o checkout não pode atrasar o formulário de teste grátis. */
+export async function checkCheckoutStatus(): Promise<boolean> {
+  return checkoutAvailable();
 }
