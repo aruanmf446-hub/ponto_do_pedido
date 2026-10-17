@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { APP_LABELS, type AppModule } from '@/core/apps';
-import type { Plan, Subscription } from '@/core/plans';
+import type { Subscription } from '@/core/plans';
 import { planPriceLabel } from '@/core/plans';
 import { formatDate } from '@/core/dates';
 import { formatCents } from '@/core/money';
@@ -26,7 +26,6 @@ export function SubscriptionCard({
   paymentProvider,
 }: {
   sub: Subscription;
-  plans: Plan[];
   onboardingDone: boolean;
   paymentProvider?: string | null;
 }) {
