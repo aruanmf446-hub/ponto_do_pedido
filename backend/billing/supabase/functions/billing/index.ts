@@ -86,7 +86,22 @@ async function resolveProduct(id: string): Promise<Product | null> {
   if (!result.error) {
     const product = result.data;
     if (!product || product.id !== id || !/^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(product.auth_url)) return null;
-    // Em produção, o Auth vem somente do registro do produto (nunca de override legado).
+    // Nas stacks de teste LOCAL, o Auth é da instância local, não do projeto
+    // de produção registrado no catálogo. Jamais aceita esse override em HTTPS.
+    // O hostname é controlado pelo runtime Docker e NÃO vem da requisição.
+    const localIdentity = Deno.env.get('PDP_IDENTITY_URL');
+    const localKey = Deno.env.get('PDP_IDENTITY_PUBLISHABLE_KEY');
+    const billingHost = new URL(SUPABASE_URL);
+    if (
+      id === LEGACY_PRODUCT &&
+      billingHost.protocol === 'http:' &&
+      ['kong', 'supabase_kong_assinaturas', '127.0.0.1'].includes(billingHost.hostname) &&
+      localIdentity === 'http://supabase_kong_pontodopedido:8000' &&
+      localKey
+    ) {
+      return { ...product, auth_url: localIdentity, auth_publishable_key: localKey };
+    }
+    // Em produção, o Auth vem somente do registro do produto.
     return product;
   }
   // Compatibilidade estrita com o banco legado. Falha de rede/JSON nunca vira fallback.

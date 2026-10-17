@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Cria um restaurante de demonstração nos Supabase LOCAIS seguindo o fluxo real:
-// cadastro do titular → contratação (assinaturas) → sincronização da licença →
+// cadastro do titular → assinatura fixture LOCAL → sincronização da licença →
 // cadastros via RPC → equipe via Edge Function `team`.
 // Uso: node scripts/seed-local.mjs [slug] [--e2e]
 // --e2e: dispensa a troca de senha do primeiro acesso (apenas no banco LOCAL de testes).
 import { confirmLocalPayment } from './confirm-local-payment.mjs';
 import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -66,14 +67,25 @@ if (!token && signUp.user?.id) {
 }
 if (!token) throw new Error('Cadastro local sem sessão.');
 
-const subscribed = await call(`${BILLING}/functions/v1/billing`, token, {
-  action: 'subscribe',
-  plan_code: 'diamond',
-  restaurant_name: 'Bistrô Aurora',
-  restaurant_slug: slug,
-  accept_terms: true,
-  idempotency_key: slug,
-}, BILLING_KEY);
+// Dados de integração de testes são inseridos no banco LOCAL, sem criar um
+// checkout externo. A validação Auth do gateway comercial é de produção.
+const localBillingDsn = process.env.SEED_BILLING_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:55322/postgres';
+const dbAddress = new URL(localBillingDsn);
+if (!['127.0.0.1', 'localhost', '[::1]'].includes(dbAddress.hostname) || dbAddress.port !== '55322') {
+  throw new Error('Seed comercial restrito ao banco local da porta 55322.');
+}
+const localBillingDb = new pg.Client({ connectionString: localBillingDsn });
+await localBillingDb.connect();
+let subscribed;
+try {
+  const { rows } = await localBillingDb.query(
+    `select public.billing_subscribe($1,$2,$3,$4,$5,$6,$7,$8) as result`,
+    [signUp.user.id, ownerEmail, 'Helena Prado', 'diamond', 'Bistrô Aurora', slug, 'seed-local', slug],
+  );
+  subscribed = rows[0]?.result;
+} finally {
+  await localBillingDb.end();
+}
 if (subscribed.status !== 'pending_payment') throw new Error('Contratação local deveria aguardar pagamento.');
 await confirmLocalPayment(subscribed.subscription_id, APP, BILLING);
 const sync = await call(`${APP}/functions/v1/license-sync`, token, {}, APP_KEY);
@@ -173,7 +185,6 @@ for (const [key, name, app, roleNames] of staff) {
   accounts[key] = email;
 }
 if (e2e) {
-  const { default: pg } = await import('pg');
   const db = new pg.Client({ connectionString: process.env.SEED_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' });
   await db.connect();
   await db.query('update public.memberships set must_change_password = false where tenant_id = $1', [tenant]);

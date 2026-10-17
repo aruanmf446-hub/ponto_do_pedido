@@ -34,8 +34,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - name: Build de produção (next build)
-        run: npm run build
+      - name: Build de validação (Webpack, compatível com fontes do Next 16)
+        run: npm run build -- --webpack
 
   database-e2e:
     name: Banco (RLS, permissões, fluxos) e E2E
@@ -68,7 +68,7 @@ jobs:
         run: npm run test:db
       - name: Restaurante de demonstração
         run: node scripts/seed-local.mjs aurora --e2e
-      - run: npm run build
+      - run: npm run build -- --webpack
       - run: npx playwright install --with-deps chromium
       - name: E2E de recuperação e confirmação dupla
         env:

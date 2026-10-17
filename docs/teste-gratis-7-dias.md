@@ -22,3 +22,7 @@
 
 - Auditoria de sincronização: contratos apenas pendentes e cancelados antes de qualquer vigência são ignorados sem serem reportados como erro. O teste ativo de outro restaurante continua sincronizando sem alerta indevido.
 - Há uma contratação pendente com checkout Mercado Pago iniciado no projeto comercial. Não cancelar nem converter automaticamente sem reconciliar o contrato no provedor; essa pendência conserva o endereço reservado.
+
+- O CI usa Webpack apenas para compilar nas máquinas GitHub Actions: o build de produção na Vercel mantém seu processo habitual.
+- A fixture local de pagamento cria assinatura via RPC no banco PostgreSQL local, sem conta ou cobrança no Mercado Pago. A licença ainda é sincronizada via Edge Function e usuário real do Auth local.
+- No billing, a resolução do Auth local é permitida somente para URLs internas Docker em HTTP e configuração de teste explícita; produção HTTPS usa exclusivamente o Auth cadastrado.
