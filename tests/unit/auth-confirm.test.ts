@@ -2,9 +2,12 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { safeAuthNext } from '@/core/auth/redirect';
 
+vi.mock('server-only', () => ({}));
+vi.mock('@/core/auth/recovery', () => ({ recoveryUser: vi.fn() }));
 vi.mock('@/core/supabase/server', () => ({ createServerSupabase: vi.fn() }));
 import { createServerSupabase } from '@/core/supabase/server';
-import { confirmEmail } from '@/core/auth/confirm';
+import { recoveryUser } from '@/core/auth/recovery';
+import { confirmEmail, confirmRecovery } from '@/core/auth/confirm';
 
 const exchange = vi.fn();
 const verify = vi.fn();
@@ -58,4 +61,28 @@ it('hash inválido não autoriza o Portal', async () => {
     new NextRequest('https://pontodopedido.vercel.app/auth/confirm?token_hash=invalid&type=email&next=//evil.invalid'),
   );
   expect(response.headers.get('location')).toBe('https://pontodopedido.vercel.app/?erro=link-invalido');
+});
+
+it('recuperação exige sessão específica e ignora next externo', async () => {
+  verify.mockResolvedValue({ error: null });
+  vi.mocked(recoveryUser).mockResolvedValue({ id: 'owner' } as never);
+  const r = await confirmEmail(
+    new NextRequest('https://pontodopedido.vercel.app/auth/confirm?token_hash=unit&type=recovery&next=https://evil.invalid'),
+  );
+  expect(new URL(r.headers.get('location')!).pathname).toBe('/nova-senha');
+  expect(r.headers.get('cache-control')).toBe('no-store');
+});
+it.each([false, true])('código inválido ou sessão comum não vira recuperação: %s', async (validCode) => {
+  exchange.mockResolvedValue({ error: validCode ? null : { code: 'otp_expired' } });
+  vi.mocked(recoveryUser).mockResolvedValue(null);
+  const r = await confirmRecovery(new NextRequest('https://pontodopedido.vercel.app/auth/recuperar?code=unit&next=/portal'));
+  expect(new URL(r.headers.get('location')!).pathname).toBe('/recuperar-senha');
+  expect(r.headers.get('location')).not.toContain('code=');
+});
+it('confirmação de e-mail usa destino fixo seguro e não declara alteração concluída', async () => {
+  verify.mockResolvedValue({ error: null });
+  const r = await confirmEmail(
+    new NextRequest('https://pontodopedido.vercel.app/auth/confirm?token_hash=unit&type=email_change&next=//evil.invalid'),
+  );
+  expect(r.headers.get('location')).toBe('https://pontodopedido.vercel.app/portal/seguranca?confirmacao=recebida');
 });

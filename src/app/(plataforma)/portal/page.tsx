@@ -61,6 +61,9 @@ export default async function PortalPage() {
           <Link href="/planos" className="pl-btn pl-btn--ghost">
             Contratar para meu restaurante
           </Link>
+          <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">
+            Segurança da conta
+          </Link>
           <form action={signOutPlatform}>
             <button type="submit" className="pl-btn pl-btn--ghost">
               Sair
@@ -85,6 +88,9 @@ export default async function PortalPage() {
         <div className="pl-row">
           <Link href="/contratar" className="pl-btn pl-btn--ghost">
             Novo restaurante
+          </Link>
+          <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">
+            Segurança da conta
           </Link>
           <form action={signOutPlatform}>
             <button type="submit" className="pl-btn pl-btn--ghost">
