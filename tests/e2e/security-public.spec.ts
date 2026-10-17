@@ -9,7 +9,7 @@ for (const width of [390, 1440]) {
     await noHorizontalOverflow(page);
     await page.goto('/auth/recuperar?code=invalid-local-test&next=https://evil.invalid');
     expect(new URL(page.url()).pathname).toBe('/recuperar-senha');
-    await expect(page.getByRole('alert')).toContainText('inválido ou expirou');
+    await expect(page.locator('.pl-error[role=alert]')).toContainText('inválido ou expirou');
     await page.goto('/nova-senha');
     await expect(page.locator('input[name=confirmation]')).toHaveCount(0);
     await page.goto('/portal/seguranca');

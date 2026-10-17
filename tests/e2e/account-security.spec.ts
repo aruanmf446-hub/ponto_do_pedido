@@ -85,7 +85,7 @@ for (const width of [390, 1440]) {
       await page.locator('input[name=password]').fill(password);
       await page.locator('input[name=confirmation]').fill('does-not-match');
       await page.locator('button[type=submit]').click();
-      await expect(page.getByRole('alert')).toContainText('não coincidem');
+      await expect(page.locator('.pl-error[role=alert]')).toContainText('não coincidem');
       await page.locator('input[name=confirmation]').fill(password);
       await page.locator('button[type=submit]').click();
       await expect(page.getByRole('status')).toContainText('Senha alterada com sucesso');
