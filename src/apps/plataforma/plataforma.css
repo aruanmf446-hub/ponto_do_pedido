@@ -2417,7 +2417,7 @@
 .pl-account-state-steps li > span {
   flex: none;
   color: var(--pl-account-orange);
-  font-family: var(--pl-editorial), Georgia, serif;
+  font-family: var(--pl-serif), Georgia, serif;
   font-size: 1.35rem;
 }
 .pl-account-state-steps strong,
