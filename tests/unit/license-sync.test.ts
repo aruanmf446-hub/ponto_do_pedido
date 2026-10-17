@@ -69,9 +69,10 @@ describe('license-sync: fronteiras de confiança e falhas do billing', () => {
   it('não libera assinatura pendente', async () => {
     const s = setup();
     s.fetch.mockResolvedValue(Response.json({ subscriptions: [{ status: 'pending_payment', restaurant_slug: 'pending' }] }));
-    expect((await s.call()).status).toBe(200);
+    const response = await s.call();
+    expect(response.status).toBe(200);
     expect(s.rpc).not.toHaveBeenCalled();
-    expect(await (await s.call()).json()).toEqual({ results: [{ slug: 'pending' }] });
+    expect(await response.json()).toEqual({ results: [{ slug: 'pending' }] });
   });
 
   it('não cria restaurante após cancelar contratação nunca paga', async () => {
