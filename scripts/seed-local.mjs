@@ -30,7 +30,6 @@ function localPublishableKey(project) {
   return key;
 }
 const APP_KEY = process.env.SEED_APP_PUBLISHABLE_KEY ?? localPublishableKey('app');
-const BILLING_KEY = process.env.SEED_BILLING_PUBLISHABLE_KEY ?? localPublishableKey('billing');
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const e2e = process.argv.includes('--e2e');
 const slug = args[0] ?? `aurora${Date.now().toString(36).slice(-5)}`;
