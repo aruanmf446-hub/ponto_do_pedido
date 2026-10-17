@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import type { Plan } from '@/core/plans';
 import { tenantDisplayUrl } from '@/core/tenant/urls';
-import { checkSlug, subscribe } from '@/apps/plataforma/actions';
+import { checkCheckoutStatus, checkSlug, subscribe } from '@/apps/plataforma/actions';
 
 function toSlug(name: string): string {
   return name
@@ -26,6 +26,7 @@ export function SubscribeForm({
   checkoutAvailable: boolean;
 }) {
   const [error, action, pending] = useActionState(subscribe, null);
+  const [online, setOnline] = useState(checkoutAvailable);
   const [restaurant, setRestaurant] = useState('');
   const [slug, setSlug] = useState('');
   const [touched, setTouched] = useState(false);
@@ -45,6 +46,12 @@ export function SubscribeForm({
       clearTimeout(t);
     };
   }, [effectiveSlug]);
+
+  useEffect(() => {
+    let mounted = true;
+    checkCheckoutStatus().then((ready) => { if (mounted) setOnline(ready); }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   const status = effectiveSlug.length < 3 || available?.slug !== effectiveSlug ? null : available.value;
 
@@ -99,13 +106,19 @@ export function SubscribeForm({
         </p>
       ) : null}
       <p className="pl-muted" role="status">
-        {checkoutAvailable
-          ? 'O restaurante e os aplicativos serão liberados somente após a confirmação do pagamento.'
-          : 'Novas contratações estão temporariamente indisponíveis. Nenhum pagamento será solicitado agora.'}
+        Seu teste de 7 dias começa no cadastro do restaurante. Não pedimos cartão, não há cobrança automática
+        e cada titular pode experimentar uma vez. Depois, contrate um plano para continuar usando.
       </p>
-      <button type="submit" className="pl-btn" disabled={!checkoutAvailable || pending || status === false}>
-        {pending ? 'Registrando…' : checkoutAvailable ? 'Continuar para pagamento' : 'Contratação indisponível'}
-      </button>
+      <div className="pl-row" style={{ gap: 10, alignItems: 'stretch' }}>
+        <button type="submit" name="mode" value="trial" className="pl-btn" disabled={pending || status === false}>
+          {pending ? 'Preparando seu acesso…' : 'Começar 7 dias grátis'}
+        </button>
+        <button type="submit" name="mode" value="paid" className="pl-btn pl-btn--ghost"
+          disabled={!online || pending || status === false}>
+          Contratar agora
+        </button>
+      </div>
+      {!online && <small className="pl-muted">Pagamento online em verificação. O teste grátis está disponível sem cobrança.</small>}
     </form>
   );
 }
