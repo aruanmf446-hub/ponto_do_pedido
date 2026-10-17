@@ -13,6 +13,7 @@ import { startPayment, subscriptionAction } from '@/apps/plataforma/actions';
 
 const STATUS: Record<Subscription['status'], { label: string; tone: string }> = {
   active: { label: 'Ativa', tone: 'ok' },
+  trialing: { label: 'Teste grátis', tone: 'ok' },
   pending_payment: { label: 'Aguardando pagamento', tone: 'warn' },
   past_due: { label: 'Pagamento pendente', tone: 'warn' },
   suspended: { label: 'Suspensa', tone: 'danger' },
@@ -33,11 +34,13 @@ export function SubscriptionCard({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<'cancel' | null>(null);
-  const status = STATUS[sub.status];
-  const operational = sub.status === 'active' || sub.status === 'past_due';
+  const status = sub.status === 'suspended' && sub.trial_ends_at
+    ? { label: 'Teste encerrado', tone: 'warn' }
+    : STATUS[sub.status];
+  const operational = sub.status === 'active' || sub.status === 'past_due' || sub.status === 'trialing';
 
   const online = paymentProvider === 'mercadopago';
-  const awaitingPayment = online && (sub.status === 'pending_payment' || sub.status === 'past_due');
+  const awaitingPayment = online && (sub.status === 'pending_payment' || sub.status === 'past_due' || sub.status === 'trialing' || (sub.status === 'suspended' && !!sub.trial_ends_at));
 
   const pay = () =>
     start(async () => {
@@ -74,11 +77,11 @@ export function SubscriptionCard({
         </div>
         <div>
           <dt>Valor</dt>
-          <dd>{planPriceLabel(sub)}</dd>
+          <dd>{sub.status === 'trialing' ? `Grátis por 7 dias · depois ${planPriceLabel(sub)}` : planPriceLabel(sub)}</dd>
         </div>
         <div>
-          <dt>Vigência até</dt>
-          <dd>{formatDate(sub.current_period_end)}</dd>
+          <dt>{sub.trial_ends_at && (sub.status === 'trialing' || sub.status === 'suspended') ? 'Fim do teste grátis' : 'Vigência até'}</dt>
+          <dd>{formatDate(sub.trial_ends_at && (sub.status === 'trialing' || sub.status === 'suspended') ? sub.trial_ends_at : sub.current_period_end)}</dd>
         </div>
         <div>
           <dt>Contratado em</dt>
@@ -101,6 +104,9 @@ export function SubscriptionCard({
         </p>
         <p className="pl-url">{tenantDisplayUrl(sub.restaurant_slug)}</p>
       </div>
+      {sub.status === 'trialing' ? (
+        <p className="pl-muted">Seu período grátis termina automaticamente na data indicada, sem cobrança automática.</p>
+      ) : null}
       {sub.status === 'pending_payment' ? (
         <p className="pl-muted">
           Acesso aguardando confirmação do pagamento.{!online ? ' Pagamento online indisponível no momento.' : ''}
@@ -119,15 +125,15 @@ export function SubscriptionCard({
         ) : null}
         {awaitingPayment ? (
           <button type="button" className="pl-btn" disabled={pending} onClick={pay}>
-            Pagar agora
+            {sub.status === 'trialing' ? 'Assinar antes do fim do teste' : sub.trial_ends_at ? 'Contratar para continuar' : 'Pagar agora'}
           </button>
         ) : null}
-        {operational ? (
+        {operational && sub.status !== 'trialing' ? (
           <p className="pl-muted">
             Renovação e alteração de plano dependem de pagamento confirmado e estão indisponíveis neste momento.
           </p>
         ) : null}
-        {operational && !sub.cancel_at_period_end ? (
+        {operational && sub.status !== 'trialing' && !sub.cancel_at_period_end ? (
           <button type="button" className="pl-btn pl-btn--danger" disabled={pending} onClick={() => setDialog('cancel')}>
             Cancelar assinatura
           </button>
