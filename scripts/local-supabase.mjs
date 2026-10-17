@@ -14,7 +14,7 @@ const projects = {
   app: { dir: join(root, 'backend/app'), id: 'pontodopedido' },
   billing: { dir: join(root, 'backend/billing'), id: 'assinaturas' },
 };
-const exclude = 'studio,logflare,vector,imgproxy,mailpit,supavisor';
+const exclude = 'studio,logflare,vector,imgproxy,supavisor';
 const env = { ...process.env, SUPABASE_INTERNAL_IMAGE_REGISTRY: process.env.SUPABASE_INTERNAL_IMAGE_REGISTRY ?? 'docker.io' };
 
 function sb(project, args, opts = {}) {
@@ -55,7 +55,7 @@ if (command === 'start') {
   // Primeira inicialização: a CLI gera as chaves reais de cada instância.
   // Em seguida, configura a comunicação cruzada e reinicia os runtimes
   // somente se as variáveis das funções foram alteradas.
-  for (const p of Object.values(projects)) sb(p, ['start', '-x', p.id === 'pontodopedido' ? exclude : `${exclude},realtime,storage-api`]);
+  for (const p of Object.values(projects)) sb(p, ['start', '-x', p.id === 'pontodopedido' ? exclude : `${exclude},mailpit,realtime,storage-api`]);
   const appLocal = status(projects.app);
   const billingLocal = status(projects.billing);
   const appKey = appLocal.PUBLISHABLE_KEY ?? appLocal.ANON_KEY;
@@ -78,7 +78,7 @@ if (command === 'start') {
     // Stop/start preserva os volumes locais; nunca usar db reset aqui.
     for (const p of Object.values(projects)) sb(p, ['stop']);
     sb(projects.app, ['start', '-x', exclude]);
-    sb(projects.billing, ['start', '-x', `${exclude},realtime,storage-api`]);
+    sb(projects.billing, ['start', '-x', `${exclude},mailpit,realtime,storage-api`]);
   }
   connect('supabase_network_assinaturas', 'supabase_kong_pontodopedido');
   connect('supabase_network_pontodopedido', 'supabase_kong_assinaturas');
