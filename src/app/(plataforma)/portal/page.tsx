@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { signOutPlatform } from '@/apps/plataforma/actions';
 import { SubscriptionCard } from '@/apps/plataforma/Portal';
-import { billingCall, fetchPlans, syncLicenses, type BillingOverview } from '@/core/billing';
+import { billingCall, checkoutAvailable, fetchPlans, syncLicenses, type BillingOverview } from '@/core/billing';
 import { rpcRead } from '@/core/rpc';
 import { getCurrentUser } from '@/core/supabase/server';
 import { tenantDisplayUrl, tenantUrl } from '@/core/tenant/urls';
@@ -28,49 +28,108 @@ export default async function PortalPage() {
   // Mantém licenças do projeto operacional alinhadas com a origem comercial
   const sync = subscriptions.length > 0 ? await syncLicenses() : null;
   const syncError = sync && (!sync.ok ? sync.message : sync.data.results.find((result) => result.error)?.error);
-  const [plans, tenants] = await Promise.all([fetchPlans(), rpcRead<MyTenant[]>('my_tenants', {})]);
+  const [plans, tenants, canContract] = await Promise.all([
+    fetchPlans(),
+    rpcRead<MyTenant[]>('my_tenants', {}),
+    subscriptions.length === 0 && overview.ok ? checkoutAvailable() : Promise.resolve(false),
+  ]);
   const isHolder = subscriptions.length > 0;
 
-  if (!isHolder) {
-    // Não titular: acesso restrito ao portal, apenas atalhos para os restaurantes
+  if (!overview.ok) {
     return (
-      <div className="pl-narrow">
-        <p className="pl-eyebrow">Portal do Assinante</p>
-        <h1 style={{ fontSize: '2rem' }}>Acesso restrito</h1>
-        <p className="pl-muted">
-          O Portal do Assinante é exclusivo do titular da assinatura. Para operar, entre pelo endereço do seu restaurante.
-        </p>
-        {!overview.ok ? <p className="pl-error">{overview.message}</p> : null}
-        <ul className="pl-steps" style={{ marginTop: 24 }}>
-          {tenants.map((t) => (
-            <li key={t.id}>
-              <span className="pl-step-dot" aria-hidden="true">
-                →
-              </span>
-              <div>
-                <strong>{t.name}</strong>
-                <small>{tenantDisplayUrl(t.slug)}</small>
-              </div>
-              <a className="pl-btn pl-btn--small" href={tenantUrl(t.slug)}>
-                Entrar
-              </a>
-            </li>
-          ))}
-        </ul>
-        <div className="pl-row" style={{ marginTop: 24 }}>
-          <Link href="/planos" className="pl-btn pl-btn--ghost">
-            Contratar para meu restaurante
-          </Link>
-          <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">
-            Segurança da conta
-          </Link>
-          <form action={signOutPlatform}>
-            <button type="submit" className="pl-btn pl-btn--ghost">
-              Sair
-            </button>
-          </form>
+      <section className="pl-account-state" aria-labelledby="portal-error-heading">
+        <div className="pl-account-state-main">
+          <p className="pl-eyebrow">Portal do Assinante · Conectado</p>
+          <h1 id="portal-error-heading">Não conseguimos consultar suas assinaturas<span>.</span></h1>
+          <p className="pl-account-state-lead">
+            Sua sessão está ativa, mas o serviço de assinaturas não respondeu corretamente.
+            Nenhum dado foi alterado.
+          </p>
+          <p className="pl-error" role="alert">{overview.message}</p>
+          <div className="pl-account-state-actions">
+            <a href="/portal" className="pl-btn">Tentar novamente <span aria-hidden="true">↗</span></a>
+            <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">Segurança da conta</Link>
+          </div>
         </div>
-      </div>
+        <div className="pl-account-state-side">
+          <span className="pl-account-state-index">PORTAL / 01</span>
+          <p>Não é necessário criar outra conta para tentar novamente.</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (!isHolder && tenants.length === 0) {
+    return (
+      <section className="pl-account-state" aria-labelledby="primeiro-acesso-heading">
+        <div className="pl-account-state-main">
+          <p className="pl-eyebrow">Portal do Assinante · Primeiro acesso</p>
+          <span className="pl-account-state-status"><span aria-hidden="true" /> Conta conectada</span>
+          <h1 id="primeiro-acesso-heading">Sua conta está pronta.<br />Falta o restaurante<span>.</span></h1>
+          <p className="pl-account-state-lead">
+            Você já tem acesso ao Ponto do Pedido. Para começar, escolha o plano e cadastre o seu restaurante.
+            Não é preciso criar outro usuário.
+          </p>
+          {!canContract && (
+            <p className="pl-account-state-notice" role="status">
+              <strong>Novas contratações temporariamente indisponíveis.</strong>
+              A ativação depende da configuração do pagamento. Sua conta continua válida.
+            </p>
+          )}
+          <div className="pl-account-state-actions">
+            {canContract ? (
+              <Link href="/contratar" className="pl-btn">Cadastrar meu restaurante <span aria-hidden="true">↗</span></Link>
+            ) : (
+              <Link href="/planos" className="pl-btn">Conhecer os planos <span aria-hidden="true">↗</span></Link>
+            )}
+            <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">Segurança da conta</Link>
+          </div>
+        </div>
+        <div className="pl-account-state-side">
+          <span className="pl-account-state-index">COMECE POR AQUI / 01—03</span>
+          <ol className="pl-account-state-steps">
+            <li><span>01</span><div><strong>Escolha o plano</strong><small>START, PLUS ou DIAMOND, conforme a operação.</small></div></li>
+            <li><span>02</span><div><strong>Cadastre o restaurante</strong><small>Nome e endereço exclusivo da sua equipe.</small></div></li>
+            <li><span>03</span><div><strong>Ative e configure</strong><small>Após o pagamento confirmado, organize cardápio e acessos.</small></div></li>
+          </ol>
+          <div className="pl-account-state-signature" aria-hidden="true">
+            <span className="pl-account-state-mark">P<span>•</span></span>
+            <span>Seu próximo pedido começa aqui.</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!isHolder) {
+    return (
+      <section className="pl-account-state" aria-labelledby="acesso-equipe-heading">
+        <div className="pl-account-state-main">
+          <p className="pl-eyebrow">Ponto do Pedido · Acesso da equipe</p>
+          <h1 id="acesso-equipe-heading">Seu restaurante está a um clique<span>.</span></h1>
+          <p className="pl-account-state-lead">
+            Você tem acesso operacional aos estabelecimentos abaixo. Assinaturas e pagamentos são
+            administrados exclusivamente pelo titular.
+          </p>
+          <div className="pl-account-state-actions">
+            <Link href="/portal/seguranca" className="pl-btn pl-btn--ghost">Segurança da conta</Link>
+            <form action={signOutPlatform}>
+              <button type="submit" className="pl-btn pl-btn--ghost">Sair da conta</button>
+            </form>
+          </div>
+        </div>
+        <div className="pl-account-state-side">
+          <p className="pl-eyebrow">Seus acessos</p>
+          <ul className="pl-account-restaurants">
+            {tenants.map((t) => (
+              <li key={t.id}>
+                <div><strong>{t.name}</strong><small>{tenantDisplayUrl(t.slug)}</small></div>
+                <a href={tenantUrl(t.slug)} className="pl-btn pl-btn--small">Abrir <span aria-hidden="true">↗</span></a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
     );
   }
 
