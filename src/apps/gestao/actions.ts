@@ -238,7 +238,7 @@ export async function revokePermission(tenantId: string, grantId: string) {
 export async function createMember(
   tenantId: string,
   input: { email: string; full_name: string; job_title: string; primary_app: string; role_ids: string[]; temporary_password: string },
-): Promise<ActionResult<{ created_account: boolean }>> {
+): Promise<ActionResult<{ created_account: boolean; email_sent: boolean }>> {
   const token = await getAccessToken();
   if (!token) return failure('AUTH_REQUIRED', 'Sessão expirada. Entre novamente.');
   try {
@@ -250,7 +250,7 @@ export async function createMember(
     });
     const body = await res.json().catch(() => null);
     if (!res.ok || body?.error) return failure(body?.error?.code ?? 'ERROR', body?.error?.message ?? 'Não foi possível cadastrar.');
-    return ok({ created_account: !!body.created_account });
+    return ok({ created_account: !!body.created_account, email_sent: !!body.email_sent });
   } catch {
     return failure('UNAVAILABLE', 'Serviço de cadastro indisponível. Tente novamente.');
   }
