@@ -10,6 +10,7 @@ import { usePermission, useTenant } from '@/core/ui/TenantProvider';
 import { useAction } from '@/core/ui/useAction';
 import { createMember, grantPermission, revokePermission, setMemberRoles, updateMember } from '@/apps/gestao/actions';
 import type { Grant, Member, Permission, Role } from '@/apps/gestao/queries';
+import { ShareAccess } from '@/apps/gestao/pages/ShareAccess';
 import { Badge, MODULE_LABEL, PageHead } from '@/apps/gestao/ui';
 
 const STATUS = { active: ['Ativo', 'ok'], suspended: ['Suspenso', 'warn'], revoked: ['Desligado', 'danger'] } as const;
@@ -44,7 +45,7 @@ export function TeamPage({
     <>
       <PageHead
         title="Equipe"
-        subtitle={`Colaboradores, gestores e responsáveis. Cada pessoa entra por ${rootUrl}.`}
+        subtitle="Colaboradores, gestores e responsáveis. Gerencie os acessos do restaurante."
         actions={
           canCreate ? (
             <button type="button" className="gs-btn gs-btn--primary" onClick={() => setAdding(true)}>
@@ -69,7 +70,7 @@ export function TeamPage({
             {members.map((m) => (
               <tr key={m.id}>
                 <td>
-                  <strong>{m.display_name}</strong>
+                  <strong>{m.display_name}</strong> {!m.is_owner ? <ShareAccess url={rootUrl} name={m.display_name} compact /> : null}
                   {m.is_owner ? (
                     <>
                       {' '}
@@ -143,9 +144,10 @@ function AddMember({ roles, onClose, tenantId }: { roles: Role[]; onClose: () =>
               {
                 onSuccess: (r) =>
                   setDone(
-                    r.created_account
-                      ? 'Acesso criado. Informe a senha temporária ao colaborador: ele definirá uma senha pessoal no primeiro login.'
-                      : 'Este e-mail já tinha conta no Ponto do Pedido: o colaborador foi vinculado e usa a senha que já possui.',
+                    (r.created_account
+                      ? 'Acesso criado. Informe a senha temporária separadamente: ele definirá uma senha pessoal no primeiro login.'
+                      : 'Conta existente vinculada: o colaborador usa sua senha atual.') +
+                    (r.email_sent ? ' E-mail de boas-vindas enviado.' : ' E-mail não enviado; compartilhe o link manualmente.'),
                   ),
               },
             );
