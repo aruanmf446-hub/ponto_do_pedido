@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ShareAccess } from '@/apps/gestao/pages/ShareAccess';
 import type { VisualModel } from '@/core/apps';
 import { config } from '@/core/config';
 import { addDays, formatDate } from '@/core/dates';
@@ -108,7 +107,6 @@ export function Dashboard({
   base,
   preset,
   model,
-  rootUrl,
 }: {
   ctx: TenantContext;
   kpis: Kpis;
@@ -116,7 +114,6 @@ export function Dashboard({
   base: string;
   preset: string;
   model: VisualModel;
-  rootUrl: string;
 }) {
   const p = kpis.pending;
   const firstName = ctx.membership.display_name.split(' ')[0];
@@ -152,7 +149,9 @@ export function Dashboard({
       </a>
     </div>
   ) : null;
-  const share = ctx.membership.is_owner ? <ShareAccess url={rootUrl} label="Acessar sistema" primary /> : null;
+  const access = ctx.permissions['atendimento.acessar'] === 'direct' && ctx.modules.includes('atendimento') ? (
+    <Link className="gs-btn gs-btn--primary" href={`${base}/atendimento`}><Icon name="service" size={16} /> Iniciar atendimento</Link>
+  ) : null;
   const period = <PeriodFilter base={base} path="/gestao" current={preset} from={kpis.period.from} to={kpis.period.to} />;
 
   const stats = (
@@ -377,7 +376,7 @@ export function Dashboard({
     return (
       <>
         {banner}
-        <PageHead title="Painel de Gestão" subtitle={`Dia operacional ${formatDate(kpis.today)} · ${periodText}`} actions={<div className="gs-row">{period}{share}</div>} />
+        <PageHead title="Painel de Gestão" subtitle={`Dia operacional ${formatDate(kpis.today)} · ${periodText}`} actions={<div className="gs-row">{period}{access}</div>} />
         {stats}
         <div className="gs-grid gs-grid--suite">
           {revenueCard}
@@ -420,7 +419,7 @@ export function Dashboard({
     return (
       <>
         {banner}
-        <PageHead title="Painel de Gestão" subtitle={`Visão operacional em tempo real · ${periodText}`} actions={<div className="gs-row">{period}{share}</div>} />
+        <PageHead title="Painel de Gestão" subtitle={`Visão operacional em tempo real · ${periodText}`} actions={<div className="gs-row">{period}{access}</div>} />
         <section className="gs-grid gs-grid--stats" aria-label="Situação">
           <Stat icon="crown" tone="warn" label="Plano" value={plan} hint={`Licença ${license}`} />
           <Stat icon="users" tone="info" label="Usuários ativos" value={extras.team.total} hint={`${extras.team.byRole.length} funções em uso`} />
@@ -473,7 +472,7 @@ export function Dashboard({
   return (
     <>
       {banner}
-      <PageHead title="Gestão" subtitle={`Olá, ${firstName}. Controle tudo o que acontece no seu restaurante em um só lugar.`} actions={<div className="gs-row">{period}{share}</div>} />
+      <PageHead title="Gestão" subtitle={`Olá, ${firstName}. Controle tudo o que acontece no seu restaurante em um só lugar.`} actions={<div className="gs-row">{period}{access}</div>} />
       {stats}
       <div className="gs-grid gs-grid--command">
         {revenueCard}
