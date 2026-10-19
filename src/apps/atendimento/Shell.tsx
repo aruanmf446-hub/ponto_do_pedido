@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import type { InternalApp } from '@/core/apps';
 import type { UiPreference } from '@/core/prefs';
 import { extraAreas, type TenantContext } from '@/core/tenant/context';
@@ -31,6 +32,7 @@ export function AtendimentoShell({
   const nav = <AtendimentoNav base={base} />;
   const tools = (
     <div className="at-tools">
+      {apps.includes('gestao') ? <Link href={`${base}/gestao`} className="at-btn at-btn--small">Ir para Gestão</Link> : null}
       <ModelPicker tenantId={ctx.tenant.id} app="atendimento" current={model} scheme={pref.scheme} options={ATENDIMENTO_MODELS} />
       <AppSwitcher
         base={base}
