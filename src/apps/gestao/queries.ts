@@ -61,8 +61,10 @@ export async function loadTeam(tenantId: string) {
       .is('revoked_at', null),
     supabase.from('permissions').select('code, module, label, action, supports_limit, approvable').order('module').order('code'),
   ]);
+  const { data: emails } = await supabase.rpc('team_member_emails', { p_tenant: tenantId });
+  const byUser = new Map(((emails ?? []) as { user_id: string; email: string }[]).map((item) => [item.user_id, item.email]));
   return {
-    members: (members.data ?? []) as Member[],
+    members: ((members.data ?? []) as Member[]).map((member) => ({ ...member, email: byUser.get(member.user_id) ?? null })),
     roles: (roles.data ?? []) as Role[],
     memberRoles: (memberRoles.data ?? []) as { membership_id: string; role_id: string }[],
     grants: (grants.data ?? []) as Grant[],
@@ -71,6 +73,7 @@ export async function loadTeam(tenantId: string) {
 }
 
 export type Member = {
+  email: string | null;
   id: string;
   user_id: string;
   display_name: string;
