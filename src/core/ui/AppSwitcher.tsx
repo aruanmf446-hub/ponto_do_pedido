@@ -39,7 +39,7 @@ export function AppSwitcher({
         </span>
         <span className="pdp-switcher-who">
           <span className="pdp-switcher-name">{userName}</span>
-          <span className="pdp-switcher-role">{role ? `${role} · ` : ''}<span className="pdp-switcher-change">Trocar função</span></span>
+          {others.length + extras.length > 0 ? <span className="pdp-switcher-role pdp-switcher-change">Trocar função</span> : role ? <span className="pdp-switcher-role">{role}</span> : null}
         </span>
       </summary>
       <div className="pdp-switcher-menu">
