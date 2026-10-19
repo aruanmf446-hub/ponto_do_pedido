@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatCents, parseCents } from '@/core/money';
 import { browserSupabase } from '@/core/supabase/browser';
 import { ProductImage } from '@/core/ui/ProductImage';
@@ -21,6 +22,7 @@ const CHANNELS = [
 export function MenuPage({ categories, products, sectors }: { categories: Category[]; products: Product[]; sectors: { id: string; name: string }[] }) {
   const [editing, setEditing] = useState<Product | 'new' | null>(null);
   const [catEdit, setCatEdit] = useState<Category | 'new' | null>(null);
+  const [organizing, setOrganizing] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const shown = products.filter((p) => filter === 'all' || p.category_id === filter);
 
@@ -31,6 +33,7 @@ export function MenuPage({ categories, products, sectors }: { categories: Catego
         subtitle="Fotos, descrições e preços. Os mesmos registros alimentam Atendimento, Cardápio Digital e Delivery."
         actions={
           <>
+            {categories.length > 1 ? <button type="button" className="gs-btn" onClick={() => setOrganizing(true)}>Organizar categorias</button> : null}
             <button type="button" className="gs-btn" onClick={() => setCatEdit('new')}>
               Nova categoria
             </button>
@@ -89,7 +92,8 @@ export function MenuPage({ categories, products, sectors }: { categories: Catego
           onClose={() => setEditing(null)}
         />
       ) : null}
-      {catEdit ? <CategoryEditor category={catEdit === 'new' ? null : catEdit} onClose={() => setCatEdit(null)} /> : null}
+      {catEdit ? <CategoryEditor category={catEdit === 'new' ? null : catEdit} nextPosition={categories.reduce((max, item) => Math.max(max, item.position), 0) + 1} onClose={() => setCatEdit(null)} /> : null}
+      {organizing ? <CategoryOrder categories={categories} onClose={() => setOrganizing(false)} /> : null}
     </>
   );
 }
@@ -240,7 +244,7 @@ function ProductEditor({
   );
 }
 
-function CategoryEditor({ category, onClose }: { category: Category | null; onClose: () => void }) {
+function CategoryEditor({ category, nextPosition, onClose }: { category: Category | null; nextPosition: number; onClose: () => void }) {
   const { tenantId } = useTenant();
   const action = useAction();
   return (
@@ -254,7 +258,7 @@ function CategoryEditor({ category, onClose }: { category: Category | null; onCl
             id: category?.id ?? null,
             name: String(f.get('name')),
             description: String(f.get('description')),
-            position: Number(f.get('position') || 0),
+            position: category?.position ?? nextPosition,
             active: f.get('active') === 'on',
           };
           void action.run(() => saveCategory(tenantId, input), {
@@ -270,10 +274,6 @@ function CategoryEditor({ category, onClose }: { category: Category | null; onCl
         <label className="gs-field">
           Descrição
           <input name="description" defaultValue={category?.description ?? ''} />
-        </label>
-        <label className="gs-field">
-          Ordem
-          <input name="position" type="number" defaultValue={category?.position ?? 0} />
         </label>
         <label className="gs-check">
           <input type="checkbox" name="active" defaultChecked={category?.active ?? true} /> Ativa
@@ -300,6 +300,74 @@ function CategoryEditor({ category, onClose }: { category: Category | null; onCl
         </div>
       </form>
       <ApprovalDialog tenantId={tenantId} approval={action.approval} onClose={action.clearApproval} />
+    </Dialog>
+  );
+}
+
+/** Organiza categorias por arraste, sem exigir números do restaurante. */
+function CategoryOrder({ categories, onClose }: { categories: Category[]; onClose: () => void }) {
+  const { tenantId } = useTenant();
+  const router = useRouter();
+  const [items, setItems] = useState(() => [...categories]);
+  const [dragged, setDragged] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const move = (from: string, target: string) => setItems((prev) => {
+    const source = prev.findIndex((item) => item.id === from);
+    const destination = prev.findIndex((item) => item.id === target);
+    if (source < 0 || destination < 0 || source === destination) return prev;
+    const next = [...prev];
+    next.splice(destination, 0, ...next.splice(source, 1));
+    return next;
+  });
+  async function save() {
+    setSaving(true);
+    setError('');
+    try {
+      // Reaproveita a RPC existente: mantém todas as validações de permissão.
+      for (let i = 0; i < items.length; i++) {
+        const category = items[i];
+        if (category.position === i + 1) continue;
+        const result = await saveCategory(tenantId, {
+          id: category.id, name: category.name, description: category.description,
+          position: i + 1, active: category.active,
+        });
+        if (!result.ok) throw new Error(result.message);
+      }
+      router.refresh();
+      onClose();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível salvar a ordem.');
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <Dialog open onClose={onClose} title="Organizar categorias">
+      <div className="gs-form">
+        <p className="gs-meta">Arraste as categorias para definir a ordem de exibição no cardápio. No celular, use as setas.</p>
+        <ol style={{ listStyle: 'none', display: 'grid', gap: 8, margin: 0, padding: 0 }}>
+          {items.map((category, index) => (
+            <li key={category.id} draggable={!saving}
+              onDragStart={(event) => { setDragged(category.id); event.dataTransfer.effectAllowed = 'move'; }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => { event.preventDefault(); if (dragged) move(dragged, category.id); setDragged(null); }}
+              onDragEnd={() => setDragged(null)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--gs-line)', background: 'var(--gs-surface-2)', borderRadius: 10, padding: '10px 12px', cursor: 'grab', opacity: dragged === category.id ? 0.6 : 1 }}
+            >
+              <span aria-hidden="true" style={{ color: 'var(--gs-muted)' }}>⠿</span>
+              <strong style={{ flex: 1 }}>{category.name}</strong>
+              <button type="button" className="gs-btn gs-btn--small" aria-label={`Subir ${category.name}`} disabled={saving || index === 0} onClick={() => move(category.id, items[index - 1].id)}>↑</button>
+              <button type="button" className="gs-btn gs-btn--small" aria-label={`Descer ${category.name}`} disabled={saving || index === items.length - 1} onClick={() => move(category.id, items[index + 1].id)}>↓</button>
+            </li>
+          ))}
+        </ol>
+        {error ? <p className="gs-msg gs-msg--error" role="alert">{error}</p> : null}
+        <div className="gs-row">
+          <button type="button" className="gs-btn gs-btn--primary" disabled={saving} onClick={() => void save()}>{saving ? 'Salvando…' : 'Salvar ordem'}</button>
+          <button type="button" className="gs-btn" disabled={saving} onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
     </Dialog>
   );
 }
