@@ -1516,3 +1516,8 @@
     display: none;
   }
 }
+
+/* Rodapé no fim da tela também no modelo de atendimento com cabeçalho horizontal. */
+.at { display: flex; flex-direction: column; }
+.at > .at-head + .at-main { flex: 1 0 auto; }
+.at > .at-footer { margin-top: auto; }
