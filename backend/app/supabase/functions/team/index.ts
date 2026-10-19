@@ -18,11 +18,15 @@ async function sendWelcome(email: string, name: string, tenantId: string) {
   const key = Deno.env.get('RESEND_API_KEY');
   const from = Deno.env.get('RESEND_FROM_EMAIL');
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-  const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const rawKeys = Deno.env.get('SUPABASE_SECRET_KEYS') ?? '';
+  let secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  if (rawKeys) {
+    try { secret = (JSON.parse(rawKeys) as { default?: string }).default ?? secret; } catch { /* chave legada */ }
+  }
   if (!key || !from || !supabaseUrl || !secret) return false;
   // Consulta confiável do estabelecimento; jamais usar URL ou nome recebido do navegador.
   const res = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${encodeURIComponent(tenantId)}&select=name,slug&limit=1`, {
-    headers: { apikey: secret, Authorization: `Bearer ${secret}` },
+    headers: secret.startsWith('sb_') ? { apikey: secret } : { apikey: secret, Authorization: `Bearer ${secret}` },
   });
   if (!res.ok) return false;
   const rows = await res.json() as { name: string; slug: string }[];
