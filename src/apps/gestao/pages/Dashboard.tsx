@@ -152,7 +152,7 @@ export function Dashboard({
       </a>
     </div>
   ) : null;
-  const share = ctx.membership.is_owner ? <ShareAccess url={rootUrl} /> : null;
+  const share = ctx.membership.is_owner ? <ShareAccess url={rootUrl} label="Acessar sistema" primary /> : null;
   const period = <PeriodFilter base={base} path="/gestao" current={preset} from={kpis.period.from} to={kpis.period.to} />;
 
   const stats = (
@@ -377,7 +377,7 @@ export function Dashboard({
     return (
       <>
         {banner}
-        <PageHead title="Painel de Gestão" subtitle={`Dia operacional ${formatDate(kpis.today)} · ${periodText}`} actions={<div className="gs-row">{share}{period}</div>} />
+        <PageHead title="Painel de Gestão" subtitle={`Dia operacional ${formatDate(kpis.today)} · ${periodText}`} actions={<div className="gs-row">{period}{share}</div>} />
         {stats}
         <div className="gs-grid gs-grid--suite">
           {revenueCard}
@@ -420,7 +420,7 @@ export function Dashboard({
     return (
       <>
         {banner}
-        <PageHead title="Painel de Gestão" subtitle={`Visão operacional em tempo real · ${periodText}`} actions={<div className="gs-row">{share}{period}</div>} />
+        <PageHead title="Painel de Gestão" subtitle={`Visão operacional em tempo real · ${periodText}`} actions={<div className="gs-row">{period}{share}</div>} />
         <section className="gs-grid gs-grid--stats" aria-label="Situação">
           <Stat icon="crown" tone="warn" label="Plano" value={plan} hint={`Licença ${license}`} />
           <Stat icon="users" tone="info" label="Usuários ativos" value={extras.team.total} hint={`${extras.team.byRole.length} funções em uso`} />
@@ -473,7 +473,7 @@ export function Dashboard({
   return (
     <>
       {banner}
-      <PageHead title="Gestão" subtitle={`Olá, ${firstName}. Controle tudo o que acontece no seu restaurante em um só lugar.`} actions={<div className="gs-row">{share}{period}</div>} />
+      <PageHead title="Gestão" subtitle={`Olá, ${firstName}. Controle tudo o que acontece no seu restaurante em um só lugar.`} actions={<div className="gs-row">{period}{share}</div>} />
       {stats}
       <div className="gs-grid gs-grid--command">
         {revenueCard}
