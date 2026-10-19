@@ -262,6 +262,10 @@ function EditMember({
         >
           <div className="gs-form-grid">
             <label className="gs-field">
+              E-mail de acesso
+              <input type="email" value={member.email ?? ''} placeholder={member.email ? undefined : 'E-mail indisponível'} readOnly aria-label="E-mail cadastrado do colaborador" />
+            </label>
+            <label className="gs-field">
               Nome de exibição
               <input name="display_name" defaultValue={member.display_name} />
             </label>
