@@ -33,7 +33,6 @@ export function ModelPicker({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const index = Math.max(0, options.findIndex((o) => o.id === current));
-  const active = options[index];
 
   const save = (model: VisualModel, nextScheme: ColorScheme) =>
     start(async () => {
@@ -50,8 +49,7 @@ export function ModelPicker({
       <button type="button" className="pdp-model-trigger" onClick={() => setOpen(true)} aria-haspopup="dialog" title="Trocar o modelo visual">
         <LayoutTemplate size={16} aria-hidden="true" />
         <span className="pdp-model-trigger-label">
-          Modelo {index + 1}/{options.length}
-          {active ? <span className="pdp-model-trigger-name"> · {active.name}</span> : null}
+          Tema
         </span>
       </button>
       <Dialog open={open} onClose={() => setOpen(false)} title="Escolha o modelo deste aplicativo" className="pdp-model-dialog">
