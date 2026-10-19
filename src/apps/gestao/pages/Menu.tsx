@@ -327,7 +327,7 @@ function CategoryOrder({ categories, onClose }: { categories: Category[]; onClos
       // Reaproveita a RPC existente: mantém todas as validações de permissão.
       for (let i = 0; i < items.length; i++) {
         const category = items[i];
-        if (category.position === i + 1) continue;
+        if (!category || category.position === i + 1) continue;
         const result = await saveCategory(tenantId, {
           id: category.id, name: category.name, description: category.description,
           position: i + 1, active: category.active,
@@ -357,8 +357,8 @@ function CategoryOrder({ categories, onClose }: { categories: Category[]; onClos
             >
               <span aria-hidden="true" style={{ color: 'var(--gs-muted)' }}>⠿</span>
               <strong style={{ flex: 1 }}>{category.name}</strong>
-              <button type="button" className="gs-btn gs-btn--small" aria-label={`Subir ${category.name}`} disabled={saving || index === 0} onClick={() => move(category.id, items[index - 1].id)}>↑</button>
-              <button type="button" className="gs-btn gs-btn--small" aria-label={`Descer ${category.name}`} disabled={saving || index === items.length - 1} onClick={() => move(category.id, items[index + 1].id)}>↓</button>
+              <button type="button" className="gs-btn gs-btn--small" aria-label={`Subir ${category.name}`} disabled={saving || index === 0} onClick={() => { const previous = items[index - 1]; if (previous) move(category.id, previous.id); }}>↑</button>
+              <button type="button" className="gs-btn gs-btn--small" aria-label={`Descer ${category.name}`} disabled={saving || index === items.length - 1} onClick={() => { const next = items[index + 1]; if (next) move(category.id, next.id); }}>↓</button>
             </li>
           ))}
         </ol>
