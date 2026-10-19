@@ -22,9 +22,9 @@ export function ProfilePhotoControl({ hasPhoto }: { hasPhoto: boolean }) {
     } finally { setBusy(false); }
   }
   return (
-    <div className="pdp-profile-photo-control">
+    <div className="pdp-profile-photo-control" style={{ padding: "8px 12px", borderBottom: "1px solid var(--pdp-line, #444)" }}>
       <input ref={input} aria-label="Selecionar foto de perfil" type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0])} />
-      <button type="button" disabled={busy} onClick={() => input.current?.click()}>{busy ? 'Enviando foto…' : hasPhoto ? 'Trocar foto de perfil' : 'Adicionar foto de perfil'}</button>
+      <button type="button" style={{ width: "100%", textAlign: "left", padding: "10px 12px", border: "1px solid var(--pdp-line, #444)", borderRadius: 9, color: "inherit", background: "transparent", cursor: busy ? "wait" : "pointer", font: "inherit" }} disabled={busy} onClick={() => input.current?.click()}>{busy ? 'Enviando foto…' : hasPhoto ? 'Trocar foto de perfil' : 'Adicionar foto de perfil'}</button>
       {error ? <span role="alert" style={{ display: 'block', fontSize: 12 }}>{error}</span> : null}
     </div>
   );
