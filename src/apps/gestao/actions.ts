@@ -3,7 +3,7 @@
 import { config } from '@/core/config';
 import { failure, ok, type ActionResult } from '@/core/errors';
 import { rpc } from '@/core/rpc';
-import { getAccessToken } from '@/core/supabase/server';
+import { createServerSupabase, getAccessToken } from '@/core/supabase/server';
 
 // Ações da Gestão. Toda autorização (módulo, permissão, limite, delegação)
 // é validada pelo banco; aqui apenas repassamos os dados.
@@ -250,7 +250,40 @@ export async function createMember(
     });
     const body = await res.json().catch(() => null);
     if (!res.ok || body?.error) return failure(body?.error?.code ?? 'ERROR', body?.error?.message ?? 'Não foi possível cadastrar.');
-    return ok({ created_account: !!body.created_account, email_sent: !!body.email_sent });
+    // O cadastro e as permissões continuam sob autoridade da Edge Function.
+    // O e-mail é enviado somente após a confirmação de cadastro bem-sucedido.
+    let emailSent = !!body.email_sent;
+    if (!emailSent) {
+      try {
+        const key = process.env.RESEND_API_KEY;
+        if (key) {
+          const supabase = await createServerSupabase();
+          const { data: tenant, error: tenantError } = await supabase
+            .from('tenants').select('name,slug').eq('id', tenantId).single();
+          if (!tenantError && tenant && /^[a-z0-9-]+$/.test(tenant.slug)) {
+            const url = `https://pontodopedido.vercel.app/r/${tenant.slug}/`;
+            const escape = (value: string) => value.replace(/[&<>"']/g, (ch) =>
+              ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch] ?? ch);
+            const name = input.full_name.trim();
+            const response = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                from: 'Ponto do Pedido <noreply@crmplus.store>',
+                to: [input.email.trim().toLowerCase()],
+                subject: `Boas-vindas à equipe de ${tenant.name} | Ponto do Pedido`,
+                html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#242424"><h1>Boas-vindas, ${escape(name)}!</h1><p>Você foi cadastrado na equipe de <strong>${escape(tenant.name)}</strong> no Ponto do Pedido.</p><p><a href="${url}" style="display:inline-block;padding:14px 22px;background:#ec6727;color:white;border-radius:8px;text-decoration:none">Acessar restaurante</a></p><p>Seu acesso depende das permissões atribuídas. Se recebeu uma senha temporária, solicite-a ao responsável por outro canal e troque-a no primeiro acesso.</p><p style="color:#777">Ponto do Pedido</p></div>`,
+              }),
+              cache: 'no-store',
+            });
+            emailSent = response.ok;
+          }
+        }
+      } catch {
+        console.warn('TEAM_WELCOME_EMAIL_FAILED');
+      }
+    }
+    return ok({ created_account: !!body.created_account, email_sent: emailSent });
   } catch {
     return failure('UNAVAILABLE', 'Serviço de cadastro indisponível. Tente novamente.');
   }
