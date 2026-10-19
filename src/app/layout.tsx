@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/next';
 import type { ReactNode } from 'react';
 import { schemeScript } from '@/core/ui/SchemeToggle';
 import '@/core/ui/base.css';
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {schemeScript}
         </Script>
         {children}
+        <Analytics />
       </body>
     </html>
   );
