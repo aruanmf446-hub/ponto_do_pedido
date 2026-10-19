@@ -1,6 +1,10 @@
+'use client';
+
 import { APP_LABELS, APP_PATHS, type InternalApp } from '@/core/apps';
 import { signOut } from '@/core/actions';
 import { initials } from '@/core/storage';
+import { useState } from 'react';
+import { ProfilePhotoControl } from '@/core/ui/ProfilePhotoControl';
 
 /**
  * Acesso às demais áreas autorizadas do usuário (sem tela de seleção após o
@@ -24,11 +28,14 @@ export function AppSwitcher({
   className?: string;
 }) {
   const others = apps.filter((app) => app !== current);
+  const [photoLoaded, setPhotoLoaded] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
   return (
     <details className={['pdp-switcher', className].filter(Boolean).join(' ')}>
       <summary className="pdp-switcher-user" title={userName}>
         <span className="pdp-avatar" aria-hidden="true">
-          {initials(userName)}
+          {!photoFailed ? <img src="/api/profile/avatar" width={40} height={40} alt="" onLoad={() => setPhotoLoaded(true)} onError={() => setPhotoFailed(true)} style={{ display: photoLoaded ? 'block' : 'none', width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : null}
+          {!photoLoaded ? initials(userName) : null}
         </span>
         <span className="pdp-switcher-who">
           <span className="pdp-switcher-name">{userName}</span>
@@ -36,6 +43,7 @@ export function AppSwitcher({
         </span>
       </summary>
       <div className="pdp-switcher-menu">
+        <ProfilePhotoControl hasPhoto={photoLoaded} />
         {others.length + extras.length > 0 ? (
           <nav aria-label="Outras áreas autorizadas" className="pdp-switcher-apps">
             {others.map((app) => (
