@@ -4,7 +4,7 @@ import { loadDashboardExtras, loadKpis } from '@/apps/gestao/queries';
 import { PageHead } from '@/apps/gestao/ui';
 import { businessDay } from '@/core/dates';
 import { getUiPreference } from '@/core/prefs';
-import { absoluteTenantUrl, can, requireApp, tenantBase } from '@/core/tenant/context';
+import { can, requireApp, tenantBase } from '@/core/tenant/context';
 
 export default async function GestaoHome({
   params,
@@ -34,5 +34,5 @@ export default async function GestaoHome({
     loadDashboardExtras(ctx.tenant.id),
     getUiPreference(ctx.tenant.id, 'gestao'),
   ]);
-  return <Dashboard ctx={ctx} kpis={kpis} extras={extras} base={base} preset={period.preset} model={pref.model} rootUrl={await absoluteTenantUrl('/')} />;
+  return <Dashboard ctx={ctx} kpis={kpis} extras={extras} base={base} preset={period.preset} model={pref.model} />;
 }
