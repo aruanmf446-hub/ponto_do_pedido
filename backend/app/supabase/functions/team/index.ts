@@ -9,6 +9,39 @@
 //   que impede delegar permissões que o solicitante não pode repassar.
 import { adminCreateUser, adminDeleteUser, adminRpc, bearer, cors, currentUser, fail, json, userRpc } from '../_shared/http.ts';
 
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char);
+}
+
+async function sendWelcome(email: string, name: string, tenantId: string) {
+  const key = Deno.env.get('RESEND_API_KEY');
+  const from = Deno.env.get('RESEND_FROM_EMAIL');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  if (!key || !from || !supabaseUrl || !secret) return false;
+  // Consulta confiável do estabelecimento; jamais usar URL ou nome recebido do navegador.
+  const res = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${encodeURIComponent(tenantId)}&select=name,slug&limit=1`, {
+    headers: { apikey: secret, Authorization: `Bearer ${secret}` },
+  });
+  if (!res.ok) return false;
+  const rows = await res.json() as { name: string; slug: string }[];
+  const tenant = rows[0];
+  if (!tenant || !/^[a-z0-9-]+$/.test(tenant.slug)) return false;
+  const origin = (Deno.env.get('PDP_PUBLIC_APP_ORIGIN') ?? 'https://pontodopedido.vercel.app').replace(/\/$/, '');
+  if (!origin.startsWith('https://')) return false;
+  const url = `${origin}/r/${tenant.slug}/`;
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from, to: [email], subject: `Boas-vindas à equipe de ${tenant.name} | Ponto do Pedido`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#242424"><h1>Boas-vindas, ${escapeHtml(name)}!</h1><p>Você foi cadastrado na equipe de <strong>${escapeHtml(tenant.name)}</strong> no Ponto do Pedido.</p><p><a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 22px;background:#ec6727;color:white;border-radius:8px;text-decoration:none">Acessar restaurante</a></p><p>Seu acesso depende das permissões atribuídas. Se recebeu uma senha temporária, solicite-a ao responsável por outro canal e troque-a no primeiro acesso.</p><p style="color:#777">Ponto do Pedido</p></div>`,
+    }),
+  });
+  return response.ok;
+}
+
 const APPS = ['gestao', 'caixa', 'atendimento', 'cozinha', 'cardapio', 'delivery', 'financeiro', 'estoque'];
 
 Deno.serve(async (req) => {
@@ -67,5 +100,8 @@ Deno.serve(async (req) => {
     if (created) await adminDeleteUser(userId);
     return fail(attached.error.details ?? 'ERROR', attached.error.message);
   }
-  return json({ membership_id: attached.data, created_account: created });
+  let emailSent = false;
+  try { emailSent = await sendWelcome(email, fullName, tenantId); }
+  catch { console.warn('TEAM_WELCOME_EMAIL_FAILED'); }
+  return json({ membership_id: attached.data, created_account: created, email_sent: emailSent });
 });
