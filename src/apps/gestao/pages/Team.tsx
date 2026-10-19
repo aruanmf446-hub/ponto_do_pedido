@@ -70,7 +70,8 @@ export function TeamPage({
             {members.map((m) => (
               <tr key={m.id}>
                 <td>
-                  <strong>{m.display_name}</strong> {!m.is_owner ? <ShareAccess url={rootUrl} name={m.display_name} compact /> : null}
+                  <strong>{m.display_name}</strong>
+                  {m.email ? <span className="gs-meta" style={{ display: 'block', marginTop: 4 }}>{m.email}</span> : null}
                   {m.is_owner ? (
                     <>
                       {' '}
@@ -85,11 +86,14 @@ export function TeamPage({
                   <Badge tone={STATUS[m.status][1]}>{STATUS[m.status][0]}</Badge>
                 </td>
                 <td>
+                  <div className="gs-row" style={{ flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                  {!m.is_owner && m.status === 'active' ? <ShareAccess url={rootUrl} name={m.display_name} email={m.email} compact label="Enviar acesso" /> : null}
                   {!m.is_owner && m.user_id !== userId ? (
                     <button type="button" className="gs-btn gs-btn--small" onClick={() => setEditing(m)}>
                       Editar
                     </button>
                   ) : null}
+                  </div>
                 </td>
               </tr>
             ))}
