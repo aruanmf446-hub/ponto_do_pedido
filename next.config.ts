@@ -23,14 +23,22 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {
+    // Somente a landing pública (/) pode ser exibida na vitrine da CRM Plus Store.
+    // Todas as demais páginas continuam protegidas contra incorporação externa.
     return [
       {
         source: '/:path*',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
+      {
+        source: '/',
+        headers: [
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://crmplus.store https://www.crmplus.store" },
         ],
       },
     ];
