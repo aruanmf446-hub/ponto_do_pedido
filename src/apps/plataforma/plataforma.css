@@ -93,7 +93,8 @@
   letter-spacing: -0.035em;
 }
 .pl-mark-text > span {
-  color: var(--pl-accent);
+  /* Cor da marca constante na landing, portal e telas autenticadas. */
+  color: #cc5435;
 }
 .pl-nav {
   display: flex;
