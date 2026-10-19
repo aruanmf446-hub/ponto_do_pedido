@@ -339,3 +339,8 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Alternância de área disponível junto ao nome, sem mudar o controle de acesso. */
+.pdp-switcher > summary { max-width: 245px; overflow: visible; }
+.pdp-switcher-who { max-width: 172px; }
+.pdp-switcher-change { text-decoration: underline; text-underline-offset: 2px; font-weight: 600; opacity: 1; }
